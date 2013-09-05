@@ -1,0 +1,4 @@
+rsyslogdocs
+===========
+
+Rsyslog Documentation

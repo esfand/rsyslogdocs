@@ -1,0 +1,11 @@
+rsyslogdocs
+==========
+
+rsyslog documentations project
+
+NOTE: NOTHING USEFULL HERE YET!
+
+The project started off by forking the 
+https://github.com/richfaces/richfaces-docs[RichFaces Documentation Github Project]
+as the starting point.  So, all the credit for the setup and the structure of this
+project goes to them.

@@ -1,0 +1,68 @@
+:toc:
+[[contributing-docs]]
+= Contributing to the Rsyslog Documentations
+
+The [productname]#Rsyslog# documentation project uses a _docbook_ toolchain to generate the documentation.  
+We are generating our docbook xml from _asciidoc_ source.
+
+== Building the Rsyslog docs
+
+To build the Rsyslog documentations, execute the following command:
+
+. Generate the PDF, html_single, and html files
++
+With the docbook generated we can execute our docbook toolchain to generate the PDF, html_single, 
+and html files using the maven build.
++
+----
+mvn clean install
+----
+
+== Editing the documentation using guard and livereload
+
+The asciidoc source can be edited using any text editor.  However, if you'd like re receive rapid feedback on how the
+docs are evolving, you can enable guard and livereload to see your changes live in your browser.
+
+To use guard and livereload with the Rsyslog docs, follow the following steps
+
+[NOTE]
+====
+These aren't meant to be exhaustive steps for installing and configuring guard and livereload, rather it's a recipe of
+how to use these tools as they are configured for working with the Rsyslog docs.  For more detailed instructions, 
+see this excellent resource: http://asciidoctor.org/docs/editing-asciidoc-with-live-preview/
+====
+
+. Initialize your ruby environment
++
+[NOTE]
+====
+Make sure you have ruby >= 1.9.2 installed, and the +bundle+ gem.  You will also need the livereload plugin installed
+in your browser.
+====
++
+The docs come with a bundled +Gemfile+ that is used to initialize your ruby environment as follows:
++
+----
+bundle install
+----
+
+. Start guard
++
+The docs come pre-configured with a Guardfile used to configure guard to listen for asciidoc changes, and generate 
+html directly using asciidoctor.  To run guard do:
++
+----
+bundle exec guard start
+----
+
+. Connect your browser
++
+Connect your browser to livereload by navigating to either of the files: 
++
+--
+.. [filename]+Rsyslog_Reference/target/docbook/en-US/Rsyslog_Reference.html+
+.. [filename]+Rsyslog_Guide/target/docbook/en-US/Rsyslog_Guide.html+
+--
++
+Then activate the livereload plugin in your browser.  As you save changes to the asciidoc source, you will see those
+changes reflected in the browser within seconds.

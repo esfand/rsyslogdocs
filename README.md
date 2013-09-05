@@ -1,4 +1,0 @@
-rsyslogdocs
-===========
-
-Rsyslog Documentation

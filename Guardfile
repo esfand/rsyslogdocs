@@ -5,7 +5,7 @@ require 'erb'
 require './asciidoc/src/main/ruby/RenderAsciidoc'
 
 guard :shell, :all_on_start => true do
-  watch /^([^\/]*)\/src\/.*\/(Rsyslog_Reference|Rsyslog_Guide)\.asciidoc$/ do |m|
+  watch /^([^\/]*)\/src\/.*\/(Rsyslog_Reference|Rsyslog_Guide|Rsyslog_Articles)\.asciidoc$/ do |m|
     source = m[0];
     target = m[1] + '/target/docbook/en-US/' + m[2] + '.html'
     puts "#{source} has changed"

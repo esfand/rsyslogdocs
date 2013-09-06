@@ -11,13 +11,13 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>rsyslog-guide</artifactId>
+    <artifactId>rsyslog-articles</artifactId>
     <packaging>jdocbook</packaging>
-    <name>Rsyslog Guide</name>
+    <name>Rsyslog Articles</name>
 
     <properties>
-        <docname>Rsyslog_Guide</docname>
-        <bookname>Rsyslog Guide</bookname>
+        <docname>Rsyslog_Articles</docname>
+        <bookname>Rsyslog Articles</bookname>
     </properties>
 
     <build>
@@ -39,7 +39,7 @@
     </build>
 
     <scm>
-        <url>https://github.com/esfand/rsyslogdocs/tree/develop/Rsyslog_Guide</url>
+        <url>https://github.com/esfand/rsyslogdocs/tree/develop/Rsyslog_Articles</url>
     </scm>
 
 </project>

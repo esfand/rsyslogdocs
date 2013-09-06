@@ -1,0 +1,29 @@
+= Asciidoctor
+Ryan Waldron, Dan Allen
+
+http://asciidoctor.org[Asciidoctor] is a native Ruby processor
+for converting AsciiDoc source files and strings into HTML 5,
+DocBook 4.5 and other formats.
+
+== Installation
+
+You can install the Asciidoctor RubyGem using the +gem+ command:
+
+ gem install asciidoctor
+
+On Fedora, you can install via an RPM package
+(https://bugzilla.redhat.com/show_bug.cgi?id=889011[pending])
+using the +yum+ command:
+
+ yum install rubygem-asciidoctor
+
+Now you are ready to start using Asciidoctor!
+
+== Benefits
+
+Asciidoctor is:
+
+* compliant
+* fast
+* secure
+* stable

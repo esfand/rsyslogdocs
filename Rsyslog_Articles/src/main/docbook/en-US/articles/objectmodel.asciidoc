@@ -1,24 +1,11 @@
 == rsyslog object model and message flow
 
-I thought quite a while about the upcoming configuration file format today.  I 
-have to admit, I am not very satisfied with the outcome. I have a few potential 
-formats, but either they are too brief (and quite complex) or there is a lot of 
-text. Also, I am not satisfied yet with the flexibility of the format. I guess 
-this is a harder nut to crack than I thought.  Unfortunately, I can not yet post 
-any of the ideas, as I have done them on paper and they are probably unreadable 
-to anybody but me.  Bear with me, I'll create an online version these days.
-
-
-But to understand any config file formats, you need to know more about the 
-object model. A first version of that model has materialized on my mind, and 
-actually rsyslog 1.18.0 and above is already supporting parts of it. To aid 
-understanding (and get some discussion going), I have created a quick outline of 
-what I have in mind. It's textual, it's incomplete and it can not be formally 
-verified. Still, I think (sincerely hope), it is useful. So I decided to post 
-what I currently have. Besides the actual object model discussion, it will help 
+To understand any config file formats, one needs to know more about the 
+object model.   
+Besides the actual object model discussion, it will help 
 a great deal in understanding what needs to be in the config file (thus it's 
-currently a bit biased towards configurable objects and internal ones are almost 
-completely missing).
+currently a bit biased towards `configurable objects` and `internal ones` 
+are almost completely missing).
 
 
 [[Rsyslog_Object]]

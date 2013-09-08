@@ -1,4 +1,484 @@
 
+[[objectmodel]]
+== rsyslog object model and message flow
+
+http://blog.gerhards.net/2007/08/rsyslog-v3-object-model-and-message.html[Article Source]
+
+To understand the Rsyslog's config file formats, one needs to know more about its 
+object model.  
+
+Besides the actual object model, it will help 
+a great deal in understanding what needs to be in the config file Thus it's 
+currently a bit biased towards configurable objects and the internal objects are almost 
+completely missing.
+
+
+[[Rsyslog_Object]]
+== rsyslog Objects
+
+Rsyslog uses objects, even though it is written in C. This can quite well be 
+done. Only at some points (like inheritance) we need to fiddle a bit with the 
+language. But nothing to hard to be done. We try to keep object overhead very 
+low, so it should be more like traditional C than C++.
+
+
+[[|Rsyslog_object_Module]]
+=== Module
+
+The module object is the base class for anything that even remotely looks 
+like a loadable object.  In the long term, that might eventually be almost 
+everything.  
+
+Module object handles the necessary plumbing like loading modules, keeping 
+track of module status, querying interface and all those things...  
+It does not by itself provide any module-specific actions.
+
+
+[[|Rsyslog_object_Input]]
+=== Input
+
+An input gatheres messages (events) from external sources. Current typical 
+examples are UDP or TCP based syslog. However, there is no architectural limit, 
+so in the long term an input module may also gather SNMP traps or file lines. 
+Please note that an input does not necessarily parse the obtained event by 
+itself - this may be delegated to a parser module (this whole thing still needs 
+to be thought out).
+
+
+[[|Rsyslog_object_Output]]
+=== Output
+
+An output module receives strings from the engine and writes them to some 
+ultimate destination. Popluar examples are files, databases or remote syslog 
+servers.
+
+
+=== Action
+
+The action object is the "engine wrapper" around an output module. It 
+provides numerous servies to the output. Most importantly, it provides the core 
+plumbing behind restarting and queueing actions.
+
+
+=== Ruleset
+
+http://www.rsyslog.com/doc/multi_ruleset.html[See this article.]
+
+
+=== Function
+
+A function object (and lodable module) provides extensibility for internal 
+processing.  Version 3.0 will support programming-like functions, which replace 
+and extend the property replacer options.  For example, we may want to extract 
+characters 5 to 10 and convert them to lower case.  With current rsyslog, this 
+works as follows: `%msg:5:10:lower%`.  With Version 3, it will look: 
+`lower(substr(%msg, 5, 10))`. 
+
+Functions will be supported everywhere a string is supported, which means 
+everywhere.  Examples are filters, output format (templates), and file name 
+generation.
+
+
+== Message Flow
+
+This is a brief description of how a message (an event) flows inside rsyslog.
+
+The message text is received by an input module.  
+
+The input module, possibly with the help of a parser module, transforms the 
+message text to an in-memory structured message.  
+
+This structured message enters rsyslog's main processing queue.  
+
+As soon as  possible, the msg object is dequeued.  
+
+The dequeued message is then processed by a ruleset.
+
+A rule set object contains multiple rule object, which are executed in order 
+until either all rules are processed or a discard action is encountered. 
+
+If there are multiple ruleset objects bound to a single input module, they are 
+also executed in the configured order. The normal discard action will discard a 
+message for one ruleset, but an additional rule set will  continue to 
+process the msg object.  A special case of the discard action can be envisioned, 
+which discards a msg object for all bound rule sets. 
+
+Each rule object contains 
+filter objects and action objects.  First, all filter objects are executed. That 
+means, their expressions are evaluated.  If there are multiple filter objects, 
+their result is combined in an AND operation (other modes are not supported - 
+that could be easily done by crafting a specific filter expression, so we do not 
+encourage an additional set of complexity be allowing additional boolean 
+operators when multiple filter objects are used inside a single rule). 
+
+If the 
+outcome of the overall filter object evaluation results in true ("to be 
+processed"), all action objects are called.  They are called in the order of their 
+appearance in the config file (no exceptions here).  The msg object is used to 
+generate the string required by the action (note that the msg object itself is 
+NOT passed to the action, this is a security and encapsulation boundary). 
+
+For  string generation, function plug-ins may possibly be called (this is also the 
+case during filter procesing).  The resulting strings are  passed to the 
+execute method of the action object.  That object decides if queing, 
+rate-limiting, or other functionality generically available to all actions is the 
+be carried out.  All of this is done by the action object itself. 
+
+Finally, the  strings are passed from the action object to the actual output 
+object (a plug-in). 
+
+The output objct takes the strings and performs whatever processing needs to be 
+done. 
+
+After all actions, rules, and rulesets have been processed (or when a 
+discard action occurs), the msg object is destroyed. Please note that even then 
+a copy may be held in memory, because that might be needed for duplicate message 
+reduction and similiar features. Thus, msg is reference-counted and actually 
+only destroyed when the count reaches zero.
+
+
+Please note that there are a number of utility objects involved.  For clarify, 
+these have been omitted.  Also, all function calls return a meaningful return 
+state. The caller will process that state with care. In some cases, however, 
+this may mean ignore a failed call, because this is the most appropriate thing 
+to do (e.g. when an action fails - if we'd abort processing the msg object, we'd 
+do much more harm).
+
+
+== Data flow
+
+This is a brief and not so accurate picture of the data flow.  It focuses
+on the role of the plug-ins.
+
+input module(parser) -> rule engine (custom functions) -> action (with 
+aggregated output module)
+
+
+== Known Open Issues with Plug-ins
+
+Probably the number one question is how message-modifying plug-ins can be 
+created.  I think about things like implementing syslog-sign or TLS security.  It 
+is my current, unverified, view that we must have something like "filter-plug-ins" 
+which can be placed inside the message data flow to modify the message text and/or 
+the msg object.
+
+
+
+== Understanding rsyslog Queues
+
+http://www.rsyslog.com/doc/queues.html[Article Source]
+
+Rsyslog uses queues whenever two activities need to be loosely coupled.  With a queue, 
+one part of the system "produces" syslog messages while another part "consumes" the messages. 
+
+The most prominent example is the main message queue. Whenever rsyslog receives a
+ message (e.g. locally, via UDP, TCP or in whatever else way), it places these messages 
+into the main message queue.  Later, it is dequeued by the rule processor, which then 
+evaluates which actions are to be carried out. In front of each action, there is also a 
+queue, which potentially de-couples the filter processing from the actual action 
+(e.g. writing to file, database or forwarding to another host).
+
+Currently, queues are used for the main message queue and for the actions.
+
+There is a single main message queue inside rsyslog.  Each input module delivers messages to it. 
+The main message queue worker filters messages based on rules specified in rsyslog.conf and 
+dispatches them to the individual action queues.  Once a message is in an action queue, it is 
+deleted from the main message queue.
+
+There are multiple action queues, one for each configured action.  Action queues are fully 
+configurable and thus can be changed to whatever is best for the given use case.
+
+Action queue parameters can not be  modified once the action has been specified.  
+For example, to tell the main message queue to save its content on shutdown, 
+use $MainMsgQueueSaveOnShutdown on".
+
+The main message queue is created after parsing the config file and all of its potential 
+includes.  An action queue is created each time an action selector is specified. 
+
+Not all queues necessarily support the full set of queue configuration parameters, because 
+not all are applicable.  For example, in current output module design, actions do not support 
+multi-threading.  Consequently, the number of worker threads is fixed to one for action queues 
+and can not be changed.
+
+
+=== Queue Analogy
+
+A warp-up: In rsyslog, an action queue "sits in front of" each output plugin. 
+Messages are received and flow, from input to output, over various stages and two level of 
+queues to the outputs.  Actions queues are always present, but may not easily be visible when 
+in direct mode (where no actual queuing takes place). 
+
+On the output side, the queue is the active component, not the consumer. As such, the consumer cannot ask the queue for anything (like n number of messages) but rather is activated by the queue itself. As such, a queue somewhat resembles a "living thing" whereas the outputs are just tools that this "living thing" uses.
+
+Note that I left out a couple of subtleties, especially when it comes to error handling and terminating a queue (you hopefully have now at least a rough idea why I say "terminating a queue" and not "terminating an action" - who is the "living thing"?). An action returns a status to the queue, but it is the queue that ultimately decides which messages can finally be considered processed and which not. Please note that the queue may even cancel an output right in the middle of its action. This happens, if configured, if an output needs more than a configured maximum processing time and is a guard condition to prevent slow outputs from deferring a rsyslog restart for too long. Especially in this case re-queuing and cleanup is not trivial. Also, note that I did not discuss disk-assisted queue modes. The basic rules apply, but there are some additional constraints, especially in regard to the threading model. Transitioning between actual disk-assisted mode and pure-in-memory-mode (which is done automatically when needed) is also far from trivial and a real joy for an implementer to work on ;).
+
+=== Worker Thread Pools
+
+Each queue (except in "direct" mode) has an associated pool of worker threads.  Worker threads 
+carry out the action to be performed on the data elements enqueued.  As an actual sample, the 
+main message queue's worker task is to apply filter logic to each incoming message and enqueue 
+them to the relevant output queues (actions).
+
+
+
+=== Turning Lanes and Rsyslog Queues - an Analogy
+
+If there is a single object absolutely vital to understanding the way rsyslog works, 
+this object is queues.  Queues offer a variety of services, including support for multithreading. 
+While there is elaborate in-depth documentation on the ins and outs of rsyslog queues, 
+some of the concepts are hard to grasp even for experienced people.  I think this is 
+because rsyslog uses a very high layer of abstraction which includes things that look 
+quite unnatural, like queues that do not actually queue...
+
+The graphic below describes the data flow inside rsyslog:
+
+image::http://www.rsyslog.com/doc/dataflow.png[rsyslog data flow]
+
+For our needs, the important fact to know is that messages enter rsyslog on "the left side" 
+(for example, via UDP), are being preprocessed, put into the so-called main queue, 
+taken off that queue, be filtered and be placed into one or several action queues 
+(depending on filter results).  They leave rsyslog on "the right side" where output 
+modules (like the file or database writer) consume them.
+
+So there are always two stages where a message (conceptually) is queued - first in the 
+main queue and later on in n action specific queues (with n being the number of actions 
+that the message in question needs to be processed by, what is being decided by the 
+"Filter Engine").  As such, a message will be in at least two queues during its lifetime
+(with the exception of messages being discarded by the queue itself, but for the purpose 
+of this document, we will ignore that possibility).
+
+Also, it is vitally important to understand that each action has a queue sitting in front of it. 
+If you have dug into the details of rsyslog configuration, you have probably seen that a 
+queue mode can be set for each action. And the default queue mode is the so-called "direct mode",
+in which "the queue does not actually enqueue data". That sounds silly, but is not. 
+It is an important abstraction that helps keep the code clean.
+
+To understand this, we first need to look at who is the active component.  In our data flow, 
+the active part always sits to the left of the object.  For example, the "Preprocessor" is 
+being called by the inputs and calls itself into the main message queue.  That is, the queue 
+receiver is called, it is passive.  One might think that the "Parser & Filter Engine" is an 
+active component that actively pulls messages from the queue. This is wrong! Actually, it is 
+the queue that has a pool of worker threads, and these workers pull data from the queue and 
+then call the passively waiting Parser and Filter Engine with those messages. 
+So the main message queue is the active part, the Parser and Filter Engine are passive.
+
+
+== Log Message Normalization Module (mmnormalize)
+
+http://www.rsyslog.com/doc/mmnormalize.html[Article Source]
+
+=== Description
+
+This module provides the capability to normalize log messages via liblognorm.  
+Thanks to liblognorm, unstructured text, like usually found in log messages, can very 
+quickly be parsed and put into a normal form. This is done so quickly, that it should 
+be possible to normalize events in realtime.
+
+This module is implemented via the output module interface.  This means that mmnormalize 
+should be called just like an action. After it has been called, the normalized message 
+properties are available and can be accessed. These properties are called the "CEE/lumberjack" 
+properties, because liblognorm creates a format that is inspired by the CEE/lumberjack approach.
+
+Please note: CEE/lumberjack properties are different from regular properties.  They 
+always have "$!" prepended to the property name given in the rulebase. Such a property 
+needs to be called with %$!propertyname%.
+
+Note that mmnormalize should only be called once on each message. Behaviour is undefined 
+if multiple calls to mmnormalize happen for the same message.
+
+
+=== Action Parameters
+
+* ruleBase [word]
+Specifies which rulebase file is to use. If there are multiple mmnormalize instances, each one 
+can use a different file. However, a single instance can use only a single file. This parameter 
+MUST be given, because normalization can only happen based on a rulebase. It is recommended that 
+an absolute path name is given. Information on how to create the rulebase can be found in the
+liblognorm manual.
+
+* useRawMsg [boolean]
+Specifies if the raw message should be used for normalization (on) or just the MSG part of 
+the message (off). Default is "off".
+
+
+=== Sample
+
+This activates the module and applies normalization to all messages:
+
+
+module(load="mmnormalize")
+action(type="mmnormalize" ruleBase="/path/to/rulebase.rb")
+
+
+== $RulesetCreateMainQueue
+
+Type: ruleset-specific configuration directive +
+Parameter Values: boolean (on/off, yes/no) + 
+Default: off 
+
+=== Description
+
+Rulesets may use their own "main" message queue for message submission. Specifying this directive, inside a ruleset definition, turns this on. This is both a performance enhancement and also permits different rulesets (and thus different inputs within the same rsyslogd instance) to use different types of main message queues.
+
+The ruleset queue is created with the parameters that are specified for the main message queue at the time the directive is given. If different queue configurations are desired, different main message queue directives must be used in front of the $RulesetCreateMainQueue directive. Note that this directive may only be given once per ruleset. If multiple statements are specified, only the first is used and for the others error messages are emitted.
+
+Note that the final set of ruleset configuration directives specifies the parameters for the default main message queue.
+
+To learn more about this feature, please be sure to read about multi-ruleset support in rsyslog.
+
+=== Caveats
+
+The configuration statement "$RulesetCreateMainQueue off" has no effect at all. The capability to specify this is an artifact of the current (ugly!) configuration language.
+
+=== Example
+
+This example sets up a tcp server with three listeners. Each of these three listener is bound to a specific ruleset. As a performance optimization, the rulesets all receive their own private queue. The result is that received messages can be independently processed. With only a single main message queue, we would have some lock contention between the messages. This does not happen here. Note that in this example, we use different processing. Of course, all messages could also have been processed in the same way ($IncludeConfig may be useful in that case!).
+
+[source]
+----
+$ModLoad imtcp
+
+# First, this is a copy of the unmodified rsyslog.conf
+#define rulesets first
+
+$RuleSet remote10514
+$RulesetCreateMainQueue on # create ruleset-specific queue
+*.*     /var/log/remote10514
+
+$RuleSet remote10515
+$RulesetCreateMainQueue on # create ruleset-specific queue
+*.*     /var/log/remote10515
+
+$RuleSet remote10516
+$RulesetCreateMainQueue on # create ruleset-specific queue
+mail.*  /var/log/mail10516
+&       ~
+# note that the discard-action will prevent this messag from 
+# being written to the remote10516 file - as usual...
+*.*     /var/log/remote10516
+
+# and now define listeners bound to the relevant ruleset
+
+$InputTCPServerBindRuleset remote10514
+$InputTCPServerRun 10514
+
+$InputTCPServerBindRuleset remote10515
+$InputTCPServerRun 10515
+
+$InputTCPServerBindRuleset remote10516
+$InputTCPServerRun 10516
+----
+
+=== Q & A
+
+Q: Is there a way to specify that a ruleset should have it's own main queue
+with the new ruleset() {...} statement?
+
+A: Yes, you can do it by specifying the parameters inside ruleset(); for
+example:
+
+[source]
+----
+ruleset(
+    name="collectors" 
+    queue.type="linkedlist" 
+    queue.size="50000") { ...
+}
+----
+
+specifying any queue parameters in the ruleset definition will as a side effect 
+perform the equivalent of a `$RulesetCreateMainQueue on`
+
+
+== $RulesetParser
+
+Type: ruleset-specific configuration directive
+
+Parameter Values: string
+
+Available since: 5.3.4+
+
+Default: rsyslog.rfc5424 followed by rsyslog.rfc3164
+
+=== Description
+
+This directive permits to specify which message parsers should be used for the ruleset in question. It no ruleset is explicitely specified, the default ruleset is used. Message parsers are contained in (loadable) parser modules with the most common cases (RFC3164 and RFC5424) being build-in into rsyslogd.
+
+When this directive is specified the first time for a ruleset, it will not only add the parser to the ruleset's parser chain, it will also wipe out the default parser chain. So if you need to have them in addition to the custom parser, you need to specify those as well.
+
+Order of directives is important. Parsers are tried one after another, in the order they are specified inside the config. As soon as a parser is able to parse the message, it will do so and no other parsers will be executed. If no matching parser can be found, the message will be discarded and a warning message be issued (but only for the first 1,000 instances of this problem, to prevent message generation loops).
+
+Note that the rfc3164 parser will always be able to parse a message - it may just not be the format that you like. This has two important implications: 1) always place that parser at the END of the parser list, or the other parsers after it will never be tried and 2) if you would like to make sure no message is lost, placing the rfc3164 parser at the end of the parser list ensures that.
+
+Multiple parser modules are very useful if you have various devices that emit messages that are malformed in various ways. The route to take then is
+
+make sure you find a custom parser for that device; if there is no one, you may consider writing one yourself (it is not that hard) or getting one written as part of Adiscon's professional services for rsyslog.
+load your custom parsers via $ModLoad
+create a ruleset for each malformed format; assign the custom parser to it
+create a specific listening port for all devices that emit the same malformed format
+bind the listener to the ruleset with the required parser
+Note that it may be cumbersome to add all rules to all rulesets. To avoid this, you can either use $Include or omruleset (what probably provides the best solution).
+
+More information about rulesets in general can be found in multi-ruleset support in rsyslog.
+
+=== Example
+
+This example assumes there are two devices emiting malformed messages via UDP. We have two custom parsers for them, named "device1.parser" and "device2.parser". In addition to that, we have a number of other devices sending wellformed messages, also via UDP.
+
+The solution is to listen for data from the two devices on two special ports (10514 and 10515 in this example), create a ruleset for each and assign the custom parsers to them. The rest of the messages are received via port 514 using the regular parsers. Processing shall be equal for all messages. So we simply forward the malformed messages to the regular queue once they are parsed (keep in mind that a message is never again parsed once any parser properly processed it).
+
+[source]
+----
+$ModLoad imudp
+$ModLoad pmdevice1 # load parser "device1.parser" for device 1
+$ModLoad pmdevice2 # load parser "device2.parser" for device 2
+
+# define ruleset for the first device sending malformed data
+$Ruleset maldev1
+$RulesetCreateMainQueue on # create ruleset-specific queue
+$RulesetParser "device1.parser" # note: this deactivates the default parsers
+# forward all messages to default ruleset:
+$ActionOmrulesetRulesetName RSYSLOG_DefaultRuleset 
+*.* :omruleset:
+
+# define ruleset for the second device sending malformed data
+$Ruleset maldev2
+$RulesetCreateMainQueue on # create ruleset-specific queue
+$RulesetParser "device2.parser" # note: this deactivates the default parsers
+# forward all messages to default ruleset:
+$ActionOmrulesetRulesetName RSYSLOG_DefaultRuleset 
+*.* :omruleset:
+
+# switch back to default ruleset
+$Ruleset RSYSLOG_DefaultRuleset
+*.*           /path/to/file
+auth.info     @authlogger.example.net
+# whatever else you usually do...
+
+
+# now define the inputs and bind them to the rulesets
+# first the default listener (utilizing the default ruleset)
+$UDPServerRun 514
+
+# now the one with the parser for device type 1:
+$InputUDPServerBindRuleset maldev1
+$UDPServerRun 10514
+
+# and finally the one for device type 2:
+$InputUDPServerBindRuleset maldev2
+$UDPServerRun 10515
+----
+For an example of how multiple parser can be chained (and an actual use case), please see the example section on the pmlastmsg parser module.
+
+Note the positions of the directives. With the current config language, sequence of statements is very important. This is ugly, but unfortunately the way it currently works.
+
+
+
+
+
+
+
+
 [[actionlegaccy]]
 == Action Statement ==
         

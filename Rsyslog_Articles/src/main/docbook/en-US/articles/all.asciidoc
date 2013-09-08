@@ -1,0 +1,2705 @@
+
+[[actionlegaccy]]
+== Action Statement ==
+        
+Action object describe what is to be done with a message. 
+They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+
+The action object has different parameters:
+* those that apply to all actions and are action specific.     
+    These are documented below.
+* parameters for the action queue.     
+    While they also apply to all parameters, they are queue-specific, not action-specific 
+    (they are the same that are used in rulesets, for example).
+* action-specific parameters.     
+    These are specific to a certain type of actions. 
+    They are documented by the output module in question.
+
+## Legacy Format ##
+
+Be warned that legacy action format is hard to get right. It is
+recommended to use RainerScript-Style action format whenever possible!
+
+A key problem with legacy format is that a single action is defined via
+multiple configurations lines, which may be spread all across rsyslog.conf.
+Even the definition of multiple actions may be intermixed (often not
+intentional!). If legacy actions format needs to be used (e.g. some modules
+may not yet implement the RainerScript format), it is strongly recommended
+to place all configuration statements pertaining to a single action
+closely together.
+
+Please also note that legacy action parameters **do not** affect
+RainerScript action objects. So if you define for example:
+
+    $actionResumeRetryCount 10
+    action(type="omfwd" target="server1.example.net")
+    @@server2.example.net
+
+server1's "action.resumeRetryCount" parameter is **not** set, instead server2's is!
+
+A goal of the new RainerScript action format was to avoid confusion
+which parameters are actually used. As such, it would be counter-productive
+to honor legacy action parameters inside a RainerScript definition. As 
+result, both types of action definitions are strictly (and nicely)
+separated from each other. The bottom line is that if RainerScript actions
+are used, one does not need to care about which legacy action parameters may 
+(still...) be in effect.
+
+Note that not all modules necessarily support legacy action format.
+Especially newer modules are recommended to NOT support it.
+
+### Legacy Description ###
+
+Templates can be used with many actions. If used, the specified template
+is used to generate the message content (instead of the default
+template). To specify a template, write a semicolon after the action
+value immediately followed by the template name.    
+    
+Beware: templates MUST be defined BEFORE they are used. It is OK to
+define some templates, then use them in selector lines, define more
+templates and use use them in the following selector lines. But it is
+NOT permitted to use a template in a selector line that is above its
+definition. If you do this, the action will be ignored.
+
+**You can have multiple actions for a single selector ** (or
+more precisely a single filter of such a selector line). Each action
+must be on its own line and the line must start with an ampersand
+('&amp;') character and have no filters. An example would be
+
+    *.=crit :omusrmsg:rger
+    &root
+    & /var/log/critmsgs</b></code></p>
+
+These three lines send critical messages to the user rger and
+root and also store them in /var/log/critmsgs.  **Using multiple
+actions per selector is** convenient and also **offers
+a performance benefit**.  As the filter needs to be evaluated
+only once, there is less computation required to process the directive
+compared to the otherwise-equal config directives below:
+
+    *.=crit :omusrmsg:rger
+    *.=crit root
+    *.=crit /var/log/critmsgs
+
+
+### Regular File ###
+
+<p>Typically messages are logged to real files. The file usually is
+specified by full pathname, beginning with a slash "/".
+Starting with version 4.6.2 and 5.4.1 (previous v5 version do NOT support this)
+relative file names can also be specified.  To do so, these must begin with a
+dot. For example, use "./file-in-current-dir.log" to specify a file in the
+current directory. Please note that rsyslogd usually changes its working 
+directory to the root, so relative file names must be tested with care (they
+were introduced primarily as a debugging vehicle, but may have useful other applications
+as well).    
+    
+    
+You may prefix each entry with the minus "-'' sign to omit syncing the
+file after every logging. Note that you might lose information if the
+system crashes right behind a write attempt. Nevertheless this might
+give you back some performance, especially if you run programs that use
+logging in a very verbose manner.
+
+<p>If your system is connected to a reliable UPS and you receive
+lots of log data (e.g. firewall logs), it might be a very good idea to
+turn of
+syncing by specifying the "-" in front of the file name.
+
+**The filename can be either static **(always
+the same) or <b>dynamic</b> (different based on message
+received). The later is useful if you would automatically split
+messages into different files based on some message criteria. For
+example, dynamic file name selectors allow you to split messages into
+different files based on the host that sent them. With dynamic file
+names, everything is automatic and you do not need any filters. </p>
+<p>It works via the template system. First, you define a template
+for the file name. An example can be seen above in the description of
+template. We will use the "DynFile" template defined there. Dynamic
+filenames are indicated by specifying a questions mark "?" instead of a
+slash, followed by the template name. Thus, the selector line for our
+dynamic file name would look as follows:</p>
+<blockquote>
+<code>*.* ?DynFile</code>
+</blockquote>
+<p>That's all you need to do. Rsyslog will now automatically
+generate file names for you and store the right messages into the right
+files. Please note that the minus sign also works with dynamic file
+name selectors. Thus, to avoid syncing, you may use</p>
+<blockquote>
+<code>*.* -?DynFile</code></blockquote>
+<p>And of course you can use templates to specify the output
+format:</p>
+<blockquote>
+<code>*.* ?DynFile;MyTemplate</code></blockquote>
+<p><b>A word of caution:</b> rsyslog creates files as
+needed. So if a new host is using your syslog server, rsyslog will
+automatically create a new file for it.</p>
+<p><b>Creating directories is also supported</b>. For
+example you can use the hostname as directory and the program name as
+file name:</p>
+<blockquote>
+<code>$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"</code></blockquote>
+
+### Named Pipes ###
+
+<p>This version of rsyslogd(8) has support for logging output to
+named pipes (fifos). A fifo or named pipe can be used as a destination
+for log messages by prepending a pipe symbol ("|'') to the name of the
+file. This is handy for debugging. Note that the fifo must be created
+with the mkfifo(1) command before rsyslogd(8) is started.</p>
+
+### Terminal and Console ###
+
+If the file you specified is a tty, special tty-handling is
+done, same with /dev/console.
+
+### Remote Machine ###
+
+Rsyslogd provides full remote logging, i.e. is able to send
+messages to a remote host running rsyslogd(8) and to receive messages
+from remote hosts. Using this feature you're able to control all syslog
+messages on one host, if all other machines will log remotely to that.
+This tears down administration needs.
+
+To forward messages to another host, prepend the hostname with
+the at sign ("@"). A single at sign means that messages will
+be forwarded via UDP protocol (the standard for syslog). If you prepend
+two at signs ("@@"), the messages will be transmitted via TCP. Please
+note that plain TCP based syslog is not officially standardized, but
+most major syslogds support it (e.g. syslog-ng or
+<a href="http://www.winsyslog.com/">WinSyslog</a>). The
+forwarding action indicator (at-sign) can be followed by one or more
+options. If they are given, they must be immediately (without a space)
+following the final at sign and be enclosed in parenthesis. The
+individual options must be separated by commas. The following options
+are right now defined:
+
+<table id="table2" border="1" width="100%">
+<tbody>
+<tr>
+<td>
+<p align="center"><b>z&lt;number&gt;</b></p>
+</td>
+<td>Enable zlib-compression for the message. The
+&lt;number&gt; is the compression level. It can be 1 (lowest
+gain, lowest CPU overhead) to 9 (maximum compression, highest CPU
+overhead). The level can also be 0, which means "no compression". If
+given, the "z" option is ignored. So this does not make an awful lot of
+sense. There is hardly a difference between level 1 and 9 for typical
+syslog messages. You can expect a compression gain between 0% and 30%
+for typical messages. Very chatty messages may compress up to 50%, but
+this is seldom seen with typically traffic. Please note that rsyslogd
+checks the compression gain. Messages with 60 bytes or less will never
+be compressed. This is because compression gain is pretty unlikely and
+we prefer to save CPU cycles. Messages over that size are always
+compressed. However, it is checked if there is a gain in compression
+and only if there is, the compressed message is transmitted. Otherwise,
+the uncompressed messages is transmitted. This saves the receiver CPU
+cycles for decompression. It also prevents small message to actually
+become larger in compressed form.
+
+<p><b>Please note that when a TCP transport is used,
+compression will also turn on syslog-transport-tls framing. See the "o"
+option for important information on the implications.</b></p>
+<p>Compressed messages are automatically detected and
+decompressed by the receiver. There is nothing that needs to be
+configured on the receiver side.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p align="center"><b>o</b></p>
+</td>
+<td><b>This option is experimental. Use at your own
+risk and only if you know why you need it! If in doubt, do NOT turn it
+on.</b>
+<p>This option is only valid for plain TCP based
+transports. It selects a different framing based on IETF internet draft
+syslog-transport-tls-06. This framing offers some benefits over
+traditional LF-based framing. However, the standardization effort is
+not yet complete. There may be changes in upcoming versions of this
+standard. Rsyslog will be kept in line with the standard. There is some
+chance that upcoming changes will be incompatible to the current
+specification. In this case, all systems using -transport-tls framing
+must be upgraded. There will be no effort made to retain compatibility
+between different versions of rsyslog. The primary reason for that is
+that it seems technically impossible to provide compatibility between
+some of those changes. So you should take this note very serious. It is
+not something we do not *like* to do (and may change our mind if enough
+people beg...), it is something we most probably *can not* do for
+technical reasons (aka: you can beg as much as you like, it won't
+change anything...).</p>
+<p>The most important implication is that compressed syslog
+messages via TCP must be considered with care. Unfortunately, it is
+technically impossible to transfer compressed records over traditional
+syslog plain tcp transports, so you are left with two evil choices...</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><br>
+The hostname may be followed by a colon and the destination port.</p>
+<p>The following is an example selector line with forwarding:</p>
+<p>*.*&nbsp;&nbsp;&nbsp; @@(o,z9)192.168.0.1:1470</p>
+<p>In this example, messages are forwarded via plain TCP with
+experimental framing and maximum compression to the host 192.168.0.1 at
+port 1470.</p>
+<p>*.* @192.168.0.1</p>
+<p>In the example above, messages are forwarded via UDP to the
+machine 192.168.0.1, the destination port defaults to 514. Messages
+will not be compressed.</p>
+<p>Note that IPv6 addresses contain colons. So if an IPv6 address is specified
+in the hostname part, rsyslogd could not detect where the IP address ends
+and where the port starts. There is a syntax extension to support this:
+put squary brackets around the address (e.g. "[2001::1]"). Square
+brackets also work with real host names and IPv4 addresses, too.
+</p><p>A valid sample to send messages to the IPv6 host 2001::1 at port 515
+is as follows:
+</p><p>*.* @[2001::1]:515
+</p><p>This works with TCP, too.
+</p><p><b>Note to sysklogd users:</b> sysklogd does <b>not</b>
+support RFC 3164 format, which is the default forwarding template in
+rsyslog. As such, you will experience duplicate hostnames if rsyslog is
+the sender and sysklogd is the receiver. The fix is simple: you need to
+use a different template. Use that one:</p>
+<p class="MsoPlainText">$template
+sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""<br>
+*.* @192.168.0.1;sysklogd</p>
+
+### List of Users ###
+
+<p>Usually critical messages are also directed to "root'' on
+that machine. You can specify a list of users that shall get the
+message by simply writing ":omusrmsg: followed by the login name. For example,
+the send messages to root, use ":omusrmsg:root".
+You may specify more than one user
+by separating them with commas (",''). Do not repeat the ":omusrmsg:" prefix in
+this case. For example, to send data to users root and rger, use
+":omusrmsg:root,rger" (do not use ":omusrmsg:root,:omusrmsg:rger", this is invalid).
+If they're logged in they get
+the message.
+
+### Everyone logged on ###
+
+Emergency messages often go to all users currently online to
+notify them that something strange is happening with the system. To
+specify this wall(1)-feature use an asterisk as the user message
+destination(":omusrmsg:*'').
+
+### Call Plugin ###
+This is a generic way to call an output plugin. The plugin
+must support this functionality. Actual parameters depend on the
+module, so see the module's doc on what to supply. The general syntax
+is as follows:
+
+<p>:modname:params;template</p>
+
+<p>Currently, the ommysql database output module supports this
+syntax (in addtion to the "&gt;" syntax it traditionally
+supported). For ommysql, the module name is "ommysql" and the params
+are the traditional ones. The ;template part is not module specific, it
+is generic rsyslog functionality available to all modules.</p>
+
+<p>As an example, the ommysql module may be called as follows:</p>
+<p>:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+
+<p>For details, please see the "Database Table" section of this
+documentation.</p>
+
+Note: as of this writing, the ":modname:" part is hardcoded
+into the module. So the name to use is not necessarily the name the
+module's plugin file is called.
+
+### Database Table ###
+
+<p>This allows logging of the message to a database table.
+Currently, only MySQL databases are supported. However, other database
+drivers will most probably be developed as plugins. By default, a <a href="http://www.monitorware.com/">MonitorWare</a>-compatible
+schema is required for this to work. You can create that schema with
+the createDB.SQL file that came with the rsyslog package. You can also<br>
+use any other schema of your liking - you just need to define a proper
+template and assign this template to the action.<br>
+<br>
+The database writer is called by specifying a greater-then sign
+("&gt;") in front of the database connect information. Immediately
+after that<br>
+sign the database host name must be given, a comma, the database name,
+another comma, the database user, a comma and then the user's password.
+If a specific template is to be used, a semicolon followed by the
+template name can follow the connect information. This is as follows:<br>
+<br>
+&gt;dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+
+**Important: to use the database functionality, the
+MySQL output module must be loaded in the config file** BEFORE
+the first database table action is used. This is done by placing the
+
+    $ModLoad ommysql 
+
+directive some place above the first use of the database write
+(we recommend doing at the the beginning of the config file).
+
+### Discard ###
+
+If the discard action is carried out, the received message is
+immediately discarded. No further processing of it occurs. Discard has
+primarily been added to filter out messages before carrying on any
+further processing. For obvious reasons, the results of "discard" are
+depending on where in the configuration file it is being used. Please
+note that once a message has been discarded there is no way to retrieve
+it in later configuration file lines.
+
+Discard can be highly effective if you want to filter out some
+annoying messages that otherwise would fill your log files. To do that,
+place the discard actions early in your log files. This often plays
+well with property-based filters, giving you great freedom in
+specifying what you do not want.
+
+Discard is just the single tilde character with no further parameters:
+
+<p>~</p>
+<p>For example,</p>
+<p>*.*&nbsp;&nbsp; ~</p>
+<p>discards everything (ok, you can achive the same by not
+running rsyslogd at all...).</p>
+
+### Output Channel ###
+
+Binds an output channel definition (see there for details) to
+this action. Output channel actions must start with a $-sign, e.g. if
+you would like to bind your output channel definition "mychannel" to
+the action, use "$mychannel". Output channels support template
+definitions like all all other actions.
+
+### Shell Execute ###
+
+This executes a program in a subshell. The program is passed
+the template-generated message as the only command line parameter.
+Rsyslog waits until the program terminates and only then continues to
+run.
+
+^program-to-execute;template
+
+The program-to-execute can be any valid executable. It
+receives the template string as a single parameter (argv[1]).
+
+**WARNING:** The Shell Execute action was added to serve an urgent need. 
+While it is considered reasonable save when
+used with some thinking, its implications must be considered. The
+current implementation uses a system() call to execute the command.
+This is not the best way to do it (and will hopefully changed in
+further releases). Also, proper escaping of special characters is done
+to prevent command injection. However, attackers always find smart ways
+to circumvent escaping, so we can not say if the escaping applied will
+really safe you from all hassles. Lastly, rsyslog will wait until the
+shell command terminates. Thus, a program error in it (e.g. an infinite
+loop) can actually disable rsyslog. Even without that, during the
+programs run-time no messages are processed by rsyslog. As the IP
+stacks buffers are quickly overflowed, this bears an increased risk of
+message loss. You must be aware of these implications. Even though they
+are severe, there are several cases where the "shell execute" action is
+very useful. This is the reason why we have included it in its current
+form. To mitigate its risks, always a) test your program thoroughly, b)
+make sure its runtime is as short as possible (if it requires a longer
+run-time, you might want to spawn your own sub-shell asynchronously),
+c) apply proper firewalling so that only known senders can send syslog
+messages to rsyslog. Point c) is especially important: if rsyslog is
+accepting message from any hosts, chances are much higher that an
+attacker might try to exploit the "shell execute" action.
+
+### Template Name ###
+
+Every ACTION can be followed by a template name. If so, that
+template is used for message formatting. If no name is given, a
+hard-coded default template is used for the action. There can only be
+one template name for each given action. The default template is
+specific to each action. For a description of what a template is and
+what you can do with it, see "TEMPLATES" at the top of this document.
+
+
+
+[[actionstatement]]
+== Action Statement
+        
+Action object describe what is to be done with a message. 
+They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+
+The action object has different parameters:
+* those that apply to all actions and are action specific.     
+    These are documented below.
+* parameters for the action queue.     
+    While they also apply to all parameters, they are queue-specific, not action-specific 
+    (they are the same that are used in rulesets, for example).
+* action-specific parameters.     
+    These are specific to a certain type of actions. 
+    They are documented by the output module in question.
+
+### General Action Parameters ###
+
+* **name**  word    
+    used for statistics gathering and documentation    
+
+* **type** string    
+    Mandatory parameter for every action. The name of the module that should be used.    
+
+* **action.writeAllMarkMessages** on/off    
+    Normally, mark messages are written to actions only if the action was not recently executed 
+    (by default, recently means within the past 20 minutes). If this setting is switched to "on", 
+    mark messages are always sent to actions, no matter how recently they have been executed. 
+    In this mode, mark messages can be used as a kind of heartbeat. Note that this option 
+    auto-resets to "off", so if you intend to use it with multiple actions, it must be specified 
+    in front off all selector lines that should provide this functionality.    
+
+* **action.execOnlyEveryNthTime** integer    
+    If configured, the next action will only be executed every n-th time. 
+    For example, if configured to 3, the first two messages that go into the action will be dropped, 
+    the 3rd will actually cause the action to execute, the 4th and 5th will be dropped, 
+    the 6th executed under the action, ... and so on. 
+    Note: this setting is automatically re-set when the actual action is defined.    
+
+* **action.execOnlyEveryNthTimeout** integer    
+    Has a meaning only if Action.ExecOnlyEveryNthTime is also configured for the same action. 
+    If so, the timeout setting specifies after which period the counting of "previous actions" 
+    expires and a new action count is begun. Specify 0 (the default) to disable timeouts.
+    Why is this option needed? Consider this case: a message comes in at, eg., 10am. That's count 1. 
+    Then, nothing happens for the next 10 hours. At 8pm, the next one occurs. 
+    That's count 2. Another 5 hours later, the next message occurs, bringing the total count to 3. 
+    Thus, this message now triggers the rule.
+    The question is if this is desired behavior? Or should the rule only be triggered if the 
+    messages occur within an e.g. 20 minute window? If the later is the case, you need a    
+    Action.ExecOnlyEveryNthTimeTimeout="1200"    
+    This directive will timeout previous messages seen if they are older than 20 minutes. 
+    In the example above, the count would now be always 1 and consequently no rule would 
+    ever be triggered.    
+    
+* **action.execOnlyOnceEveryInterval** integer    
+    Execute action only if the last execute is at last <seconds> seconds in the past (more info in ommail, 
+    but may be used with any action)</seconds>    
+
+* **action.execOnlyWhenpReviousIsSuspended** on/off    
+    This directive allows to specify if actions should always be executed ("off," the default) or only 
+    if the previous action is suspended ("on"). This directive works hand-in-hand with the multiple 
+    actions per selector feature. It can be used, for example, to create rules that automatically 
+    switch destination servers or databases to a (set of) backup(s), if the primary server fails. 
+    Note that this feature depends on proper implementation of the suspend feature in the output module.
+    All built-in output modules properly support it (most importantly the database write and the 
+    syslog message forwarder).    
+
+* **action.repeatedmsgcontainsoriginalmsg** on/off    
+    "last message repeated n times" messages, if generated, have a different format that contains 
+    the message that is being repeated. Note that only the first "n" characters are included, 
+    with n to be at least 80 characters, most probably more (this may change from version to version, 
+    thus no specific limit is given). The bottom line is that n is large enough to get a good idea 
+    which message was repeated but it is not necessarily large enough for the whole message.
+   (Introduced with 4.1.5). Once set, it affects all following actions.
+
+* **action.resumeRetryCount** integer    
+    [default 0, -1 means eternal]
+
+* **action.resumeInterval** integer    
+    Sets the ActionResumeInterval for the action. The interval provided is always in seconds. 
+    Thus, multiply by 60 if you need minutes and 3,600 if you need hours (not recommended).
+    When an action is suspended (e.g. destination can not be connected), the action is resumed 
+    for the configured interval. Thereafter, it is retried. If multiple retires fail, the interval 
+    is automatically extended. This is to prevent excessive ressource use for retires. 
+    After each 10 retries, the interval is extended by itself. To be precise, the actual interval 
+    is (numRetries / 10 + 1) * Action.ResumeInterval. so after the 10th try, it by default is 60 
+    and after the 100th try it is 330.
+
+
+### Queue Parameters ###
+
+
+* **queue.filename**  word     
+    Specifes the base name to be used for queue files.    
+    Default: none    
+    Mandatory: yes (for disk-based queues)    
+     
+    Disk-based queues create a set of files for queue content. The value set via queue.filename acts 
+    as the basename to be used for filename creation. For actual log data, a number is appended to 
+    the file name. There is also a so-called "queue information" (qi) file created, which holds 
+    administrative information about the queue status. This file is named with the base name plus 
+    ".qi" as suffix.    
+
+
+* **queue.size**  size      
+    Specifes the maximum number of (in-core) messages a queue can hold.    
+    Default: 10,000 for ruleset queues, 1,000 for action queues    
+    Mandatory: no    
+     
+    This setting affects the in-memory queue size. Disk based queues may hold more data inside the queue, 
+    but not in main memory but on disk. The size is specified in number of messages. The representation 
+    of a typical syslog message object should require less than 1K, but excessively large messages may 
+    also result in excessively large objects. Note that not all message types may utilize the full queue. 
+    This depends on other queue parameters like the watermark settings. Most importantly, a small amount
+    (seven percent) is reserved for messages with high loss potential (like UDP-received messages) and 
+    will not be utilized by messages with lower loss potential (like TCP-received messages).    
+    
+    Warning: do not set the size to extremely small values (like less than 500 messages) unless you know 
+    exactly what you do (and why!). This could interfere with other internal settings like watermarks and 
+    batch sizes. It is possible to specify very small values in order to support power users who customize
+    the other settings accordingly. Usually there is no need to do that. Queues take only up memory when 
+    messages are stored in them. So reducing queue sizes does not reduce memory usage, except in cases 
+    where queues are actually full. The default settings permit small message bursts to be buffered 
+    without message loss.
+
+
+* **queue.dequeuebatchsize** number     
+    Specifies how many messages can be dequeued at once.    
+    Default:    
+    Mandatory: no    
+    
+    Specifies the batch size for dequeue operations. This setting affects performance. As a rule of thumb, 
+    larger batch sizes (up to a environment-induced upper limit) provide better performance. 
+    For the average system, there usually should be no need to adjust batch sizes as the defaults are sufficient.
+
+
+* **queue.maxdiskspace** size
+    Specifies maximum amount of disk space a queue may use.    
+    Default: unlimited    
+    Mandatory: no    
+     
+    This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
+If the size limit is hit, messages are discarded until sufficient messages have been dequeued and queue files been deleted
+
+
+* **queue.highwatermark** number    
+    Specifies ...    
+    Default:    
+    Mandatory: no
+
+* **queue.lowwatermark** number    
+    Specifies ...    
+    Default:    
+    Mandatory: no
+
+queue.fulldelaymark
+-------------------
+Specifies .
+
+Available Since: 6.3.3    
+Format: number    
+Default:    
+Mandatory: no
+
+
+queue.discardmark
+-----------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.discardseverity
+---------------------
+Specifies
+
+Available Since:    6.3.3
+Format: severity
+Default:     
+Mandatory:  no
+
+queue.checkpointinterval
+------------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.syncqueuefiles
+--------------------
+Specifies
+
+Available Since:    6.3.3
+Format: binary
+Default:     
+Mandatory:  no
+
+queue.type
+----------
+Specifies
+
+Available Since:    6.3.3
+Format: queue type
+Default: LinkedList for ruleset queues, Direct for action queues
+Mandatory:  no
+
+
+queue.workerthreads
+-------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+queue.timeoutshutdown
+---------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.timeoutactioncompletion
+-----------------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.timeoutenqueue
+--------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.timeoutworkerthreadshutdown
+---------------------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+queue.workerthreadminimummessages
+---------------------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+queue.maxfilesize
+-----------------
+Specifies
+
+Available Since:    6.3.3
+Format: size
+Default:     
+Mandatory:  no
+
+
+queue.saveonshutdown
+--------------------
+Specifies
+
+Available Since:    6.3.3
+Format: binary
+Default:    no
+Mandatory:  no
+
+queue.dequeueslowdown
+---------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+queue.dequeuetimebegin
+----------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+queue.dequeuetimeend
+--------------------
+Specifies
+
+Available Since:    6.3.3
+Format: number
+Default:     
+Mandatory:  no
+
+
+
+
+[[config]]
+== Configure rsyslog 
+
+We configure rsyslog 
+* to recive UDP messages, 
+* to filter them depending on the IP of the host, and
+* to store them in a file.
+
+### How to configure the module ###
+
+The module has to be configured first. The general line for this configuration is: 
+
+    module (load=”im<type of protocol>”)
+
+So in our example, where we want UDP, it will look like this:
+
+    module (load=”imudp”)
+
+### How to configure the input for rsyslog ###
+
+For the input, you have to give two different information to rsyslog. 
+
+The first information needed is the protocol type of the input; in our example again `UDP`. 
+Like in the first line there is an `im` in front of the protocol-type.
+
+The other information is to configure a port for rsyslog, in our example 514. These two 
+information items are together in only one line. The line is:
+
+    input (type=”<protocol of input>“ port=”<number of port>“)
+
+This means for the example, the line has to be
+
+    input (type=”imudp” port=”514”)
+
+### How to configure a filter for fromhost-IPs and store them in a file ###
+
+A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure 
+it to do something with all notes from a specific IP, between “if” and “then” will be the property 
+“$fromhost-ip ==”-IP, you want to filter-”. After this stays a “then” and after the “then” follows 
+an action in brackets, which I will explain later. 
+
+In my example I want only the notes from the host with the IP 172.19.1.135. So the line will be
+
+    If $fromhost-ip == “172.19.1.135” then [
+
+After this we have to tell the computer, what to do if that case is given. In this example we want it
+to store these messages in the file “/var/log/network1.log”. This is an action with the type “omfile”. 
+
+To configure the file where to store the messages, the action is “action (type=”omfile” File=”-filename-“). So in this example, it will look like this:
+
+    Action (type=”omfile” file=”/var/log/network1.log”)
+    ]
+ 
+
+All the lines together now are
+
+    Module (load=“imupd“)
+
+    Input (type=”imudp” port=”514”)
+    If $fromhost-ip == “172.19.1.135“ then [
+        Action (type=”omfile” File=”/var/log/network1.log”)
+    ]
+
+All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
+
+ 
+
+Rsyslog and rulesets
+Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
+
+Input (type=”imudp” port=”514” ruleset=”rs1”)
+But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
+
+You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+
+So my full example looks like this
+
+    Module (load=”imudp”)
+
+    Input (type=”imudp” port=”514” ruleset=”rs1”)
+
+    Ruleset (name=”rs1”) {
+        Action (type=”omfile” file=”/var/log/network1.log”)
+    }
+
+In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
+
+
+
+[[configuration]]
+== Configure rsyslog
+
+In this part I’ll explain some basic configuration steps for rsyslog. We configure rsyslog to recive UDP messages, to filter them depending on the IP of the host and to store them in a file.
+
+How to configure the module
+---------------------------
+The module has to be configured first. The general line for this configuration is: “module (load=”im-type of protocol-”). So in our example, where we want UDP, it will look like this:
+
+    Module (load=”imudp”)
+
+How to configure the input for rsyslog
+--------------------------------------
+For the input, you have to give two different information to rsyslog. The first information needed is the protocol type of the input; in my example again UDP. Like in the first line there is an “im-” in front of the protocol-type. The other information is to configure a port for rsyslog, in my example 514. These two information are together in only one line. The line is: “Input (type=”-protocol of input-“port=”-number of port-“). This means for my example, the line has to be
+Input (type=”imudp” port=”514”)
+
+How to configure a filter for fromhost-IPs and store them in a file
+-------------------------------------------------------------------
+A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure it to do something with all notes from a specific IP, between “if” and “then” will be the property “$fromhost-ip ==”-IP, you want to filter-”. After this stays a “then” and after the “then” follows an action in brackets, which I will explain later. In my example I want only the notes from the host with the IP 172.19.1.135. So the line will be
+If $fromhost-ip == “172.19.1.135” then [
+After this we have to tell the computer, what to do if that case is given. In this example we want him to store these messages in the file “/var/log/network1.log”. This is an action with the type “omfile”. To configure the file where to store the messages, the action is “action (type=”omfile” File=”-filename-“). So in this example, it will look like this:
+
+Action (type=”omfile” file=”/var/log/network1.log”)
+]
+ 
+
+All the lines together now are
+-------------------------------
+
+    Module (load=“imupd“)
+    
+    Input (type=”imudp” port=”514”)
+    If $fromhost-ip == “172.19.1.135“ then [
+    Action (type=”omfile” File=”/var/log/network1.log”)
+    ]
+
+All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
+
+ 
+
+Rsyslog and rulesets
+====================
+Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
+
+Input (type=”imudp” port=”514” ruleset=”rs1”)
+But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
+
+You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+
+So my full example looks like this
+
+    Module (load=”imudp”)
+    
+    Input (type=”imudp” port=”514” ruleset=”rs1”)
+    
+    Ruleset (name=”rs1”) {
+        Action (type=”omfile” file=”/var/log/network1.log”)
+    }
+
+In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
+
+
+[[elasticsearch]]
+== Logging to ElasticSearch
+
+This HOWTO should explain the steps of creating a basic setup where host(s) running rsyslog 
+is sending logs to host(s) running Elasticsearch.  This would enable you to aggregate logs 
+and search for them. Much like Graylog2 does, only not as nice but more flexible and scalable.
+
+I'm running Ubuntu 12.04 x86_64, but I guess on any Linux the steps would be similar.
+
+### Installing Elasticsearch ###
+Download it from here: http://www.elasticsearch.org/download/
+
+For Ubuntu there's a nice .deb package which you can simply install. For any other Linux, 
+it's as easy as extracting the .tar.gz archive and running bin\elasticsearch
+
+If you have a complex setup, with many logs maybe, you would probably want to build or 
+adapt a custom interface. But for now we'll use elasticsearch-head as our GUI. To install
+it, simply do:
+
+    git clone git://github.com/mobz/elasticsearch-head.git
+
+Then open index.html in your browser. In the Overview tab you will see your shards and 
+replicas, while in the Browser tab you can search for your logs. Trouble is, at this
+point we have no shards/replicas and no logs in it.  But that's going to change soon :D
+
+The default settings for Elasticsearch are quite sensible, but if you have a lot of
+logs, you might find this tutorial useful:
+http://www.elasticsearch.org/tutorials/2012/05/19/elasticsearch-for-logging.html
+
+### Installing rsyslog with omelasticsearch ###
+At the time of writing this omelasticsearch is experimental, so you would have to 
+download it from the master-elasticsearch branch here:
+http://git.adiscon.com/?p=rsyslog.git;a=shortlog;h=refs/heads/master-elasticsearch
+
+Before compiling it, you need libestr:
+http://libestr.adiscon.com/download/
+and libee:
+http://www.libee.org/download/
+
+Here, it was as easy as:
+ # tar zxf $PACKAGE_NAME.tar.gz
+ # cd $PACKAGE_NAME*
+ # ./configure
+ # make && make install
+
+When doing the same thing with rsyslog, you would need to add "--enable-elasticsearch" 
+when you run the configure script.
+
+### Configuring rsyslog for elasticsearch ###
+For a basic setup, you need to add the following lines:
+
+    $ModLoad /usr/local/lib/rsyslog/omelasticsearch.so
+    *.*     action(type="omelasticsearch" server="myelasticsearch.mydomain.com")
+
+This would add send all your logs to the specified Elasticsearch server. Your index will be named "system" and your type would be "events".
+
+Now let's suppose you want to add just some specific properties. For that, you would need to define a custom template, that would properly escape the JSON fields for you, and then tell omelasticsearch to use that template.
+
+You can also use templates for defining index names. For example, you might want to have an index per day. This way, for "rotating" logs, you can just remove old indices.
+
+Our config might become something like this:
+
+ $ModLoad /usr/local/lib/rsyslog/omelasticsearch.so
+ #
+ # the template below will output a JSON like this:
+ # {"message":"test","host":"rgheorghe","severity":"6","date":"2012-05-10T10:17:38.045","tag":"test:"}
+ $template customSchema,"{\"message\":\"%msg:::json%\",\"host\":\"%HOSTNAME:::json%\",\"severity\":\"%syslogseverity%\",\"date\":\"%timereported:1:19:date-rfc3339%.%timereported:1:3:date-subseconds%\",\"tag\":\"%syslogtag:::json%\"}"
+ #
+ #the template below outputs something like "2012-05-10" to have our variable index names
+ $template srchidx,"%timereported:1:10:date-rfc3339%"
+ #
+ #now we put everything together
+ # "template" is for storing the syslog fields we want
+ # dynSearchIndex="on" is for having variable index names
+ # searchIndex is for letting rsyslog know where to get these names
+ *.*     action(type="omelasticsearch" template="customSchema" searchIndex="srchidx" dynSearchIndex="on" server="myserver")
+
+There are some other nice things you can use:
+* searchType="mycustomtype" - to specify a different type than "events". You can have dynSearchType="on" to have it variable, like you can with indices
+* serverport="9200" - this is the default setting, but you can specify a different port
+* asyncrepl="on" to enable asyncronous replication. That is, Elasticsearch gives an answer imediately after inserting to the main shard(s). It doesn't wait for replicas to be updated as well, which is the default setting
+* timeout="1m" - how long to wait for a reply from Elasticsearch. More info here, near the end: http://www.elasticsearch.org/guide/reference/api/index_.html
+* basic HTTP authentication. Elasticsearch has no authentication by default, but you can enable it:
+
+Download the http-basic plugin for Elasticsearch from here:
+https://github.com/Asquera/elasticsearch-http-basic/downloads
+
+Then, from your Elasticsearch home directory (/usr/share/elasticsearch on Ubuntu):
+ # mkdir -p plugins/http-basic
+ # cp elasticsearch-http-basic-1.0.3.jar plugins/http-basic/
+
+Then you need to add the following to your config, before restarting Elasticsearch:
+
+ http.basic.enabled: true
+ http.basic.user: "myuser"
+ http.basic.password: "mypass"
+
+Which is config/elasticsearch.yml if you just extracted the elasticsearch.tar.gz. If you installed it from the .deb package, it's /etc/elasticsearch/elasticsearch.yml
+
+On the rsyslog side, you need to add the following to your "action" line: uid="myuser" pwd="mypass".
+
+Then restart rsyslog and it should work :)
+
+### Using bulk indexing ###
+Elasticsearch can index multiple documents at a time (eg: in the same request), which makes this approach faster than indexing one log line at a time. You can make omelasticsearch use this feature by setting bulkmode="on" in your action() line.
+
+The bulk size depends on your queue settings. The default is 16, but, depending on your setup, a value of a few hundred will probably increase the indexing performance.
+
+More infromation about omelasticsearch's bulk indexing here:
+http://blog.gerhards.net/2012/06/using-elasticsearch-bulk-mode-with.html
+
+And about queueing in general here:
+http://www.rsyslog.com/doc/queues.html
+
+[[elements]]
+== Data Flow
+
+<img src="http://www.rsyslog.com/doc/dataflow.png" width="680" height="305" alt="Drawing"/>
+
+### Bird's Eye View of Rsyslog Configuration Elements ###
+
+In a rsyslog cnfiguration file, **rulesets** are not the only elements that must
+be defined at the top level.  Inputs, templates, modules, and a few directives must 
+also be defined at the top level alongside the templates.
+
+There are a few **directives** that need to be defined outside of any statements,
+i.e. at the top level.  Examples of such directives are `xxx` 
+and 'yyy'.  A directive always starts with a $-sign.
+
+Among the top-level defineable elements, **primary-rulesets** are conceptually
+at a higher level than other elements, including **subordinate-rulesets**.  rulesets 
+can be defined hierarchically, i.e. one ruleset can call another ruleset
+(called subordinate-ruleset as opposed to primary-ruleset)  A primary-ruleset is
+a ruleset not reachable via any other ruleset.
+
+Even though an **input** element must also be defined at the top level, i.e. the same
+level as rulesets, it is conceptually contained in and belongs to one and only one
+particular ruleset.  A ruleset contains, and is pointed to by, one or more inputs using 
+the input statement's `ruleset=<ruleset-name>` option.  In other words, there is a 
+one-to-many relationship between rulesets and inputs.
+
+There is also a one-to-many relationship between **input-modules** and inputs.  Each 
+input must be linked to one and only one input-module using its `type=<input-module-name>`.
+
+Also, there is an implied many-to-many relationship between 
+rulesets and **output-modules** via nested action statements.  Each nested action statement of 
+a ruleset, via its `type=<output-module-name>`, must specify one and only one output-module
+to be utilized for sinking the qualified messages.  On the other hand, the same output-module
+can be referred to by more than one ruleset.
+
+Similar to output-modules, **Templates** can also be syntactically bound to the action part 
+of the containing rules of a ruleset, and therefore reachable via rulesets only.
+
+It must be noted here that there is also a top-level **main-queue** configuration 
+element that explicitly defines a main-queue, unfortunately, only for so-called default 
+ruleset.  It is  unfortunate because trying to configure the default ruleset leads to 
+an unstructured configuration file with the default ruleset's configuration items splayed 
+all over the file.  The default ruleset is the legacy way to assign a ruleset to any 
+input-module with a missing `ruleset=<ruleset-name>` option.  The options and rules of 
+the default ruleset must be astray outside of a ruleset element and sensitive to the 
+order of definitions; and therefore highly error-prone.
+
+In a sense, primary-rulesets are the top of the food-chain reaching all the other elements,
+except a few directives that don't have an structured equivalent.
+
+
+### Ruleset Elements ###
+
+A ruleset is a construct defined with the following syntax:  
+
+    ruleset (<option> ...) { <if or action or stop statement> ... }
+
+An example of a rullset is:
+
+    ruleset (name=”rs1”) {
+        if $fromhost-ip == '192.168.152.137' then {
+            action(
+                type="omfile"
+                file="/var/log/remotefile02"
+            )
+            stop
+        }
+    }
+
+
+Using the `ruleset=<rulesetname>` option of the input statement, a rulesets can be 
+bound to an input.  For example, to bind a ruleset “rs1” to an input:
+
+    input (
+        type=”imudp” 
+        port=”514”
+        ruleset=”rs1”
+    )
+
+So, an a fully defined configuration may looks like:
+
+    module (load=”imtcp”)
+    module (load="omfile")
+
+    input (type=”imtcp” port=”514” ruleset=”rs1”)
+
+    ruleset (name=”rs1”) {
+        if $fromhost-ip == '192.168.152.137' then {
+            action(type="omfile" file="/var/log/remotefile02")
+        }
+    }
+
+As a result of the above configuration, the rsyslog will listen to syslog via TCP on port 514.
+If a received message is sent by a computr with the IP 172.19.1.135, then the messages will be 
+stored in the file /var/log/network1.log.
+
+Interestingly enough, the most important component of an explicitly defined ruleset 
+(arguably even the most important component of rsyslog), i.e. its main-queue, is not an 
+independently defineable element.  Each ruleset has one and only one associated main-queue.
+Each main-queue is served by a pool of dedicated worker-threads.  The worker-threads are in charge
+of enqueing incomming messages captured by input elements and dequeing and pushing messages
+to the filter engines and parsers and then placing them in zero or more action-queues.
+
+The only other kind of worker-threads created by rsyslog is the threads serving the 
+action-queues.  In this case, there is no pool per say.  Each action-queue can only
+be served by a single worker-thread dedicated to the loaded module associated to the
+action element involved. 
+
+
+## Input Elements ##
+
+Input Elements are the second most important configuration elements of
+rsyslog, after rulesets.   
+
+
+
+
+
+### Multiple Rulesets ###
+
+Starting with version 4.5.0 and 5.1.1, rsyslog supports multiple rulesets within a single configuration.
+This is especially useful for routing the reception of remote messages to a set of specific rules.
+ 
+Note that the **input module** must support binding to non-standard rulesets, so the functionality may 
+not be available with all inputs.  In this document, I am using imtcp, an input module that supports 
+binding to non-standard rulesets since rsyslog started to support them.
+
+### What is a Ruleset? ###
+
+If you have worked with (r)syslog.conf, you know that it is made up of what I call **rules** (others tend 
+to call them selectors, a sysklogd term).  Each rule consist of a **filter** and one or more **actions**
+to be carried out when the filter evaluates to true.  A filter may be as simple as a traditional syslog 
+priority based filter (like "*.*" or "mail.info" or as complex as a script-like expression.
+Details on that are covered in the config file documentation. After the filter come action specifiers,
+and an action is something that does something to a message, e.g. write it to a file or forward it to
+a remote logging server.
+
+A traditional configuration file is made up of one or more of these rules.  When a new message arrives,
+its processing starts with the first rule (in order of appearance in rsyslog.conf) and continues for
+each rule until either all rules have been processed or a so-called `discard` action happens, in which
+case processing stops and the message is thrown away (what also happens after the last rule has been 
+processed).
+
+The **multi-ruleset** support now permits to specify more than one such **rule sequence**. You can think
+of a traditional config file just as a single default rule set, which is automatically bound to each 
+of the inputs.  This is even what actually happens.  When rsyslog.conf is processed, the config file 
+parser looks for the directive
+
+    ruleset(name="rulesetname");
+
+Where name is any name the user likes (but must not start with "RSYSLOG_", which is the name space 
+reserved for rsyslog use).  If it finds this directive, it begins a new rule set (if the name was not 
+yet known) or switches to an already-existing one (if the name was known).  All rules defined between
+this `$RuleSet` directive and the next one are appended to the named ruleset.  Note that the reserved
+name "RSYSLOG_DefaultRuleset" is used to specify rsyslogd's default ruleset.  You can use that name 
+wherever you can use a ruleset name, including when binding an input to it.
+
+Inside a ruleset, messages are processed as described above: they start with the first rule and rules
+are processed in the order of appearance of the configuration file until either there are no more 
+rules or the discard action is executed. Note that with multiple rulesets no longer all rsyslog.conf
+rules are executed but only those that are contained within the specific ruleset.
+
+Inputs must explicitly bind to rulesets. If they don't do, the default ruleset is bound.
+
+This brings up the next question:
+
+### What does "To bind to a Ruleset" mean? ###
+
+This term is used in the same sense as "to bind an IP address to an interface": it means that a 
+specific input, or part of an input (like a tcp listener) will use a specific ruleset to "pass its
+messages to". So when a new message arrives, it will be processed via the bound ruleset. Rule from 
+all other rulesets are irrelevant and will never be processed.
+
+This makes multiple rulesets very handy to process local and remote message via separate means: bind
+the respective receivers to different rule sets, and you do not need to separate the messages by any
+other method.
+
+Binding to rulesets is input-specific. For imtcp, this is done via the following directive:
+
+    input(
+        type="imptcp" 
+        port="514" 
+        ruleset="rulesetname"
+    );
+
+Note that "name" must be the name of a ruleset that is already defined at the time the bind
+directive is given. There are many ways to make sure this happens, but I personally think that it is 
+best to define all rule sets at the top of rsyslog.conf and define the inputs at the bottom. This kind
+of reverses the traditional recommended ordering, but seems to be a really useful and straightforward 
+way of doing things.
+
+### Why are rulesets important for different parser configurations? ###
+
+Custom message parsers, used to handle different (and potentially otherwise-invalid) message formats, 
+can be bound to rulesets. So multiple rulesets can be a very useful way to handle devices sending 
+messages in different malformed formats in a consistent way. Unfortunately, this is not uncommon in 
+the syslog world. An in-depth explanation with configuration sample can be found at the $RulesetParser
+configuration directive.
+
+### Can I use a different Ruleset as the default? ###
+
+This is possible by using the following directive:
+
+    $DefaultRuleset <name>
+
+Please note, however, that this directive is actually global: that is, it does not modify the
+ruleset to which the next input is bound but rather provides a system-wide default rule set for those 
+inputs that did not explicitly bind to one. As such, the directive can not be used as a work-around to 
+bind inputs to non-default rulesets that do not support ruleset binding.
+
+### Examples ###
+
+#### Split local and remote logging ####
+
+Let's say you have a pretty standard system that logs its local messages to the usual bunch of files 
+that are specified in the default rsyslog.conf. As an example, your rsyslog.conf might look like this:
+
+    # ... module loading ...
+    # The authpriv file has restricted access.
+    authpriv.*  /var/log/secure
+    # Log all the mail messages in one place.
+    mail.*      /var/log/maillog
+    # Log cron stuff
+    cron.*      /var/log/cron
+    # Everybody gets emergency messages
+    *.emerg     *
+    ... more ...
+
+Now, you want to add receive messages from a remote system and log these to a special file, but you do
+not want to have these messages written to the files specified above. The traditional approach is to 
+add a rule in front of all others that filters on the message, processes it and then discards it:
+
+    # ... module loading ...
+    # process remote messages
+    if $fromhost-ip == '192.168.152.137' then {
+        action(
+            type="omfile"
+            file="/var/log/remotefile02"
+        )
+    stop
+    }
+
+    # only messages not from 192.0.21 make it past this point
+
+    # The authpriv file has restricted access.
+    authpriv.*                            /var/log/secure
+    # Log all the mail messages in one place.
+    mail.*                                /var/log/maillog
+    # Log cron stuff
+    cron.*                                /var/log/cron
+    # Everybody gets emergency messages
+    *.emerg                               *
+    ... more ...
+
+Note that "stop" is the discard action!. Also note that we assume that 192.0.2.1 is the sole remote 
+sender (to keep it simple).
+
+With multiple rulesets, we can simply define a dedicated ruleset for the remote reception case and 
+bind it to the receiver. This may be written as follows:
+
+    # ... module loading ...
+    # process remote messages
+    # define new ruleset and add rules to it:
+    ruleset(name="remote"){
+    action(
+            type="omfile" 
+            file="/var/log/remotefile"
+        )
+    }
+    # only messages not from 192.0.21 make it past this point
+
+    # bind ruleset to tcp listener and activate it:
+    input(type="imptcp" port="10514" ruleset="remote")
+
+#### Split local and remote logging for three different ports ####
+
+This example is almost like the first one, but it extends it a little bit. While it is very similar,
+I hope it is different enough to provide a useful example why you may want to have more than two 
+rulesets.
+
+Again, we would like to use the "regular" log files for local logging, only. But this time we set 
+up three syslog/tcp listeners, each one listening to a different port (in this example 10514, 
+10515, and 10516). Logs received from these receivers shall go into different files. Also, logs 
+received from 10516 (and only from that port!) with "mail.*" priority, shall be written into a 
+specif file and not be written to 10516's general log file.
+
+This is the config:
+
+    # ... module loading ...
+    # process remote messages
+
+    ruleset(name="remote10514"){
+    action(
+            type="omfile" 
+            file="/var/log/remote10514"
+        )
+    }
+
+    ruleset(name="remote10515"){
+    action(
+            type="omfile" 
+            file="/var/log/remote10515"
+        )
+    }
+
+    ruleset(name="test1"){
+        if prifilt("mail.*") then {
+            /var/log/mail10516
+            stop
+            # note that the stop-command will prevent this message from 
+            # being written to the remote10516 file - as usual...   
+        }
+        /var/log/remote10516
+    }
+
+    # and now define listeners bound to the relevant ruleset
+    input(
+        type="imptcp" 
+        port="10514" 
+        ruleset="remote10514"
+    )
+    input(
+        type="imptcp"
+        port="10515" 
+        ruleset="remote10515"
+    )
+    input(
+        type="imptcp" 
+        port="10516"
+        ruleset="remote10516"
+    )
+
+### Performance ###
+
+#### Fewer Filters ####
+
+No rule processing can be faster than not processing a rule at all. As such, it is useful for a 
+high performance system to identify disjunct actions and try to split these off to different rule
+sets. In the example section, we had a case where three different tcp listeners need to write to 
+three different files. This is a perfect example of where multiple rule sets are easier to use 
+and offer more performance. The performance is better simply because there is no need to check 
+the reception service - instead messages are automatically pushed to the right rule set and can 
+be processed by very simple rules (maybe even with "*.*"-filters, the fastest ones available).
+
+#### Partitioning of Input Data ####
+
+Starting with rsyslog 5.3.4, rulesets permit higher concurrency. They offer the ability to run on
+their own "main" queue. What that means is that a own queue is associated with a specific rule set.
+That means that inputs bound to that ruleset do no longer need to compete with each other when 
+they enqueue a data element into the queue. Instead, enqueue operations can be completed in parallel.
+
+**An example:** let us assume we have three TCP listeners. Without rulesets, each of them needs to 
+insert messages into the main message queue. So if each of them wants to submit a newly arrived 
+message into the queue at the same time, only one can do so while the others need to wait. 
+With multiple rulesets, its own queue can be created for each ruleset. If now each listener is 
+bound to its own ruleset, concurrent message submission is possible. On a machine with a 
+sufficiently large number of cores, this can result in dramatic performance improvement.
+
+It is highly advised that high-performance systems define a dedicated ruleset, with a dedicated 
+queue for each of the inputs.
+
+By default, rulesets do not have their own queue. It must be activated via the 
+$RulesetCreateMainQueue directive.
+
+
+
+[[es]]
+== Elasticsearch Output Module - omelasticsearch
+
+This module provides native support for logging to Elasticsearch.
+
+Action Parameters:
+
+* **server**    
+Host name or IP address of the Elasticsearch server. Defaults to "localhost"
+* **serverport**    
+HTTP port to connect to Elasticsearch. Defaults to 9200
+* **searchIndex**    
+Elasticsearch index to send your logs to. Defaults to "system"
+* **dynSearchIndex** <on/off>    
+Whether the string provided for searchIndex should be taken as a template. 
+Defaults to "off", which means the index name will be taken literally. 
+Otherwise, it will look for a template with that name, and the resulting string will be the index name. 
+For example, let's assume you define a template named "date-days" containing "%timereported:1:10:date-rfc3339%". 
+Then, with dynSearchIndex="on", if you say searchIndex="date-days", each log will be sent to 
+and index named after the first 10 characters of the timestamp, like "2013-03-22".
+* **searchType**    
+Elasticsearch type to send your index to. Defaults to "events"
+* **dynSearchType** <on/off>    
+Like dynSearchIndex, it allows you to specify a template for searchType, instead of a static string.
+* **asyncrepl** <on/off>    
+By default, an indexing operation returns after all replica shards have indexed the document. 
+With asyncrepl="on" it will return after it was indexed on the primary shard only - thus 
+trading some consistency for speed.
+* **timeout**    
+How long Elasticsearch will wait for a primary shard to be available for indexing your 
+log before sending back an error. Defaults to "1m".
+* **template**    
+This is the JSON document that will be indexed in Elasticsearch. The resulting string needs to be 
+a valid JSON, otherwise Elasticsearch will return an error. Defaults to:
+
+    $template JSONDefault, 
+    "{\"message\":\"%msg:::json%\",\"fromhost\":\"%HOSTNAME:::json%\",
+    \"facility\":\"%syslogfacility-text%\",
+    \"priority\":\"%syslogpriority-text%\",
+    \"timereported\":\"%timereported:::date-rfc3339%\",
+    \"timegenerated\":\"%timegenerated:::date-rfc3339%\"}"
+
+Which will produce this sort of documents (pretty-printed here for readability):
+
+    {
+        "message": " this is a test message",
+        "fromhost": "test-host",
+        "facility": "user",
+        "priority": "info",
+        "timereported": "2013-03-12T18:05:01.344864+02:00",
+        "timegenerated": "2013-03-12T18:05:01.344864+02:00"
+    }
+
+* **bulkmode** <on/off>    
+The default "off" setting means logs are shipped one by one. Each in its own HTTP request, 
+using the Index API. Set it to "on" and it will use Elasticsearch's Bulk API to send 
+multiple logs in the same request. The maximum number of logs sent in a single bulk request 
+depends on your queue settings - usually limited by the dequeue batch size. More information 
+about queues can be found here.
+* **parent**    
+Specifying a string here will index your logs with that string the parent ID of those logs. Please note that you need to define the parent field in your mapping for that to work. By default, logs are indexed without a parent.
+* **dynParent** <on/off>
+Using the same parent for all the logs sent in the same action is quite unlikely. So you'd probably want to turn this "on" and specify a template that will provide meaningful parent IDs for your logs.
+* **uid**    
+If you have basic HTTP authentication deployed (eg: through the elasticsearch-basic plugin), you can specify your user-name here.
+* **pwd**    
+Password for basic authentication.
+Samples:
+
+The following sample does the following:
+
+loads the omelasticsearch module
+outputs all logs to Elasticsearch using the default settings
+module(load="omelasticsearch")
+*.*     action(type="omelasticsearch")
+
+The following sample does the following:
+
+loads the omelasticsearch module
+defines a template that will make the JSON contain the following properties (more info about what properties you can use here):
+RFC-3339 timestamp when the event was generated
+the message part of the event
+hostname of the system that generated the message
+severity of the event, as a string
+facility, as a string
+the tag of the event
+outputs to Elasticsearch with the following settings
+host name of the server is myserver.local
+port is 9200
+JSON docs will look as defined in the template above
+index will be "test-index"
+type will be "test-type"
+activate bulk mode. For that to work effectively, we use an in-memory queue that can hold up to 5000 events. The maximum bulk size will be 300
+retry indefinitely if the HTTP request failed (eg: if the target server is down)
+module(load="omelasticsearch")
+template(name="testTemplate"
+         type="list"
+         option.json="on") {
+           constant(value="{")
+             constant(value="\"timestamp\":\"")      property(name="timereported" dateFormat="rfc3339")
+             constant(value="\",\"message\":\"")     property(name="msg")
+             constant(value="\",\"host\":\"")        property(name="hostname")
+             constant(value="\",\"severity\":\"")    property(name="syslogseverity-text")
+             constant(value="\",\"facility\":\"")    property(name="syslogfacility-text")
+             constant(value="\",\"syslogtag\":\"")   property(name="syslogtag")
+           constant(value="\"}")
+         }
+*.* action(type="omelasticsearch"
+           server="myserver.local"
+           serverport="9200"
+           template="testTemplate"
+           searchIndex="test-index"
+           searchType="test-type"
+           bulkmode="on"
+           queue.type="linkedlist"
+           queue.size="5000"
+           queue.dequeuebatchsize="300"
+           action.resumeretrycount="-1")
+ 
+
+
+[[expression]]
+== Expressions
+
+The language supports arbitrary complex expressions. All usual operators are supported. The precedence of operations is as follows (with operations being higher in the list being carried out before those lower in the list, e.g. multiplications are done before additions.
+
+    expressions in parenthesis
+    not, unary minus
+    *, /, % (modulus, as in C)
+    +, -, & (string concatenation)
+    ==, !=, <>, <, >, <=, >=, contains (strings!), startswith (strings!)
+    and
+    or
+
+For example, "not a == b" probably returns not what you intended. The script processor will first evaluate "not a" and then compare the resulting boolean to the value of b. What you probably intended to do is "not (a == b)". And if you just want to test for inequality, we highly suggest to use "!=" or "<>". Both are exactly the same and are provided so that you can pick whichever you like best. So inquality of a and b should be tested as "a <> b". The "not" operator should be reserved to cases where it actually is needed to form a complex boolean expression. In those cases, parenthesis are highly recommended.
+
+
+Rsyslog supports expressions at a growing number of places. 
+So far, they are supported for filtering messages.
+
+C-like comments `/* some comment */` are supported inside the expression, 
+but not yet in the rest of the configuration file.
+
+
+
+[[flow]]
+== Message Flow
+
+=== Message Flow
+Depending on their module type, modules may access and/or modify messages at various stages 
+during rsyslog's processing. Note that only the "core type" (e.g. input, output) but not any 
+type derived from it (message modification module) specifies when a module is called.
+
+=== Simplified Workflow
+.The simplified workflow is as follows
+image:http://www.rsyslog.com/doc/module_workflow.png[
+"Message Flow",link="http://www.rsyslog.com/doc/module_workflow.png"]
+
+As can be seen, messages are received by input modules, then passed to one or many parser 
+modules, which generate the in-memory representation of the message and may also modify the 
+message itself. The, the internal representation is passed to output modules, which may 
+output a message and (with the interfaces newly introduced in v5) may also modify messageo 
+object content.
+
+String generator modules are not included inside this picture, because they are not a 
+required part of the workflow. If used, they operate "in front of" the output modules, 
+because they are called during template generation.
+
+Note that the actual flow is much more complex and depends a lot on queue and filter settings. 
+This graphic above is a high-level message flow diagram.
+
+
+[[function]]
+== Functions
+
+RainerScript currently support quite a limited set of functions:
+
+* **getenv(str)** - like the OS call, returns the value of the environment variable, if it exists. 
+    Returns an empty string if it does not exist.
+
+* **strlen(str)** - returns the length of the provided string
+
+* **tolower(str)** - converts the provided string into lowercase
+
+* **cstr(expr)** - converts expr to a string value
+
+* **cnum(expr)** - converts expr to a number (integer)
+
+* **re_match(expr, re)** - returns 1, if expr matches re, 0 otherwise
+
+* **re_extract(expr, re, match, submatch, no-found)** - extracts data from a string (property) via a 
+regular expression match. POSIX ERE regular expressions are used. The variable "match" contains 
+the number of the match to use. This permits to pick up more than the first expression match. 
+Submatch is the submatch to match (max 50 supported). The "no-found" parameter specifies which 
+string is to be returned in case when the regular expression is not found. Note that match and 
+submatch start with zero. It currently is not possible to extract more than one submatch with a 
+single call.
+
+* **field(str, delim, matchnbr)** - returns a field-based substring. str is the string to search, 
+delim is the delimiter and matchnbr is the match to search for (the first match starts at 1). 
+This works similar as the field based property-replacer option. Versions prior to 7.3.7 only support
+a single character as delimiter character. Starting with version 7.3.7, a full string can be used 
+as delimiter. If a single character is being used as delimiter, delim is the numerical ascii value 
+of the field delimiter character (so that non-printable characters can by specified). 
+If a string is used as delmiter, a multi-character string (e.g. "#011") is to be specified. Samples:    
+    
+    `set $!usr!field = field($msg, 32, 3);     -- the third field, delimited by space`    
+    `set $!usr!field = field($msg, "#011", 3); -- the third field, delmited by "#011"`    
+    
+    Note that when a single character is specified as string [field($msg, ",", 3)] a string-based 
+extraction is done, which is more performance intense than the equivalent single-character 
+[field($msg, 44 ,3)] extraction.
+
+* **prifilt(constant)** - mimics a traditional PRI-based filter (like "*.*" or "mail.info"). 
+The traditional filter string must be given as a constant string. Dynamic string evaluation 
+is not permitted (for performance reasons).
+
+The following example can be used to build a dynamic filter based on some environment variable:
+
+    if $msg contains getenv('TRIGGERVAR') then /path/to/errfile
+
+
+
+
+[[ifcondition]]
+== Filter Conditions
+[Source](http://www.rsyslog.com/doc/rsyslog_conf_filter.html)
+
+Rsyslog offers three different types "filter conditions":
+* RainerScript</a>-based filters
+* "traditional" severity and facility based selectors
+* property-based filters
+
+
+### RainerScript-Based Filters ###
+
+RainerScript based filters are the prime means of creating complex rsyslog configuration.
+The permit filtering on arbitrary complex expressions, which can include boolean,
+arithmetic and string operations. They also support full nesting of filters, just
+as you know from other scripting environments.    
+Scripts based filters are indicated by the keyword "if", as usual.
+They have this format:
+    
+    if expr then block else block
+
+"If" and "then" are fixed keywords that mus be present. "expr" is a (potentially quite complex) expression. 
+So the <a href="expression.html">expression documentation</a> for details.
+The keyword "else" and its associated block is optional. Note that a block can contain either
+a single action (chain), or an arbitrary complex script enclosed in curly braces, e.g.:
+
+    if $programname == 'prog1' then {
+        action(type="omfile" file="/var/log/prog1.log")
+        if $msg contains 'test' then
+            action(type="omfile" file="/var/log/prog1test.log")
+        else
+            action(type="omfile" file="/var/log/prog1notest.log")
+    }
+
+Other types of filtes can also be combined with the pure RainerScript ones. This makes
+it particularly easy to migrate from early config files to RainerScript. Also, the traditional
+syslog PRI-based filters are a good and easy to use addition. While they are legacy, we still
+recommend there use where they are up to the job. We do NOT, however, recommend property-based
+filters any longer. As an example, the following is perfectly valid:
+
+    if $fromhost == 'host1' then {
+        mail.* action(type="omfile" file="/var/log/host1/mail.log")
+        *.err /var/log/host1/errlog # this is also still valid
+        # 
+        # more "old-style rules" ...
+        #
+    } else {
+        mail.* action(type="omfile" file="/var/log/mail.log")
+        *.err /var/log/errlog
+        # 
+        # more "old-style rules" ...
+        #
+    }
+
+Right now, you need to specify numerical values if you would like to check for facilities 
+and severity. These can be found  in [RFC 3164](http://www.ietf.org/rfc/rfc3164.txt)
+If you don't like that, you can of course also use the textual property - just be sure to use the right one.  
+As expression support is enhanced, this will change. For example, if you would like to filter on message
+that have facility local0, start with "DEVNAME" and have either
+"error1" or "error0" in their message content, you could use the following filter:
+
+    if $syslogfacility-text == 'local0' and 
+       $msg startswith 'DEVNAME'        and 
+       ($msg contains 'error1' or $msg contains 'error0')
+        then /var/log/somelog<br>
+
+Please note that the above **must all be on one line**! And if you would like to store all
+messages except those that contain "error1" or "error0", you just need
+to add a "not":
+
+    if  $syslogfacility-text == 'local0' and 
+        $msg startswith 'DEVNAME' and not 
+        not ($msg contains 'error1' or $msg contains 'error0') 
+    then 
+        /var/log/somelog<br>
+
+If you would like to do case-insensitive comparisons, use
+"contains_i" instead of "contains" and "startswith_i" instead of "startswith".
+
+Regular expressions are supported via functions (see function list).
+
+### Selectors ###
+
+**Selectors are the traditional way of filtering syslog messages.** 
+They have been kept in rsyslog with their original syntax, because it is well-known, highly 
+effective and also needed for compatibility with stock syslogd configuration files. 
+If you just need to filter based on priority and facility, you should do this with
+selector lines. They are <b>not</b> second-class citizens
+in rsyslog and offer the best performance for this job.
+
+The selector field itself again consists of two parts, a
+facility and a priority, separated by a period (".''). 
+Both parts are
+case insensitive and can also be specified as decimal numbers, but
+don't do that, you have been warned. Both facilities and priorities are
+described in syslog(3). The names mentioned below correspond to the
+similar LOG_-values in /usr/include/syslog.h.
+
+The facility is one of the following keywords:  auth, authpriv, cron, daemon, kern, lpr, 
+mail, mark, news, security (same as auth), syslog, user, uucp and local0 through local7.
+
+The keyword security should not
+be used anymore and mark is only for internal use and therefore should
+not be used in applications. Anyway, you may want to specify and
+redirect these messages here. The facility specifies the subsystem that
+produced the message, i.e. all mail programs log with the mail facility
+(LOG_MAIL) if they log using syslog.
+
+The priority is one of the following keywords, in ascending order:
+debug, info, notice, warning, warn (same as warning), err, error (same as err), 
+crit, alert, emerg, panic (same as emerg). 
+The keywords error, warn and panic are deprecated and should not be used anymore. 
+The priority defines the severity of the message.
+
+The behavior of the original BSD syslogd is that all messages of the
+specified priority and higher are logged according to the given action.
+Rsyslogd behaves the same, but has some extensions.
+
+In addition to the above mentioned names the rsyslogd(8) understands
+the following extensions: An asterisk ("*'') stands for all facilities
+or all priorities, depending on where it is used (before or after the
+period). The keyword none stands for no priority of the given facility.
+
+You can specify multiple facilities with the same priority pattern in
+one statement using the comma (",'') operator. You may specify as much
+facilities as you want. Remember that only the facility part from such
+a statement is taken, a priority part would be skipped.
+
+Multiple selectors may be specified for a single action using
+the semicolon (";'') separator. Remember that each selector in the
+selector field is capable to overwrite the preceding ones. Using this
+behavior you can exclude some priorities from the pattern.
+
+Rsyslogd has a syntax extension to the original BSD source,
+that makes its use more intuitively. You may precede every priority
+with an equals sign ("='') to specify only this single priority and
+not any of the above. You may also (both is valid, too) precede the
+priority with an exclamation mark ("!'') to ignore all that
+priorities, either exact this one or this and any higher priority. If
+you use both extensions than the exclamation mark must occur before the
+equals sign, just use it intuitively.
+
+### Property-Based Filters ###
+
+Property-based filters are unique to rsyslogd. They allow to
+filter on any property, like HOSTNAME, syslogtag and msg. A list of all
+currently-supported properties can be found in the <a href="property_replacer.html">property replacer documentation</a>
+(but keep in mind that only the properties, not the replacer is
+supported). With this filter, each properties can be checked against a
+specified value, using a specified compare operation.
+
+A property-based filter must start with a colon in column 0.
+This tells rsyslogd that it is the new filter type. The colon must be
+followed by the property name, a comma, the name of the compare
+operation to carry out, another comma and then the value to compare
+against. This value must be quoted. There can be spaces and tabs
+between the commas. Property names and compare operations are
+case-sensitive, so "msg" works, while "MSG" is an invalid property
+name. In brief, the syntax is as follows:
+
+    :property, [!]compare-operation, "value"
+
+The following **compare-operations** are currently supported:
+
+* **contains**    
+Checks if the string provided in value is contained in
+the property. There must be an exact match, wildcards are not supported.
+
+
+* **isempty**    
+Checks if the property is empty. The value is discarded. This is
+especially useful when working with normalized data, where some fields
+may be populated based on normalization result.
+Available since 6.6.2.
+
+
+* **isequal**    
+Compares the "value" string provided and the property contents.
+These two values must be exactly equal to match. 
+The difference to contains is that contains searches for the value anywhere
+inside the property value, whereas all characters must be identical for isequal. 
+As such, isequal is most useful for fields like syslogtag or
+FROMHOST, where you probably know the exact contents.
+
+
+* **startswith**    
+Checks if the value is found exactly at the beginning
+of the property value. For example, if you search for "val" with
+
+    :msg, startswith, "val"
+
+    it will be a match if msg contains "values are in this
+message" but it won't match if the msg contains "There are values in
+this message" (in the later case, contains would match). Please note
+that "startswith" is by far faster than regular expressions. So
+it makes very much sense (performance-wise) to use "startswith".
+
+    Note: when processing syslog messages, please note that $msg usually
+starts with a space. The reason for this is RFC3164. Please read the
+<a href="http://www.rsyslog.com/log-normalization-and-the-leading-space/">detail
+description</a> of what that means to you. In short, you need to make sure
+that you include the first space if you use "startswith", otherwise you will
+not get matches.
+
+
+
+* **regex**    
+Compares the property against the provided POSIX BRE regular expression.
+
+
+* **ereregex**    
+Compares the property against the provided POSIX ERE regular expression.
+
+
+You can use the bang-character (!) immediately in front of a
+compare-operation, the outcome of this operation is negated. For
+example, if msg contains "This is an informative message", the
+following sample would not match:
+
+    :msg, contains, "error"
+
+but this one matches:
+
+    :msg, !contains, "error"    
+
+Using negation can be useful if you would like to do some
+generic processing but exclude some specific events. You can use the
+discard action in conjunction with that. A sample would be:
+
+    *.* /var/log/allmsgs-including-informational.log
+    :msg, contains, "informational" ~
+    *.* /var/log/allmsgs-but-informational.log
+
+Do not overlook the red tilde in line 2! In this sample, all
+messages are written to the file allmsgs-including-informational.log.
+Then, all messages containing the string "informational" are discarded.
+That means the config file lines below the "discard line" (number 2 in
+our sample) will not be applied to this message. Then, all remaining
+lines will also be written to the file allmsgs-but-informational.log.
+
+**Value** is a quoted string. It supports some escape sequences:</p>
+
+\" - the quote character (e.g. "String with \"Quotes\"")    
+\\ - the backslash character (e.g. "C:\\tmp")
+
+Escape sequences always start with a backslash. Additional
+escape sequences might be added in the future. Backslash characters <b>must</b>
+be escaped. Any other sequence then those outlined above is invalid and
+may lead to unpredictable results.
+
+<p>Probably, "msg" is the most prominent use case of property
+based filters. It is the actual message text. If you would like to
+filter based on some message content (e.g. the presence of a specific
+code), this can be done easily by:</p>
+
+    :msg, contains, "ID-4711"
+
+This filter will match when the message contains the string
+"ID-4711". Please note that the comparison is case-sensitive, so it
+would not match if "id-4711" would be contained in the message.
+
+    :msg, regex, "fatal .* error"
+
+This filter uses a POSIX regular expression. It matches when the
+string contains the words "fatal" and "error" with anything in between
+(e.g. "fatal net error" and "fatal lib error" but not "fatal error" as
+two spaces are required by the regular expression!).
+
+Getting property-based filters right can sometimes be challenging. 
+In order to help you do it with as minimal effort as
+possible, rsyslogd spits out debug information for all property-based
+filters during their evaluation. To enable this, run rsyslogd in
+foreground and specify the "-d" option.
+
+Boolean operations inside property based filters (like
+'message contains "ID17" or message contains "ID18"') are currently not
+supported (except for "not" as outlined above). Please note that while
+it is possible to query facility and severity via property-based
+filters, it is far more advisable to use classic selectors (see above)
+for those cases.
+
+
+
+[[input]]
+== input() statement: a quick look
+
+The new input() config statement is released. This concludes the major part of the new config 
+format for v6 (v7 will also support an enhanced ruleset() statement). This article gives you 
+some quick ideas of how the new format looks in practice.  Following is a small test 
+rsyslog.conf with the old-style directives commented out and followed by the new style ones. 
+Here it is:
+
+    #$ModLoad imfile
+    #$inputfilepollinterval 1
+
+    module(
+        load="imfile" 
+        pollingInterval="1"
+    )
+>
+
+    #input(type="imuxsock" )
+
+    module(
+        load="imuxsock" 
+        syssock.use="off"
+    )
+    input(
+        type="imuxsock" 
+        socket="/home/rgerhards/testsock"
+    )
+>
+
+    #$ModLoad imfile
+    #$InputFileName /tmp/inputfile
+    #$InputFileTag tag1:
+    #$InputFileStateFile inputfile-state
+    #$InputRunFileMonitor
+
+    module(load="imfile")
+    input( type="imfile" file="/tmp/inputfile" tag="tag1:" statefile="inputfile-state")
+>
+
+    #$ModLoad imtcp
+    #$InputPTCPServerRun 13514
+    module(load="imptcp")
+    input(type="imptcp" port="13514")
+>
+
+    module(load="imtcp" keepalive="on")
+    #$InputTCPServerSupportOctetCountedFraming off
+    #$InputTCPServerInputName tcpname
+    #$InputTCPServerRun 13515
+
+    input(type="imtcp" port="13515" name="tcpname" supportOctetCountedFraming="off")
+>
+
+    #$UDPServerRun 13514
+    #$UDPServerRun 13515
+
+    input(type="imudp" port="13514")
+    input(type="imudp" port="13515")
+>
+
+
+
+[[jsonparse]]
+== Log Message Normalization Module
+
+Module Name: mmjsonparse
+
+Description:
+
+This module provides support for parsing structured log messages that follow the CEE/lumberjack spec. The so-called "CEE cookie" is checked and, if present, the JSON-encoded structured message content is parsed. The properties are than available as original message properties.
+
+Sample:
+
+This activates the module and applies normalization to all messages:
+
+    module(load="mmjsonparse")
+    action(type="mmjsonparse")
+    
+The same in legacy format:
+
+    $ModLoad mmjsonparse
+    *.* :mmjsonparse:
+    
+    
+    
+### how to use mmjsonparse only for select messages ###
+
+Rsyslog's mmjsonparse module permits to parse JSON base data (actually expecting CEE-format). 
+This message modification module is implemented via the output plugin interface, which 
+provides some nice flexibility in using it.  Most importantly, you can trigger parsing only 
+for a select set of messages.
+
+Note that the module checks for the presence of the cee cookie. Only if it is present, json 
+parsing will happen. Otherwise, the message is left alone. As the cee cookie was specifically 
+designed to signify the presence of JSON data, this is a sufficient check to make sure only 
+valid data is processed.
+
+However, you may want to avoid the (small) checking overhead for non-json messages (note, however, 
+that the check is *really fast*, so using a filter just to spare it does not gain you too much). 
+Another reason for using only a select set might be that you have different types of 
+cee-based messages but want to parse (and specifically process just some of them).
+
+With mmjsonparse being implemented via the output module interface, it can be used like a 
+regular action. So you could for example do this:
+
+    if ($programname == 'rsyslogd-pstats') then {
+          action(type="mmjsonparse")
+          action(type="omfwd" target="target.example.net" template="..." ...)
+    }
+
+As with any regular action, mmjsonparse will only be called when the filter evaluates to true. 
+Note, however, that the modification mmjsonparse makes (most importantly creating the structured data) 
+will be kept after the closing if-block. So any other action below that if (in the config file) will 
+also be able to see it.
+
+### CEE-enhanced syslog defined ###
+
+CEE-enhanced syslog is an upcoming standard for expressing structured data inside syslog messages. 
+It is a cross-platform effort that aims at making log analysis (and log processing in general) 
+much more easy both for log producers and consumers. 
+
+The idea was originally born as part of MITRE's CEE effort. It has been adopted by a larger set 
+of logging stakeholders in an initiative that was named "project lumberjack". Under this project, 
+cee-enhanced syslog, and a framework to make full use of it, is being openly advanced. 
+It is hoped (and planned) that the outcome will flow back to the CEE standard.
+
+In a nutshell cee-enhanced syslog is very simple and powerful: inside the syslog message, a 
+special cookie ("@cee:") is followed by a JSON representation of the data. The cookie tells 
+processors that the format is actually cee-enhanced. 
+
+If you are interested in a more technical coverage, have a look at my 
+[cee-enhanced syslog howto presentation[().
+
+
+### JSON and rsyslog templates ###
+
+Rsyslog already supports JSON parsing and formatting (for all cee properties). 
+However, the way formatting currently is done is unsatisfactory to me. Right now, 
+we just take the cee properties as they are and format them into JSON format. 
+In this mode, we do not have any way to specify which fields to use and we also 
+do not have a way to modify the field contents (e.g. pick substrings or do case 
+conversions). Exactly these are the use cases rsyslog invented templates for.
+
+One way to handle the situation is to have the user write the JSON code inside the 
+template and just inject the data field where desired. This almost works (and I 
+know Brian Knox tries to explore that route).  IT just works "almost" as there is 
+currently no property replacer option to ensure proper JSON escaping. Adding this 
+option is not hard. However, I don't feel this approach is the right route to take: 
+making the admin craft the JSON string is error-prone and very user-unfriendly.
+
+So I wonder what would be a good way to specify fields that shall go into a JSON format. 
+As a limiting factor, the method should be possible within the limits of the current 
+template system - otherwise it will probably take too long to implement it. 
+The same question also arises for outputs like MongoDB: how best to specify the fields 
+(and structure!) to be passed to the output module?
+
+Of course, both questions are closely related. One approach would be to solve the
+JSON encoding and say that to outputs like MongoDB JSON is passed. 
+Unfortunately, this has strong performance implications. In a nutshell, it would mean 
+formatting the data to JSON, and then re-parsing it inside the plugin. 
+This process could be be somewhat simplified by passing the data structure 
+(the underlaying tree) itself rather than the JSON encoding.  However, this would still 
+mean, that a data structure specific for this use would need to be created. 
+That obviously involves a lot of data-copying.
+So it would probably be useful to have a capability to specify fields (and replacement 
+options) that are just passed down to the module for its use (that would probably limit
+the required amount of data copying, at least in common cases). Question again: what 
+would be a decent syntax to specify this?
+
+Suggestions are highly welcome. I need to find at least an interim solution urgently, 
+as this is an important building block for the MongoDB driver and all work that will 
+depend on it. So please provide feedback (note that I may try out a couple of things 
+to finally settle on one - so any idea is highly welcome ;)).
+
+
+
+
+
+[[jsonparser]]
+== JSON Parser Module - mmjsonparse
+
+
+#### Description ####
+
+This module provides support for parsing structured log messages that follow the CEE/lumberjack spec. 
+The so-called "CEE cookie" is checked and, if present, the JSON-encoded structured message content is parsed. 
+The properties are than available as original message properties.
+
+#### Sample ####
+
+This activates the module and applies normalization to all messages:
+
+    module(load="mmjsonparse")
+    action(type="mmjsonparse")
+
+The same in legacy format:
+
+    $ModLoad mmjsonparse
+    *.* :mmjsonparse:
+
+
+
+[[jsonparsetip]]
+== using mmjsonparse only for select messages
+
+Rsyslog's mmjsonparse module permits to parse JSON base data (actually expecting CEE-format). 
+This message modification module is implemented via the output plugin interface, which provides 
+some nice flexibility in using it.  Most importantly, you can trigger parsing only for a select 
+set of messages.
+
+Note that the module checks for the presence of the cee cookie.  Only if it is present, 
+json parsing will happen.  Otherwise, the message is left alone.  As the cee cookie was 
+specifically designed to signify the presence of JSON data, this is a sufficient check to 
+make sure only valid data is processed.
+
+However, you may want to avoid the (small) checking overhead for non-json messages (note, however, 
+that the check is *really fast*, so using a filter just to spare it does not gain you too much). 
+
+Another reason for using only a select set might be that you have different types of cee-based 
+messages but want to parse (and specifically process just some of them).
+
+With mmjsonparse being implemented via the output module interface, it can be used like a regular action. 
+So you could for example do this:
+
+    if ($programname == 'rsyslogd-pstats') then {
+        action(type="mmjsonparse")
+        action(type="omfwd" target="target.example.net" template="..." ...)
+    }
+
+As with any regular action, mmjsonparse will only be called when the filter evaluates to true. Note, 
+however, that the modification mmjsonparse makes (most importantly creating the structured data) will 
+be kept after the closing if-block. So any other action below that if (in the config file) will also 
+be able to see it.
+
+
+
+[[jsonparsing]]
+== parsing JSON-enhanced syslog
+
+Strucuted logging is cool. A couple of month ago, I added support for log normalization and 
+the 0.5 draft CEE standard to rsyslog. At last weeks Fedora Developer's Conference, there was 
+a huge agreement that CEE-like JSON is a great way to enhance syslog logging. To follow up on 
+this concept, I have integrated a JSON decoder into libee, so that it can now decode JSON with 
+a single method call. It's a proof of concept, and for serious use performance optimization 
+needs to be done. Besides that, it's already quite solid.
+
+Also, I just added the mmjsonparse message modification module to rsyslog (available now in 
+git master branch!). It checks if the message contains an "@JSON: " cookie and, if so, tries 
+to parse the resulting string as JSON. If that succeeds, we obviously have a JSON-enhanced 
+message and the individual name/value pairs are stored and can be used both in filters and 
+output templates. This provides some really great opportunities when it comes to processing 
+the structured data. Just think about RESTful interfaces and such!
+
+Right now, everything is at proof of concept level, but works well enough for you to try it. 
+I'll smoothen some edges but will release the versions rather soon. Probably the biggest drawback 
+is that the JSON processor currently flattens the event, with structure being conveyed via 
+field names. That means if you have a JSON object "SUPER" containing a number of fields "field1" 
+to "fieldn", the current implementation will be a single level and the names are "SUPER.field1",... 
+I did this in order to have a quick solution and one that fits into the existing framework. 
+I'll work on creating real structure soon. It's not really hard, but I probably do some other PoCs first ;)
+
+I considered several approaches, among them moving over to libcollection (part of ding-libs) or 
+a pure JSON parser. The more I worked with the code, the more it turned out that libee already has 
+a lot of the necessary plumbing and could simply been enhanced/modified under the hood. 
+
+The big plus 
+in that approach is that is immediately plugs in into rsyslog and the other solutions that already 
+built on it. This even enables using the new functionality in the v6 context (I originally thought 
+I'd need to move on to rsyslog v7 for the name-value pair changes). 
+
+Now that I have written mmjsonparse, 
+this really seems to work out. No engine change was required, and I expect little need for change even
+for the final version. As such, I'll proceed in that direction. Actually, what I now use is kind of
+a hybrid approch: I use a lot of philosophy of libcollection, which showed me the right route to take. 
+Then, I use cJSON, which is a really nice JSON parser. 
+
+In the proof of concept, I use both 
+cJSON's object model and libee's own. I expect to merge them, actually tightly integrating cJSON.
+The reason is that CEE has evolved quite a bit in the mean time, and many complex constructs are 
+no longer required. As such, I can streamline the library as well, what not only reduces complexity 
+but speeds up the whole process.
+
+[[loggly]]
+== loggly
+
+source s_all {
+    file ("/proc/kmsg" log_prefix("kernel: "));
+    unix-stream ("/dev/log");
+    internal();
+    file("/mnt/log/apache2/error.log" follow_freq(1) flags(no-parse));
+};
+destination d_loggly {
+    tcp("logs.loggly.com" port(14791));
+};
+filter f_loggly { 
+    facility(authpriv); 
+};
+log {
+    source(s_all); filter(f_loggly); destination(d_loggly);
+};
+
+
+[[misc]]
+== How to write to a local socket?
+
+Friday, August 27th, 2010 +
+One member of the rsyslog comunity wrote:
+
+I’d like to forward via a local UNIX domain socket, instead. I think  I understand how to configure the ‘imuxsock’ module so my unprivileged instance reads from a non-standard socket location. But I can’t figure out how to tell my root instance to forward via a local domain socket.
+
+I didn’t figure out a completely RSyslog-native method, but another poster’s message pointed me toward ‘socat’ and ‘omprog’, which I have working, now. (It would be really nice if RSyslog could support this natively, though.)
+
+In case anyone else wants to set this up, maybe this will save you some effort. I’m also interested in any comments/criticisms about this method, I’d love to hear suggestions for better ways to make this work.
+
+Also, I rolled it all up into a Fedora/EL RPM spec, and I’ll send it on to anyone who’s interested–just ask.
+
+Setup steps:
+
+Install the ‘socat’ utility.
+Build RSyslog with the `–enable-omprog` ./configure flag.
+Create two separate RSyslog config files, one for the ‘root’ instance (writes to the socket) and a 
+second for the ‘unprivileged’ instance (reads from the socket).
+Rewrite your RSyslog init script to start two separate daemon instances, one using each config file
+(and separate PID files, too).
+Create the user ‘rsyslogd’ and the group ‘rsyslogd’.
+Set permissions/ownerships as needed to allow the user ‘rsyslogd’ to write to the file ‘/var/log/rsyslog.log’
+Create an executable script called '/usr/libexec/rsyslogd/omprog_socat' that contains the lines:
+
+    #!/bin/bash
+    /usr/bin/socat -t0 -T0 -lydaemon -d - UNIX-SENDTO:/dev/log
+    
+The ‘root’ instance config file should contain (modifying the output actions to taste):
+
+    $ModLoad imklog
+    $ModLoad omprog
+    $Template FwdViaUNIXSocket,"<%pri%>%syslogtag%%msg%"
+    $ActionOMProgBinary /usr/libexec/rsyslogd/omprog_socat
+    *.* :omprog:;FwdViaUNIXSocket
+    
+The ‘unprivileged’ instance config file should contain (modifying the output actions to taste):
+
+    $ModLoad imuxsock
+    $PrivDropToUser rsyslogd
+    $PrivDropToGroup rsyslogd
+    *.* /var/log/rsyslog.log
+
+The ‘root’ daemon can only accept input from the kernel message buffer, and nothing else 
+(especially not the syslog socket (/dev/log) or any network sockets). The unprivileged user
+will handle all of local and network log messages. To merge the kernel logs into the same 
+data channel as everything else, here’s what happens:
+
+[During the RSyslog daemons' startup]
+
+A) At startup, the ‘root’ daemon’s ‘imklog’ module starts listening for kernel messages 
+(via ‘/prog/kmsg’), and its ‘omprog’ module starts an instance of ‘socat’ (called via the 
+‘omprog_socat’ wrapper), establishing a persistent one-way IO connection where ‘omprog’ 
+pipes its output to the STDIN of ‘socat’.
+
+(Note that this same ‘socat’ instance remains running throughout the life of the RSyslog daemon, 
+handling everything ‘omprog’ outputs. Contrast this, efficiency-wise, against the built-in ‘subshell’ 
+module [the '^/path/to/program' action], which runs a separate instance instance of the child program 
+for each message.)
+
+B) At startup, the ‘unprivileged’ daemon’s ‘imuxsock’ module opens the system logging socket 
+(‘/dev/log’) and starts listening for incoming log messages from other programs.
+
+[During normal operation]1) The kernel buffer produces a message string on ‘/proc/kmsg’.2) 
+The ‘root’ RSyslog daemon reads the message from ‘/proc/kmsg’, assigning it the priority number 
+of ‘kern.info’ and the string tag ‘kernel’.3) The ‘root’ daemon prepends the priority number and 
+tag as a header to the message string, and then passes it to the ‘omprog’ module for output 
+(via persistent pipe) to the running ‘socat’ instance.4) The ‘socat’ instance receives the 
+header-framed message and sends it to the system logging socket (‘/dev/log’).
+
+5) The ‘unprivileged’ RSyslog daemon reads the message from ‘/dev/log’, assigning it the priority 
+and tag given in the message header, plus all of the other properties (timestamp, hostname, etc.) 
+a message object should have.
+
+6) The ‘unprivileged’ daemon formats the message and writes it to the output file.
+
+The only real difference I can see in the forwarded messages is that the ‘source’ property is set 
+to ‘imuxsock’ instead of ‘imklog’. I don’t think that’s a real problem, though, since the priority 
+and tag are still distinct.
+
+
+[[normalization]]
+== Normalization Sample
+
+[source]
+----
+# this is a config sample for log normalization, but can
+# be used as a more complex general sample.
+# It is based on a plain standard rsyslog.conf for Red Hat systems.
+# 
+# NOTE: Absolute path names for modules are used in this config
+# so that we can run a different rsyslog version alongside the
+# regular system-installed rsyslogd. Remove these path names
+# for production environment.
+
+#### MODULES ####
+
+# we do not run imuxsock as we don't want to mess with the main system logger
+#module(load="/home/rger/proj/rsyslog/plugins/imuxsock/.libs/imuxsock") # provides support for local system logging (e.g. via logger command)
+#module(load="imklog")   # provides kernel logging support (previously done by rklogd)
+module(load="/home/rger/proj/rsyslog/plugins/imudp/.libs/imudp")  # Provides UDP syslog reception
+module(load="/home/rger/proj/rsyslog/plugins/imtcp/.libs/imtcp")
+module(load="/home/rger/proj/rsyslog/plugins/mmjsonparse/.libs/mmjsonparse")
+module(load="/home/rger/proj/rsyslog/plugins/mmnormalize/.libs/mmnormalize")
+
+/* We assume to have all TCP logging (for simplicity)
+ * Note that we use different ports to point different sources
+ * to the right rule sets for normalization. While there are
+ * other methods (e.g. based on tag or source), using multiple
+ * ports is both the easiest as well as the fastest.
+ */
+input(type="imtcp" port="13514" Ruleset="WindowsRsyslog")
+input(type="imtcp" port="13515" Ruleset="LinuxPlainText")
+input(type="imtcp" port="13516" Ruleset="WindowsSnare")
+
+#debug:
+action(type="omfile" file="/home/rger/proj/rsyslog/logfile")
+
+/* This ruleset handles structured logging.
+ * It is the only one ever called for remote machines
+ * but executed in addition to the standard action for
+ * the local machine. The ultimate goal is to forward
+ * to some Vendor's analysis tool (which digests a
+ * structured log format, here we use Lumberjack).
+ */
+template(name="lumberjack" type="string" string="%$!all-json%\n")
+
+
+/* the rsyslog Windows Agent uses native Lumberjack format
+ * (better said: is configured to use it)
+ */
+ruleset(name="WindowsRsyslog") {
+    action(type="mmjsonparse")
+    if $parsesuccess == "OK" then {
+        if $!id == 4634 then
+            set $!usr!type = "logoff";
+        else if $!id == 4624 then
+            set $!usr!type = "logon";
+        set $!usr!rcvdfrom = $!source;
+        set $!usr!rcvdat = $timereported;
+        set $!usr!user = $!TargetDomainName & "\\" & $!TargetUserName;
+        call outwriter
+    }
+}
+
+/* This handles clumsy snare format. Note that "#011" are
+ * the escape sequences for tab chars used by snare.
+ */
+ruleset(name="WindowsSnare") {
+    set $!usr!type = field($rawmsg, "#011", 6);
+    if $!usr!type == 4634 then {
+        set $!usr!type = "logoff";
+        set $!doProces = 1;
+    } else if $!usr!type == 4624 then {
+        set $!usr!type = "logon";
+        set $!doProces = 1;
+    } else
+        set $!doProces = 0;
+    if $!doProces == 1 then {
+        set $!usr!rcvdfrom = field($rawmsg, 32, 4);
+        set $!usr!rcvdat = field($rawmsg, "#011", 5);
+        /* we need to fix up the snare date */
+        set $!usr!rcvdat = field($!usr!rcvdat, 32, 2) & " " &
+                   field($!usr!rcvdat, 32, 3) & " " &
+                   field($!usr!rcvdat, 32, 4);
+        set $!usr!user = field($rawmsg, "#011", 8);
+        call outwriter
+    }
+}
+
+/* plain Linux log messages (here: ssh and sudo) need to be
+ * parsed - we use mmnormalize for fast and efficient parsing
+ * here.
+ */
+ruleset(name="LinuxPlainText") {
+    action(type="mmnormalize"
+               rulebase="/home/rger/proj/rsyslog/linux.rb" userawmsg="on")
+    if $parsesuccess == "OK" and $!user != "" then {
+        if $!type == "opened" then
+            set $!usr!type = "logon";
+        else if $!type == "closed" then
+            set $!usr!type = "logoff";
+        set $!usr!rcvdfrom = $!rcvdfrom;
+        set $!usr!rcvdat = $!rcvdat;
+        set $!usr!user = $!user;
+        call outwriter
+    }
+}
+
+/* with CSV, we the reader must receive information on the
+ * field names via some other method (e.g. tool configuration,
+ * prepending of a header to the written CSV-file). All of
+ * this is highly dependant on the actual CSV dialect needed.
+ * Below, we cover the basics.
+ */
+template(name="csv" type="list") {
+    property(name="$!usr!rcvdat" format="csv")
+    constant(value=",")
+    property(name="$!usr!rcvdfrom" format="csv")
+    constant(value=",")
+    property(name="$!usr!user" format="csv")
+    constant(value=",")
+    property(name="$!usr!type" format="csv")
+    constant(value="\n")
+}
+
+/* template for Lumberjack-style logging. Note that the extra
+ * LF at the end is just for wrinting it to file - it MUST NOT
+ * be included for messages intended to be sent to a remote system.
+ * For the latter use case, the syslog header must also be prepended,
+ * something we have also not done for simplicity (as we write to files).
+ * Note that we use a JSON-shortcut: If a tree name is specified, JSON
+ * for its whole subtree is generated. Thus, we only need to specify the
+ * $!usr top node to get everytihing we need.
+ */
+template(name="cee" type="string" string="@cee: %$!usr%\n")
+
+
+/* this ruleset simulates forwarding to the final destination */
+ruleset(name="outwriter"){
+    action(type="omfile"
+               file="/home/rger/proj/rsyslog/logfile.csv" template="csv")
+    action(type="omfile"
+               file="/home/rger/proj/rsyslog/logfile.cee" template="cee")
+}
+
+
+/* below is just the usual "uninteresting" stuff...
+ * Note that this goes into the default rule set. So 
+ * local logging is handled "as usual" without the need
+ * for any extra effort.
+ */
+
+
+#### GLOBAL DIRECTIVES ####
+
+# Use default timestamp format
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+# Include all config files in /etc/rsyslog.d/
+# commented out not to interfere with the system rsyslogd
+# (just for this test configuration!)
+#$IncludeConfig /etc/rsyslog.d/*.conf
+
+
+#### RULES ####
+
+# Log all kernel messages to the console.
+# Logging much else clutters up the screen.
+#kern.*                                                 /dev/console
+
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+
+# Log all the mail messages in one place.
+mail.*                                                  /var/log/maillog
+
+
+# Log cron stuff
+cron.*                                                  /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                                 :omusrmsg:*
+
+# Save news errors of level crit and higher in a special file.
+uucp,news.crit                                          /var/log/spooler
+
+# Save boot messages also to boot.log
+local7.*                                                /var/log/boot.log
+----
+
+[[omelasticsearch]]
+== Elasticsearch Output Module
+
+This module provides native support for logging to <a href="http://www.elasticsearch.org/">Elasticsearch</a>.</p>
+
+**Action Parameters:**
+
+* **server**    
+Host name or IP address of the Elasticsearch server. Defaults to "localhost"</li>
+* **serverport**    
+HTTP port to connect to Elasticsearch. Defaults to 9200</li>
+* **searchIndex**    
+<a href="http://www.elasticsearch.org/guide/appendix/glossary.html#index">Elasticsearch index</a> to send your logs to. Defaults to "system"
+* **dynSearchIndex** on off    
+Whether the string provided for <strong>searchIndex</strong> should be taken as a <a href="http://www.rsyslog.com/doc/rsyslog_conf_templates.html">template</a>. Defaults to "off", which means the index name will be taken literally. Otherwise, it will look for a template with that name, and the resulting string will be the index name. For example, let's assume you define a template named "date-days" containing "%timereported:1:10:date-rfc3339%". Then, with dynSearchIndex="on", if you say searchIndex="date-days", each log will be sent to and index named after the first 10 characters of the timestamp, like "2013-03-22".
+
+* **searchType**
+<a href="http://www.elasticsearch.org/guide/appendix/glossary.html#type">Elasticsearch type</a> to send your index to. 
+Defaults to "events"
+
+* **dynSearchType** <on|**off**>
+Like <strong>dynSearchIndex</strong>, it allows you to specify a <a href="http://www.rsyslog.com/doc/rsyslog_conf_templates.html">template</a> for <strong>searchType</strong>, instead of a static string.
+
+* **asyncrepl** <on|**off>
+By default, an indexing operation returns after 
+all <a href="http://www.elasticsearch.org/guide/appendix/glossary.html#replica_shard">replica shards</a> 
+have indexed the document. With asyncrepl="on" it will return after it was indexed on 
+the <a href="http://www.elasticsearch.org/guide/appendix/glossary.html#primary_shard">primary shard</a> 
+only - thus trading some consistency for speed.
+* **timeout**
+How long Elasticsearch will wait for a primary shard to be available for indexing your log before sending 
+back an error. Defaults to "1m".
+* **template**
+This is the JSON document that will be indexed in Elasticsearch. 
+The resulting string needs to be a valid JSON, otherwise Elasticsearch will return an error. Defaults to:
+
+        <pre>$template JSONDefault, "{\"message\":\"%msg:::json%\",\"fromhost\":\"%HOSTNAME:::json%\",\"facility\":\"%syslogfacility-text%\",\"priority\":\"%syslogpriority-text%\",\"timereported\":\"%timereported:::date-rfc3339%\",\"timegenerated\":\"%timegenerated:::date-rfc3339%\"}"
+</pre>
+
+<p>Which will produce this sort of documents (pretty-printed here for readability):</p>
+
+
+<pre>{
+&nbsp;&nbsp;&nbsp; "message": " this is a test message",
+&nbsp;&nbsp;&nbsp; "fromhost": "test-host",
+&nbsp;&nbsp;&nbsp; "facility": "user",
+&nbsp;&nbsp;&nbsp; "priority": "info",
+&nbsp;&nbsp;&nbsp; "timereported": "2013-03-12T18:05:01.344864+02:00",
+&nbsp;&nbsp;&nbsp; "timegenerated": "2013-03-12T18:05:01.344864+02:00"
+}</pre>
+
+* **bulkmode** <on|**off**>
+The default "off" setting means logs are shipped one by one. Each in its own HTTP request, using the <a href="http://www.elasticsearch.org/guide/reference/api/index_.html">Index API</a>. Set it to "on" and it will use Elasticsearch's <a href="http://www.elasticsearch.org/guide/reference/api/bulk.html">Bulk API</a> to send multiple logs in the same request. The maximum number of logs sent in a single bulk request depends on your queue settings - usually limited by the <a href="http://www.rsyslog.com/doc/node35.html">dequeue batch size</a>. More information about queues can be found <a href="http://www.rsyslog.com/doc/node32.html">here</a>.</li>
+            <li>
+                <strong>parent</strong><br>
+                Specifying a string here will index your logs with that string the parent ID of those logs. Please note that you need to define the <a href="http://www.elasticsearch.org/guide/reference/mapping/parent-field.html">parent field</a> in your <a href="http://www.elasticsearch.org/guide/reference/mapping/">mapping</a> for that to work. By default, logs are indexed without a parent.</li>
+            <li>
+                <strong>dynParent </strong>&lt;on/<strong>off</strong>&gt;<br>
+                Using the same parent for all the logs sent in the same action is quite unlikely. So you'd probably want to turn this "on" and specify a <a href="http://www.rsyslog.com/doc/rsyslog_conf_templates.html">template</a> that will provide meaningful parent IDs for your logs.</li>
+            <li>
+                <strong>uid</strong><br>
+                If you have basic HTTP authentication deployed (eg: through the <a href="https://github.com/Asquera/elasticsearch-http-basic">elasticsearch-basic plugin</a>), you can specify your user-name here.</li>
+            <li>
+                <strong>pwd</strong><br>
+                Password for basic authentication.</li>
+        </ul>
+        <p>
+            <b>Samples:</b></p>
+        <p>
+            The following sample does the following:</p>
+        <ul>
+            <li>
+                loads the omelasticsearch module</li>
+            <li>
+                outputs all logs to Elasticsearch using the default settings</li>
+        </ul>
+        <pre>module(load="omelasticsearch")
+*.*     action(type="omelasticsearch")</pre>
+        <p>
+            The following sample does the following:</p>
+        <ul>
+            <li>
+                loads the omelasticsearch module</li>
+            <li>
+                defines a template that will make the JSON contain the following properties (more info about what properties you can use <a href="http://www.rsyslog.com/doc/property_replacer.html">here</a>):
+                <ul>
+                    <li>
+                        RFC-3339 timestamp when the event was generated</li>
+                    <li>
+                        the message part of the event</li>
+                    <li>
+                        hostname of the system that generated the message</li>
+                    <li>
+                        severity of the event, as a string</li>
+                    <li>
+                        facility, as a string</li>
+                    <li>
+                        the tag of the event</li>
+                </ul>
+            </li>
+            <li>
+                outputs to Elasticsearch with the following settings
+                <ul>
+                    <li>
+                        host name of the server is myserver.local</li>
+                    <li>
+                        port is 9200</li>
+                    <li>
+                        JSON docs will look as defined in the template above</li>
+                    <li>
+                        index will be "test-index"</li>
+                    <li>
+                        type will be "test-type"</li>
+                    <li>
+                        activate bulk mode. For that to work effectively, we use an in-memory queue that can hold up to 5000 events. The maximum bulk size will be 300</li>
+                    <li>
+                        retry indefinitely if the HTTP request failed (eg: if the target server is down)</li>
+                </ul>
+            </li>
+        </ul>
+        <pre>module(load="omelasticsearch")
+template(name="testTemplate"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; type="list"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; option.json="on") {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="{")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\"timestamp\":\"")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; property(name="timereported" dateFormat="rfc3339")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\",\"message\":\"")&nbsp;&nbsp;&nbsp;&nbsp; property(name="msg")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\",\"host\":\"")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; property(name="hostname")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\",\"severity\":\"")&nbsp;&nbsp;&nbsp; property(name="syslogseverity-text")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\",\"facility\":\"")&nbsp;&nbsp;&nbsp; property(name="syslogfacility-text")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\",\"syslogtag\":\"")&nbsp;&nbsp; property(name="syslogtag")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; constant(value="\"}")
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+*.* action(type="omelasticsearch"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; server="myserver.local"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; serverport="9200"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; template="testTemplate"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; searchIndex="test-index"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; searchType="test-type"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bulkmode="on"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; queue.type="linkedlist"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; queue.size="5000"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; queue.dequeuebatchsize="300"
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; action.resumeretrycount="-1")</pre>
+
+
+
+[[omrelp]]
+== RELP Output Module (omrelp)
+
+#### Description ####
+
+This module supports sending syslog messages over the reliable RELP protocol.    
+For RELP's advantages over plain tcp syslog, please see the documentation for imrelp (the server counterpart). 
+
+#### Setup ####
+Please note that librelp is required for imrelp (it provides the core relp protocol implementation).
+
+#### Action Configuration Parameters ####
+
+* **target** (mandatory)    
+The target server to connect to.
+
+* **template** (not mandatory, default "RSYSLOG_ForwardFormat")    
+Defines the template to be used for the output.
+
+* **timeout** (not mandatory, default 90)    
+Timeout for relp sessions. If set too low, valid sessions may be considered dead and tried to recover.
+
+* **windowSize** (not mandatory, default 0)    
+This is an expert parameter. It permits to override the RELP window size being used by the client. 
+Changing the window size has both an effect on performance as well as potential message duplication 
+in failure case. A larger window size means more performance, but also potentially more duplicated 
+messages - and vice versa. The default 0 means that librelp's default window size is being used, 
+which is considered a compromise between goals reached.    
+For your information: at the time of this 
+writing, the librelp default window size is 128 messages, but this may change at any time.    
+Note that there is no equivalent server parameter, as the client proposes and manages the window 
+size in RELP protocol.
+
+* **tls** (not mandatory, values "on","off", default "off")    
+If set to "on", the RELP connection will be encrypted by TLS, so that the data is protected 
+against observers. Please note that both the client and the server must have set TLS to 
+either "on" or "off". Other combinations lead to unpredictable results.
+
+* **tls.compression** (not mandatory, values "on","off", default "off")    
+The controls if the TLS stream should be compressed (zipped). While this increases CPU use, 
+the network bandwidth should be reduced. Note that typical text-based log records usually 
+compress rather well.
+
+* **tls.permittedPeer** peer    
+Places access restrictions on this forwarder. Only peers which have been listed in this parameter 
+may be connected to. This guards against rouge servers and man-in-the-middle attacks. The 
+validation bases on the certficate the remote peer presents.
+The peer parameter lists permitted certificate fingerprints. Note that it is an array parameter, 
+so either a single or multiple fingerprints can be listed. When a non-permitted peer is connected to, 
+the refusal is logged together with it's fingerprint. So if the administrator knows this was a 
+valid request, he can simple add the fingerprint by copy and paste from the logfile to rsyslog.conf. 
+It must be noted, though, that this situation should usually not happen after initial client setup 
+and administrators should be alert in this case.    
+Note that usually a single remote peer should be all that is ever needed. Support for multiple 
+peers is primarily included in support of load balancing scenarios. If the connection goes to a 
+specific server, only one specific certificate is ever expected (just like when connecting to a 
+specific ssh server).    
+To specify multiple fingerprints, just enclose them in braces like this:    
+`tls.permittedPeer=["SHA1:...1", "SHA1:....2"]`     
+To specify just a single peer, you can either specify the string directly or enclose it in braces.
+
+* **tls.authMode** mode    
+Sets the mode used for mutual authentication. Supported values are either "fingerprint" or "name".   
+      
+    Fingerprint mode basically is what SSH does. It does not require a full PKI to be present, instead 
+self-signed certs can be used on all peers. Even if a CA certificate is given, the validity of the 
+peer cert is NOT verified against it. Only the certificate fingerprint counts.    
+    
+    In "name" mode, certificate validation happens. Here, the matching is done against the certificate's 
+subjectAltName and, as a fallback, the subject common name. If the certificate contains multiple names, 
+a match on any one of these names is considered good and permits the peer to talk to rsyslog.
+
+* **tls.prioritystring** (not mandatory, string)    
+This parameter permits to specify the so-called "priority string" to GnuTLS. This string gives 
+complete control over all crypto parameters, including compression setting. For this reason, 
+when the prioritystring is specified, the "tls.compression" parameter has no effect and is ignored.     
+Full information about how to construct a priority string can be found in the GnuTLS manual. 
+At the time of this writing, this information was contained in section 6.10 of the GnuTLS manual.    
+Note: this is an expert parameter. Do not use if you do not exactly know what you are doing.
+
+#### Sample ####
+
+The following sample sends all messages to the central server "centralserv" at port 2514 (note that that 
+server must run imrelp on port 2514).
+
+    module(load="omrelp")
+    action(type="omrelp" target="centralserv" port="2514")
+
+
+
+
+
+
+
+
+
+
+
+

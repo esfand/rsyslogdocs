@@ -1,20 +1,18 @@
-
 [[objectmodel]]
 == rsyslog object model and message flow
 
 http://blog.gerhards.net/2007/08/rsyslog-v3-object-model-and-message.html[Article Source]
 
-To understand the Rsyslog's config file formats, one needs to know more about its 
-object model.  
+To understand the Rsyslog's config file formats, one needs to know more 
+about its object model.  
 
-Besides the actual object model, it will help 
-a great deal in understanding what needs to be in the config file Thus it's 
-currently a bit biased towards configurable objects and the internal objects are almost 
-completely missing.
+Besides the actual object model, it will help a great deal in understanding 
+what needs to be in the config file Thus it's currently a bit biased towards
+configurable objects and the internal objects are almost completely missing.
 
 
 [[Rsyslog_Object]]
-== rsyslog Objects
+=== rsyslog Objects
 
 Rsyslog uses objects, even though it is written in C. This can quite well be 
 done. Only at some points (like inheritance) we need to fiddle a bit with the 
@@ -23,7 +21,7 @@ low, so it should be more like traditional C than C++.
 
 
 [[|Rsyslog_object_Module]]
-=== Module
+==== Module
 
 The module object is the base class for anything that even remotely looks 
 like a loadable object.  In the long term, that might eventually be almost 
@@ -35,7 +33,7 @@ It does not by itself provide any module-specific actions.
 
 
 [[|Rsyslog_object_Input]]
-=== Input
+==== Input
 
 An input gatheres messages (events) from external sources. Current typical 
 examples are UDP or TCP based syslog. However, there is no architectural limit, 
@@ -46,27 +44,23 @@ to be thought out).
 
 
 [[|Rsyslog_object_Output]]
-=== Output
-
+==== Output
 An output module receives strings from the engine and writes them to some 
 ultimate destination. Popluar examples are files, databases or remote syslog 
 servers.
 
-
-=== Action
-
+[[|Rsyslog_object_Action]]
+==== Action
 The action object is the "engine wrapper" around an output module. It 
 provides numerous servies to the output. Most importantly, it provides the core 
 plumbing behind restarting and queueing actions.
 
-
-=== Ruleset
-
+[[|Rsyslog_object_Ruleset]]
+==== Ruleset
 http://www.rsyslog.com/doc/multi_ruleset.html[See this article.]
 
-
-=== Function
-
+[[|Rsyslog_object_Function]]
+==== Function
 A function object (and lodable module) provides extensibility for internal 
 processing.  Version 3.0 will support programming-like functions, which replace 
 and extend the property replacer options.  For example, we may want to extract 
@@ -79,7 +73,7 @@ everywhere.  Examples are filters, output format (templates), and file name
 generation.
 
 
-== Message Flow
+=== Message Flow
 
 This is a brief description of how a message (an event) flows inside rsyslog.
 
@@ -100,8 +94,8 @@ until either all rules are processed or a discard action is encountered.
 If there are multiple ruleset objects bound to a single input module, they are 
 also executed in the configured order. The normal discard action will discard a 
 message for one ruleset, but an additional rule set will  continue to 
-process the msg object.  A special case of the discard action can be envisioned, 
-which discards a msg object for all bound rule sets. 
+process the msg object.  A special case of the discard action can be
+envisioned, which discards a msg object for all bound rule sets. 
 
 Each rule object contains 
 filter objects and action objects.  First, all filter objects are executed. That 
@@ -111,8 +105,7 @@ that could be easily done by crafting a specific filter expression, so we do not
 encourage an additional set of complexity be allowing additional boolean 
 operators when multiple filter objects are used inside a single rule). 
 
-If the 
-outcome of the overall filter object evaluation results in true ("to be 
+If the outcome of the overall filter object evaluation results in true ("to be 
 processed"), all action objects are called.  They are called in the order of their 
 appearance in the config file (no exceptions here).  The msg object is used to 
 generate the string required by the action (note that the msg object itself is 
@@ -127,15 +120,14 @@ be carried out.  All of this is done by the action object itself.
 Finally, the  strings are passed from the action object to the actual output 
 object (a plug-in). 
 
-The output objct takes the strings and performs whatever processing needs to be 
-done. 
+The output objct takes the strings and performs whatever processing needs to
+be done. 
 
 After all actions, rules, and rulesets have been processed (or when a 
 discard action occurs), the msg object is destroyed. Please note that even then 
-a copy may be held in memory, because that might be needed for duplicate message 
-reduction and similiar features. Thus, msg is reference-counted and actually 
-only destroyed when the count reaches zero.
-
+a copy may be held in memory, because that might be needed for duplicate
+ message reduction and similiar features. Thus, msg is reference-counted and
+actually only destroyed when the count reaches zero.
 
 Please note that there are a number of utility objects involved.  For clarify, 
 these have been omitted.  Also, all function calls return a meaningful return 
@@ -145,7 +137,7 @@ to do (e.g. when an action fails - if we'd abort processing the msg object, we'd
 do much more harm).
 
 
-== Data flow
+=== Data flow
 
 This is a brief and not so accurate picture of the data flow.  It focuses
 on the role of the plug-ins.
@@ -154,7 +146,7 @@ input module(parser) -> rule engine (custom functions) -> action (with
 aggregated output module)
 
 
-== Known Open Issues with Plug-ins
+=== Known Open Issues with Plug-ins
 
 Probably the number one question is how message-modifying plug-ins can be 
 created.  I think about things like implementing syslog-sign or TLS security.  It 

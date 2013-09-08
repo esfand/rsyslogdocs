@@ -106,16 +106,17 @@ encourage an additional set of complexity be allowing additional boolean
 operators when multiple filter objects are used inside a single rule). 
 
 If the outcome of the overall filter object evaluation results in true ("to be 
-processed"), all action objects are called.  They are called in the order of their 
-appearance in the config file (no exceptions here).  The msg object is used to 
-generate the string required by the action (note that the msg object itself is 
-NOT passed to the action, this is a security and encapsulation boundary). 
+processed"), all action objects are called.  They are called in the order of 
+their appearance in the config file (no exceptions here).  The msg object is 
+used to generate the string required by the action (note that the msg object 
+itself is NOT passed to the action, this is a security and encapsulation 
+boundary). 
 
-For  string generation, function plug-ins may possibly be called (this is also the 
-case during filter procesing).  The resulting strings are  passed to the 
+For  string generation, function plug-ins may possibly be called (this is also 
+the case during filter procesing).  The resulting strings are  passed to the 
 execute method of the action object.  That object decides if queing, 
-rate-limiting, or other functionality generically available to all actions is the 
-be carried out.  All of this is done by the action object itself. 
+rate-limiting, or other functionality generically available to all actions is 
+to be carried out.  All of this is done by the action object itself. 
 
 Finally, the  strings are passed from the action object to the actual output 
 object (a plug-in). 
@@ -149,10 +150,10 @@ aggregated output module)
 === Known Open Issues with Plug-ins
 
 Probably the number one question is how message-modifying plug-ins can be 
-created.  I think about things like implementing syslog-sign or TLS security.  It 
-is my current, unverified, view that we must have something like "filter-plug-ins" 
-which can be placed inside the message data flow to modify the message text and/or 
-the msg object.
+created.  I think about things like implementing syslog-sign or TLS security.  
+It is my current, unverified, view that we must have something like 
+"filter-plug-ins" which can be placed inside the message data flow to modify the
+message text and/or the msg object.
 
 
 
@@ -160,25 +161,28 @@ the msg object.
 
 http://www.rsyslog.com/doc/queues.html[Article Source]
 
-Rsyslog uses queues whenever two activities need to be loosely coupled.  With a queue, 
-one part of the system "produces" syslog messages while another part "consumes" the messages. 
+Rsyslog uses queues whenever two activities need to be loosely coupled.  With a
+queue, one part of the system "produces" syslog messages while another part 
+"consumes" the messages. 
 
-The most prominent example is the main message queue. Whenever rsyslog receives a
- message (e.g. locally, via UDP, TCP or in whatever else way), it places these messages 
-into the main message queue.  Later, it is dequeued by the rule processor, which then 
-evaluates which actions are to be carried out. In front of each action, there is also a 
-queue, which potentially de-couples the filter processing from the actual action 
-(e.g. writing to file, database or forwarding to another host).
+The most prominent example is the main message queue. Whenever rsyslog receives 
+a message (e.g. locally, via UDP, TCP or in whatever else way), it places these
+messages into the main message queue.  Later, it is dequeued by the rule 
+processor, which then evaluates which actions are to be carried out. In front of
+each action, there is also a queue, which potentially de-couples the filter 
+processing from the actual action (e.g. writing to file, database or forwarding 
+to another host).
 
 Currently, queues are used for the main message queue and for the actions.
 
-There is a single main message queue inside rsyslog.  Each input module delivers messages to it. 
-The main message queue worker filters messages based on rules specified in rsyslog.conf and 
-dispatches them to the individual action queues.  Once a message is in an action queue, it is 
-deleted from the main message queue.
+There is a single main message queue inside rsyslog.  Each input module delivers
+messages to it.  The main message queue worker filters messages based on rules 
+specified in rsyslog.conf and dispatches them to the individual action queues.  
+Once a message is in an action queue, it is deleted from the main message queue.
 
-There are multiple action queues, one for each configured action.  Action queues are fully 
-configurable and thus can be changed to whatever is best for the given use case.
+There are multiple action queues, one for each configured action.  Action queues
+are fully configurable and thus can be changed to whatever is best for the given
+use case.
 
 Action queue parameters can not be  modified once the action has been specified.  
 For example, to tell the main message queue to save its content on shutdown, 
@@ -215,22 +219,26 @@ them to the relevant output queues (actions).
 
 === Turning Lanes and Rsyslog Queues - an Analogy
 
-If there is a single object absolutely vital to understanding the way rsyslog works, 
-this object is queues.  Queues offer a variety of services, including support for multithreading. 
-While there is elaborate in-depth documentation on the ins and outs of rsyslog queues, 
-some of the concepts are hard to grasp even for experienced people.  I think this is 
-because rsyslog uses a very high layer of abstraction which includes things that look 
-quite unnatural, like queues that do not actually queue...
+If there is a single object absolutely vital to understanding the way rsyslog 
+works, this object is queues.  Queues offer a variety of services, including 
+support for multithreading.
+
+While there is elaborate in-depth documentation on the ins and outs of rsyslog 
+queues, some of the concepts are hard to grasp even for experienced people.  
+I think this is because rsyslog uses a very high layer of abstraction which 
+includes things that look quite unnatural, like queues that do not actually 
+queue...
 
 The graphic below describes the data flow inside rsyslog:
 
 image::http://www.rsyslog.com/doc/dataflow.png[rsyslog data flow]
 
-For our needs, the important fact to know is that messages enter rsyslog on "the left side" 
-(for example, via UDP), are being preprocessed, put into the so-called main queue, 
-taken off that queue, be filtered and be placed into one or several action queues 
-(depending on filter results).  They leave rsyslog on "the right side" where output 
-modules (like the file or database writer) consume them.
+For our needs, the important fact to know is that messages enter rsyslog on 
+"the left side" (for example, via UDP), are being preprocessed, put into the 
+so-called main queue, taken off that queue, be filtered and be placed into one 
+or several action queues (depending on filter results).  They leave rsyslog on 
+"the right side" where output modules (like the file or database writer) consume 
+them.
 
 So there are always two stages where a message (conceptually) is queued - first in the 
 main queue and later on in n action specific queues (with n being the number of actions 
@@ -239,20 +247,23 @@ that the message in question needs to be processed by, what is being decided by 
 (with the exception of messages being discarded by the queue itself, but for the purpose 
 of this document, we will ignore that possibility).
 
-Also, it is vitally important to understand that each action has a queue sitting in front of it. 
-If you have dug into the details of rsyslog configuration, you have probably seen that a 
-queue mode can be set for each action. And the default queue mode is the so-called "direct mode",
-in which "the queue does not actually enqueue data". That sounds silly, but is not. 
-It is an important abstraction that helps keep the code clean.
+Also, it is vitally important to understand that each action has a queue sitting
+in front of it.  If you have dug into the details of rsyslog configuration, you 
+have probably seen that a queue mode can be set for each action. And the default 
+queue mode is the so-called "direct mode", in which "the queue does not actually 
+enqueue data". That sounds silly, but is not. It is an important abstraction 
+that helps keep the code clean.
 
-To understand this, we first need to look at who is the active component.  In our data flow, 
-the active part always sits to the left of the object.  For example, the "Preprocessor" is 
-being called by the inputs and calls itself into the main message queue.  That is, the queue 
-receiver is called, it is passive.  One might think that the "Parser & Filter Engine" is an 
-active component that actively pulls messages from the queue. This is wrong! Actually, it is 
-the queue that has a pool of worker threads, and these workers pull data from the queue and 
-then call the passively waiting Parser and Filter Engine with those messages. 
-So the main message queue is the active part, the Parser and Filter Engine are passive.
+To understand this, we first need to look at who is the active component.  
+In our data flow, the active part always sits to the left of the object.  For 
+example, the "Preprocessor" is being called by the inputs and calls itself into 
+the main message queue.  That is, the queue receiver is called, it is passive.  
+One might think that the "Parser & Filter Engine" is an active component that 
+actively pulls messages from the queue. This is wrong! Actually, it is the queue 
+that has a pool of worker threads, and these workers pull data from the queue 
+and then call the passively waiting Parser and Filter Engine with those 
+messages.  So the main message queue is the active part, the Parser and Filter 
+Engine are passive.
 
 
 == Log Message Normalization Module (mmnormalize)
@@ -310,21 +321,41 @@ Default: off
 
 === Description
 
-Rulesets may use their own "main" message queue for message submission. Specifying this directive, inside a ruleset definition, turns this on. This is both a performance enhancement and also permits different rulesets (and thus different inputs within the same rsyslogd instance) to use different types of main message queues.
+Rulesets may use their own "main" message queue for message submission. 
+Specifying this directive, inside a ruleset definition, turns this on. This is 
+both a performance enhancement and also permits different rulesets (and thus 
+different inputs within the same rsyslogd instance) to use different types of 
+main message queues.
 
-The ruleset queue is created with the parameters that are specified for the main message queue at the time the directive is given. If different queue configurations are desired, different main message queue directives must be used in front of the $RulesetCreateMainQueue directive. Note that this directive may only be given once per ruleset. If multiple statements are specified, only the first is used and for the others error messages are emitted.
+The ruleset queue is created with the parameters that are specified for the main
+message queue at the time the directive is given. If different queue 
+configurations are desired, different main message queue directives must be used
+in front of the $RulesetCreateMainQueue directive. Note that this directive may 
+only be given once per ruleset. If multiple statements are specified, only the 
+first is used and for the others error messages are emitted.
 
-Note that the final set of ruleset configuration directives specifies the parameters for the default main message queue.
+Note that the final set of ruleset configuration directives specifies the 
+parameters for the default main message queue.
 
-To learn more about this feature, please be sure to read about multi-ruleset support in rsyslog.
+To learn more about this feature, please be sure to read about multi-ruleset 
+support in rsyslog.
 
 === Caveats
 
-The configuration statement "$RulesetCreateMainQueue off" has no effect at all. The capability to specify this is an artifact of the current (ugly!) configuration language.
+The configuration statement "$RulesetCreateMainQueue off" has no effect at all. 
+The capability to specify this is an artifact of the current (ugly!) 
+configuration language.
 
 === Example
 
-This example sets up a tcp server with three listeners. Each of these three listener is bound to a specific ruleset. As a performance optimization, the rulesets all receive their own private queue. The result is that received messages can be independently processed. With only a single main message queue, we would have some lock contention between the messages. This does not happen here. Note that in this example, we use different processing. Of course, all messages could also have been processed in the same way ($IncludeConfig may be useful in that case!).
+This example sets up a tcp server with three listeners. Each of these three 
+listener is bound to a specific ruleset. As a performance optimization, the 
+rulesets all receive their own private queue. The result is that received 
+messages can be independently processed. With only a single main message queue, 
+we would have some lock contention between the messages. This does not happen 
+here. Note that in this example, we use different processing. Of course, all 
+messages could also have been processed in the same way ($IncludeConfig may be
+useful in that case!).
 
 [source]
 ----
@@ -394,7 +425,10 @@ Default: rsyslog.rfc5424 followed by rsyslog.rfc3164
 
 === Description
 
-This directive permits to specify which message parsers should be used for the ruleset in question. It no ruleset is explicitely specified, the default ruleset is used. Message parsers are contained in (loadable) parser modules with the most common cases (RFC3164 and RFC5424) being build-in into rsyslogd.
+This directive permits to specify which message parsers should be used for the 
+ruleset in question. It no ruleset is explicitely specified, the default ruleset
+is used. Message parsers are contained in (loadable) parser modules with the 
+most common cases (RFC3164 and RFC5424) being build-in into rsyslogd.
 
 When this directive is specified the first time for a ruleset, it will not only add the parser to the ruleset's parser chain, it will also wipe out the default parser chain. So if you need to have them in addition to the custom parser, you need to specify those as well.
 
@@ -460,9 +494,12 @@ $UDPServerRun 10514
 $InputUDPServerBindRuleset maldev2
 $UDPServerRun 10515
 ----
-For an example of how multiple parser can be chained (and an actual use case), please see the example section on the pmlastmsg parser module.
+For an example of how multiple parser can be chained (and an actual use case), 
+please see the example section on the pmlastmsg parser module.
 
-Note the positions of the directives. With the current config language, sequence of statements is very important. This is ugly, but unfortunately the way it currently works.
+Note the positions of the directives. With the current config language, 
+sequence of statements is very important. This is ugly, but unfortunately the 
+way it currently works.
 
 
 
@@ -474,15 +511,15 @@ Note the positions of the directives. With the current config language, sequence
 [[actionlegaccy]]
 == Action Statement ==
         
-Action object describe what is to be done with a message. 
-They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+Action object describe what is to be done with a message.  They are implemented 
+via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
 
 The action object has different parameters:
 * those that apply to all actions and are action specific.     
     These are documented below.
 * parameters for the action queue.     
-    While they also apply to all parameters, they are queue-specific, not action-specific 
-    (they are the same that are used in rulesets, for example).
+    While they also apply to all parameters, they are queue-specific, 
+    not action-specific (e.g. they are the same that are used in rulesets).
 * action-specific parameters.     
     These are specific to a certain type of actions. 
     They are documented by the output module in question.

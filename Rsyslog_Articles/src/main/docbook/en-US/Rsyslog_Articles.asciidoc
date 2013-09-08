@@ -59,41 +59,45 @@ Rsyslog is a component library for capturing and processing log messages
 ([acronym]#JSF#).  The framework extends the Ajax capabilities of JSF with 
 advanced features for the development of enterprise web applications.
 
-RichFaces leverages several parts of the JSF 2 framework including the lifecycle, 
-validation, conversion facilities, and management of static and dynamic resources. 
-The RichFaces framework includes components with built-in Ajax support and a 
-customizable look-and-feel that can be incorporated into JSF applications.
+RichFaces leverages several parts of the JSF 2 framework including the 
+lifecycle, validation, conversion facilities, and management of static and 
+dynamic resources.  The RichFaces framework includes components with built-in 
+Ajax support and a customizable look-and-feel that can be incorporated into 
+JSF applications.
 
-RichFaces provides a number of advantages for enterprise web application development:
+RichFaces provides a number of advantages for enterprise web application 
+development:
 
 * Create complex application views using out-of-the-box components. 
-The RichFaces user interface ([acronym]#UI#) library contains components for adding 
-rich interactive features to JSF applications. It extends the RichFaces framework to 
-include a large set of Ajax-enabled components that come with extensive skinning support. 
-Additionally, the RichFaces framework is designed to be used seamlessly with other 
-3d-party libraries on the same page, so you have more options for developing applications.
+The RichFaces user interface ([acronym]#UI#) library contains components for 
+adding rich interactive features to JSF applications. It extends the RichFaces 
+framework to include a large set of Ajax-enabled components that come with 
+extensive skinning support.  Additionally, the RichFaces framework is designed 
+to be used seamlessly with other 3d-party libraries on the same page, so you 
+have more options for developing applications.
 
 * Write your own customized rich components with built-in Ajax support. 
-The Component Development Kit ([acronym]#CDK#), used for the RichFaces UI library creation, 
-includes a code-generation facility and a templating facility 
+The Component Development Kit ([acronym]#CDK#), used for the RichFaces UI 
+library creation, includes a code-generation facility and a templating facility 
 using [acronym]#XHTML# (extended hyper-text markup language) syntax.
 
-* Generate binary resources on the fly. Extensions to JSF 2 resource-handling facilities 
-can generate images, sounds, [application]#Microsoft Excel# spreadsheets, 
-and more during run-time.
+* Generate binary resources on the fly. Extensions to JSF 2 resource-handling 
+facilities can generate images, sounds, [application]#Microsoft Excel# 
+spreadsheets, and more during run-time.
 
-* Create a modern rich user-interface with skinning technology. RichFaces provides a 
-skinning feature that allows you to define and manage different color schemes and other 
-parameters of the look and feel. It is possible to access the skin parameters from page 
-code during run-time. RichFaces comes packaged with a number of skins to get you started, 
-but you can also easily create your own customized skins too.
+* Create a modern rich user-interface with skinning technology. RichFaces 
+provides a skinning feature that allows you to define and manage different color 
+schemes and other parameters of the look and feel. It is possible to access the 
+skin parameters from page code during run-time. RichFaces comes packaged with a 
+number of skins to get you started, but you can also easily create your own 
+customized skins too.
 
 [[chap-Rsyslog_Guide-Getting_started_with_RichFaces]]
 
 == Getting started with RichFaces
 
-Follow the instructions in this chapter to configure the RichFaces framework and get started 
-with application development.
+Follow the instructions in this chapter to configure the RichFaces framework and 
+get started with application development.
 
 If you have existing projects that use a previous version of RichFaces, 
 refer to the *_RichFaces Migration Guide_* .
@@ -102,11 +106,16 @@ refer to the *_RichFaces Migration Guide_* .
 
 === Technical Requirements
 
-The minimum technical requirements needed to get started with RichFaces are outlined below.
+The minimum technical requirements needed to get started with RichFaces are 
+outlined below.
 
 * Java Development Kit ([acronym]#JDK#) 6 or higher
-* An application server compliant with Java Platform, Enterprise Edition 6 ([acronym]#JEE6#), such as [productname]#JBoss EAP 6#, [productname]#WildFly# or a servlet container coupled with a JSF implementation, such as Apache Tomcat + Mojarra 2.x.
-* A compliant web browser, such as [productname]#Firefox 17#, [productname]#Chrome 23#, or [productname]#Internet Explorer 9#
+* An application server compliant with Java Platform, Enterprise Edition 6 
+([acronym]#JEE6#), such as [productname]#JBoss EAP 6#, [productname]#WildFly# or 
+a servlet container coupled with a JSF implementation, such as 
+Apache Tomcat + Mojarra 2.x.
+* A compliant web browser, such as [productname]#Firefox 17#, 
+[productname]#Chrome 23#, or [productname]#Internet Explorer 9#
 
 
 [[sect-Rsyslog_Guide-Getting_started_with_RichFaces-Technical_Requirements-Project_libraries_and_dependencies]]
@@ -984,33 +993,46 @@ The +customClass+ style is added to the CSS, and is applied to the component whe
 
 . *Create the skin file*
 +
-The name of the skin file should follow the format [filename]+$$new_skin_name.skin.properties$$+ and is placed in either the [filename]+META-INF/skins/+ directory or the classpath directory of your project.
+The name of the skin file should follow the format 
+[filename]+$$new_skin_name.skin.properties$$+ and is placed in either the 
+[filename]+META-INF/skins/+ directory or the classpath directory of your project.
 
 . *Define the skin constants*
 +
 * *Define all the skin constants*
 +
-Add skin parameter constants and values to the file. All the skin parameters listed in <<tabl-Rsyslog_Guide-Skin_parameter_tables_in_RichFaces-Parameter_settings_for_the_blueSky_skin>> should be included in the skin file, with settings relevant to your new skin.
+Add skin parameter constants and values to the file. All the skin parameters 
+listed in <<tabl-Rsyslog_Guide-Skin_parameter_tables_in_RichFaces-Parameter_settings_for_the_blueSky_skin>> 
+should be included in the skin file, with settings relevant to your new skin.
 +
 [[exam-Rsyslog_Guide-Skinning_and_theming-blueSky.skin.properties_file]]
 .[filename]+blueSky.skin.properties+ file
 ====
 
-Open the [filename]+blueSky.skin.properties+ file from the [filename]+/META-INF/skins+ directory in the richfaces-impl-_++version++_.jarpackage. The file lists all the skin parameter constants shown in <<tabl-Rsyslog_Guide-Skin_parameter_tables_in_RichFaces-Parameter_settings_for_the_blueSky_skin>>.
+Open the [filename]+blueSky.skin.properties+ file from the 
+[filename]+/META-INF/skins+ directory in the 
+richfaces-impl-_++version++_.jarpackage. The file lists all the skin parameter 
+constants shown in 
+<<tabl-Rsyslog_Guide-Skin_parameter_tables_in_RichFaces-Parameter_settings_for_the_blueSky_skin>>.
 
-You can use the [filename]+blueSky.skin.properties+ file as a template for your new skin.
+You can use the [filename]+blueSky.skin.properties+ file as a template for your 
+new skin.
 
 ====
 +
 * *Extend a base skin*
 +
-Instead of redefining an entire new skin, your skin can use an existing skin as a base on which to build new parameters. Specify a base skin by using the [varname]+baseSkin+ parameter in the skin file, as shown in <<exam-Rsyslog_Guide-Skinning_and_theming-Using_a_base_skin>>.
+Instead of redefining an entire new skin, your skin can use an existing skin as 
+a base on which to build new parameters. Specify a base skin by using the 
+[varname]+baseSkin+ parameter in the skin file, as shown in 
+<<exam-Rsyslog_Guide-Skinning_and_theming-Using_a_base_skin>>.
 +
 [[exam-Rsyslog_Guide-Skinning_and_theming-Using_a_base_skin]]
 .Using a base skin
 ====
 
-This example takes the +blueSky+ skin as a base and only changes the [varname]+generalSizeFont+ parameter.
+This example takes the +blueSky+ skin as a base and only changes the 
+[varname]+generalSizeFont+ parameter.
 
 ----
 baseSkin=blueSky
@@ -1021,7 +1043,8 @@ generalSizeFont=12pt
 
 . *Reference the skin definition*
 +
-Add a skin definition [sgmltag]+<context-param>+ to the [filename]+web.xml+ settings file of your application:
+Add a skin definition [sgmltag]+<context-param>+ to the [filename]+web.xml+ 
+settings file of your application:
 +
 [source, XML]
 ----
@@ -1035,7 +1058,8 @@ Add a skin definition [sgmltag]+<context-param>+ to the [filename]+web.xml+ sett
 
 === Changing skins at runtime
 
-To allow users to change skins at runtime, use a managed bean to access the skin.
+To allow users to change skins at runtime, use a managed bean to access the 
+skin.
 
 . *Create the skin bean*
 +
@@ -1061,7 +1085,8 @@ public class SkinBean {
 +
 Add the [code]+@ManagedBean+ and [code]+@SessionScoped+ references to the class.
 +
-* Alternatively, use [acronym]#EL# (Expression Language) to reference the skin bean from the [filename]+web.xml+ settings file.
+* Alternatively, use [acronym]#EL# (Expression Language) to reference the skin 
+bean from the [filename]+web.xml+ settings file.
 +
 [source, XML]
 ----
@@ -1073,7 +1098,8 @@ Add the [code]+@ManagedBean+ and [code]+@SessionScoped+ references to the class.
 
 . *Set initial skin*
 +
-The application needs an initial skin to display before the user chooses an alternative skin. Specify the skin in your class with [code]+@ManagedProperty+.
+The application needs an initial skin to display before the user chooses an 
+alternative skin. Specify the skin in your class with [code]+@ManagedProperty+.
 +
 [source, Java]
 ----
@@ -1081,7 +1107,8 @@ The application needs an initial skin to display before the user chooses an alte
 private String skin;
 ----
 +
-* Alternatively, specify the initial skin in the [filename]+web.xml+ configuration file.
+* Alternatively, specify the initial skin in the [filename]+web.xml+ 
+configuration file.
 +
 [source, XML]
 ----
@@ -1100,15 +1127,22 @@ private String skin;
 
 === Skinning standard controls
 
-Standard HTML controls used alongside RichFaces components are also themed to create a cohesive user interface.
+Standard HTML controls used alongside RichFaces components are also themed to 
+create a cohesive user interface.
 
 [[sect-Rsyslog_Guide-Skinning_standard_controls-Automatic_skinning]]
 
 ==== Automatic skinning
 
-The skinning style properties are automatically applied to controls based on their element names and attribute types. If the HTML elements are referenced in the standard skin stylesheets, the controls will be styled according to the mapped skin properties.
+The skinning style properties are automatically applied to controls based on 
+their element names and attribute types. If the HTML elements are referenced in 
+the standard skin stylesheets, the controls will be styled according to the 
+mapped skin properties.
 
-Standard HTML controls are skinned in this way by default. To override this behavior and prevent the RichFaces skins from being applied to the standard HTML controls, set the +org.richfaces.enableControlSkinning+ context parameter in the [filename]+web.xml+ configuration file to +false+:
+Standard HTML controls are skinned in this way by default. To override this 
+behavior and prevent the RichFaces skins from being applied to the standard HTML 
+controls, set the +org.richfaces.enableControlSkinning+ context parameter in the 
+[filename]+web.xml+ configuration file to +false+:
 
 
 [source, XML]
@@ -1123,7 +1157,10 @@ Standard HTML controls are skinned in this way by default. To override this beha
 
 ==== Skinning with the [classname]+rfs-ctn+ class
 
-The skinning style properties can be determined through a separate CSS class. This method is not available by default, but is enabled through the +org.richfaces.enableControlSkinningClasses+ context parameter in the [filename]+web.xml+ configuration file:
+The skinning style properties can be determined through a separate CSS class. 
+This method is not available by default, but is enabled through 
+the +org.richfaces.enableControlSkinningClasses+ context parameter in the 
+[filename]+web.xml+ configuration file:
 
 
 [source, XML]
@@ -1134,9 +1171,15 @@ The skinning style properties can be determined through a separate CSS class. Th
 </context-param>
 ----
 
-When enabled, a stylesheet with predefined classes offers a special CSS class named [classname]+rfs-ctn+. Reference the [classname]+rfs-ctn+ class from any container element (such as a [sgmltag]+<div>+ element) to skin all the standard HTML controls in the container.
+When enabled, a stylesheet with predefined classes offers a special CSS class 
+named [classname]+rfs-ctn+. Reference the [classname]+rfs-ctn+ class from any 
+container element (such as a [sgmltag]+<div>+ element) to skin all the standard 
+HTML controls in the container.
 
-Standard HTML controls can also be specifically defined in the CSS. Refer to the [filename]+$$/core/impl/src/main/resources/META-INF/resources/skinning_both.ecss$$+ file in the richfaces-ui.jarpackage for examples of specially-defined CSS classes with skin parameters for HTML controls.
+Standard HTML controls can also be specifically defined in the CSS. Refer to the 
+[filename]+$$/core/impl/src/main/resources/META-INF/resources/skinning_both.ecss$$+ 
+file in the richfaces-ui.jarpackage for examples of specially-defined CSS 
+classes with skin parameters for HTML controls.
 
 [[appe-Rsyslog_Guide-Style_classes_and_skin_parameters]]
 
@@ -1144,7 +1187,9 @@ Standard HTML controls can also be specifically defined in the CSS. Refer to the
 [appendix]
 == Style classes and skin parameters
 
-Each of the [productname]#RichFaces# components are listed below, along with their style classes and skin parameters. For further details on each component, refer to the relevant section in the *_RichFaces Component Reference_* .
+Each of the [productname]#RichFaces# components are listed below, along with 
+their style classes and skin parameters. For further details on each component, 
+refer to the relevant section in the *_RichFaces Component Reference_* .
 
 === Processing management
 
@@ -1325,7 +1370,9 @@ include::skinning/dragIndicator.asciidoc[]
 [appendix]
 == Migration Notes
 
-This section of the guide will track any breaking changes introduced in new releases, and identify any steps required to accommodate those changes in your application.
+This section of the guide will track any breaking changes introduced in new 
+releases, and identify any steps required to accommodate those changes in your 
+application.
 
 [[appe-Rsyslog_Guide-Migration_Notes-4_3_0]]
 
@@ -1335,22 +1382,214 @@ This section of the guide will track any breaking changes introduced in new rele
 
 ==== Built-in sorting and filtering controls
 
-The [sgmltag]+<extendedDataTable>+ now has built-in sorting and filtering controls. If you have existing [sgmltag]+<extendedDataTable>+ with custom sort and/or filter controls, you will want to disable the built-in sort and/or filter controls. This can be done either on a column-by-column basis, or for all columns in your applications.
+The [sgmltag]+<extendedDataTable>+ now has built-in sorting and filtering 
+controls. If you have existing [sgmltag]+<extendedDataTable>+ with custom sort 
+and/or filter controls, you will want to disable the built-in sort and/or filter 
+controls. This can be done either on a column-by-column basis, or for all 
+columns in your applications.
 
-For details on disabling the built-in sort and filter controls, refer to sections "External filter controls" and "External sort controls" in the RichFaces Component Reference.
+For details on disabling the built-in sort and filter controls, refer to 
+sections "External filter controls" and "External sort controls" in the 
+RichFaces Component Reference.
 
 [[appe-Rsyslog_Guide-Migration_Notes-4_3_0-NotifyMessage_Sting_Escaping]]
 
 ==== NotifyMessage string escaping
 
-Prior to version 4.3.0.Final, the message summary and details of the [sgmltag]+<r:notifyMessage>+ and [sgmltag]+<r:notifyMessages>+ components were not escaped. In the 4.3.0.Final release, an attribute [varname]+escape+ was added with a default value true.
+Prior to version 4.3.0.Final, the message summary and details of the 
+[sgmltag]+<r:notifyMessage>+ and [sgmltag]+<r:notifyMessages>+ components were 
+not escaped. In the 4.3.0.Final release, an attribute [varname]+escape+ was 
+added with a default value true.
 
 [[appe-Rsyslog_Guide-Migration_Notes-4_3_0-Select_Input_Validation]]
 
 ==== Select input validation
 
-The [sgmltag]+<r:select>+ now validates that manually entered input values match one of the values of the provided list (including support for client-side validation).
+The [sgmltag]+<r:select>+ now validates that manually entered input values match
+one of the values of the provided list (including support for client-side 
+validation).
 
+
+
+
+[[Rainer_Script]]
+== RainerScript
+
+Source: http://www.rsyslog.com/doc/rainerscript.html
+
+RainerScript is a scripting language specifically designed and well-suited for 
+processing network events and configuring event processors (with the most 
+prominent sample being syslog). While RainerScript is theoritically usable with
+ various softwares, it currently is being used, and developed for, rsyslog. 
+ Please note that RainerScript may not be abreviated as rscript, because that's 
+ somebody elses trademark.
+
+RainerScript is currently under development. It has its first appearance in 
+rsyslog 3.12.0, where it provides complex expression support. However, this is 
+only a very partial implementatio of the scripting language. Due to technical 
+restrictions, the final implementation will have a slightly different syntax. 
+So while you are invited to use the full power of expresssions, you 
+unfortunatley need to be prepared to change your configuration files at some 
+later points. Maintaining backwards-compatibility at this point would cause us 
+to make too much compromise. Defering the release until everything is perfect is
+also not a good option. So use your own judgement.
+
+A formal definition of the language can be found in RainerScript ABNF. The rest 
+of this document describes the language from the user's point of view. Please 
+note that this doc is also currently under development and can (and will) 
+probably improve as time progresses. If you have questions, use the rsyslog 
+forum. Feedback is also always welcome.
+
+=== Data Types
+RainerScript is a typeless language. That doesn't imply you don't need to care
+about types. Of course, expressions like "A" + "B" will not return a valid 
+result, as you can't really add two letters (to concatenate them, use the 
+concatenation operator &).  However, all type conversions are automatically done 
+by the script interpreter when there is need to do so.
+
+=== Variable (Property) types
+All rsyslog properties (see the property replacer page for a list) can be used 
+in RainerScript. In addition, it also supports local and global variables. 
+Local variables are local to the current message, but are NOT message properties
+(e.g. the "$!" all JSON property does not contain them). Global variables have a 
+truely global scope and are NOT bound to a specifc message. Thus they can be 
+used to persist values across multiple messages (for things like counters). 
+Please note that rsyslog ensures proper synchronization for global variables 
+(which also means they are slower than the others). HOWEVER, in a highly 
+multithreaded configuration operations like
+
+[source]
+----
+set $/var = $/var + 1;
+----
+
+are not atomic, so some updates to the counter variable may be missing. 
+The classical sample for this is in a two-thread environment: Variable $/var is 
+set to 1 at the start. Now the following happens in the following order:
+
+* Thread A reads 1 from $/var and adds 1, result is 2, but not yet stored
+* Thread B reads 1 from $/var and adds 1, result is 2, but not yet stored
+* Thread A stores its result of 2
+* Thread B stores its result of 2
+
+After this sequence, $/var contains the value two, which is probably not what 
+was expected. Rsyslog does not provide looking primitives for individual 
+variables, as this can lead to serious configuration problems if not used 
+100% correctly. However, rsyslog provides (or will in the future provide) 
+special function which provide guaranteed atomic updates (in the sample, the end 
+result would be three no matter what the scheduling order is).
+Only message json (CEE/Lumberjack) properties can be modified by the "set" and 
+"unset" statements, not any other message property. Obviously, local and global 
+variables are also modifieable.
+
+Message JSON property names start with "$!" where the bang character represents 
+the root.
+
+Local variables names start with "$.", where the dot denotes the root. 
+Similarly, global variables start with "$/".
+
+Both JSON properties as well as local variables may contain an arbitrary deep 
+path before the final element. The bang character is always used as path 
+separator, no matter if it is a message property or a local variable. For 
+example "$!path1!path2!varname" is a three-level deep message property where as 
+the very similar looking "$.path1!path2!varname" specifies a three-level deep 
+local variable. The similar global variables is named "$/path1!path2!varname". 
+The bang, slash, or dot character immediately following the dollar sign is used 
+by rsyslog to separate the different types.
+
+configuration objects
+main_queue()
+This object is available since 7.5.3. This permits to specify parameters for the 
+main message queue. Note that only queue-parameters are permitted for this 
+config object. This permits to set the same options like in ruleset and action 
+queues. A special statement is needed for the main queue, because it is a 
+different object and cannot be configured via any other object.
+
+Note that when the main_queue() object is configured, the legacy `$MainMsgQ...` 
+statements are ignored.
+
+Example:
+[source]
+---
+main_queue(queue.size="100000" queue.type="LinkedList")
+----
+
+=== Expressions
+
+The language supports arbitrary complex expressions. All usual operators are 
+supported. The precedence of operations is as follows (with operations being 
+higher in the list being carried out before those lower in the list, e.g. 
+multiplications are done before additions.
+
+----
+expressions in parenthesis
+not, unary minus
+*, /, % (modulus, as in C)
++, -, & (string concatenation)
+==, !=, <>, <, >, <=, >=, contains (strings!), startswith (strings!)
+and
+or
+----
+
+For example, `not a == b` probably returns not what you intended. The script 
+processor will first evaluate "not a" and then compare the resulting boolean to 
+the value of b. What you probably intended to do is `not (a == b)`. And if you 
+just want to test for inequality, we highly suggest to use "!=" or "<>". Both 
+are exactly the same and are provided so that you can pick whichever you like 
+best. So inquality of a and b should be tested as "a <> b". The "not" operator 
+should be reserved to cases where it actually is needed to form a complex 
+boolean expression. In those cases, parenthesis are highly recommended.
+
+=== Lookup Tables
+
+Lookup tables are a powerful construct to obtain "class" information based on 
+message content (e.g. to build log file names for different server types, 
+departments or remote offices).
+
+=== Functions
+
+RainerScript supports a currently quite limited set of functions:
+
+* *getenv(str)* - like the OS call, returns the value of the environment 
+variable, if it exists. Returns an empty string if it does not exist.
+* *strlen(str)* - returns the length of the provided string
+* *tolower(str)* - converts the provided string into lowercase
+* *cstr(expr)* - converts expr to a string value
+* *cnum(expr)* - converts expr to a number (integer)
+* *re_match(expr, re)* - returns 1, if expr matches re, 0 otherwise
+* *re_extract(expr, re, match, submatch, no-found)* - extracts data from a 
+string (property) via a regular expression match. POSIX ERE regular expressions
+are used. The variable "match" contains the number of the match to use. This 
+permits to pick up more than the first expression match. Submatch is the 
+submatch to match (max 50 supported). The "no-found" parameter specifies which 
+string is to be returned in case when the regular expression is not found. 
+Note that match and submatch start with zero. It currently is not possible to 
+extract more than one submatch with a single call.
+* *field(str, delim, matchnbr)* - returns a field-based substring. str is the 
+string to search, delim is the delimiter and matchnbr is the match to search for 
+(the first match starts at 1). This works similar as the field based 
+property-replacer option. Versions prior to 7.3.7 only support a single 
+character as delimiter character. Starting with version 7.3.7, a full string 
+can be used as delimiter. If a single character is being used as delimiter, 
+delim is the numerical ascii value of the field delimiter character (so that 
+non-printable characters can by specified). If a string is used as delmiter, 
+a multi-character string (e.g. "#011") is to be specified. Samples: +
+set $!usr!field = field($msg, 32, 3); -- the third field, delimited by space +
+set $!usr!field = field($msg, "#011", 3); -- the third field, delmited by "#011" +
+Note that when a single character is specified as string [field($msg, ",", 3)] 
+a string-based extraction is done, which is more performance intense than the 
+equivalent single-character [field($msg, 44 ,3)] extraction.
+* *prifilt(constant)* - mimics a traditional PRI-based filter (like "*.*" or 
+"mail.info"). The traditional filter string must be given as a constant string. 
+Dynamic string evaluation is not permitted (for performance reasons).
+
+The following example can be used to build a dynamic filter based on some 
+environment variable:
+
+[Source]
+----
+if $msg contains getenv('TRIGGERVAR') then /path/to/errfile
+----
 
 
 [[objectmodel]]
@@ -1427,7 +1666,7 @@ Functions will be supported everywhere a string is supported, which means
 everywhere.  Examples are filters, output format (templates), and file name 
 generation.
 
-
+[[|Rsyslog_object-Message_Flow]]
 === Message Flow
 
 This is a brief description of how a message (an event) flows inside rsyslog.
@@ -1543,31 +1782,51 @@ Action queue parameters can not be  modified once the action has been specified.
 For example, to tell the main message queue to save its content on shutdown, 
 use $MainMsgQueueSaveOnShutdown on".
 
-The main message queue is created after parsing the config file and all of its potential 
-includes.  An action queue is created each time an action selector is specified. 
+The main message queue is created after parsing the config file and all of its 
+potential includes.  An action queue is created each time an action selector is 
+specified. 
 
-Not all queues necessarily support the full set of queue configuration parameters, because 
-not all are applicable.  For example, in current output module design, actions do not support 
-multi-threading.  Consequently, the number of worker threads is fixed to one for action queues 
-and can not be changed.
+Not all queues necessarily support the full set of queue configuration 
+parameters, because not all are applicable.  For example, in current output 
+module design, actions do not support multi-threading.  Consequently, the number 
+of worker threads is fixed to one for action queues and can not be changed.
 
 
 === Queue Analogy
 
 A warp-up: In rsyslog, an action queue "sits in front of" each output plugin. 
-Messages are received and flow, from input to output, over various stages and two level of 
-queues to the outputs.  Actions queues are always present, but may not easily be visible when 
-in direct mode (where no actual queuing takes place). 
+Messages are received and flow, from input to output, over various stages and 
+two level of queues to the outputs.  Actions queues are always present, but may 
+not easily be visible when in direct mode (where no actual queuing takes place). 
 
-On the output side, the queue is the active component, not the consumer. As such, the consumer cannot ask the queue for anything (like n number of messages) but rather is activated by the queue itself. As such, a queue somewhat resembles a "living thing" whereas the outputs are just tools that this "living thing" uses.
+On the output side, the queue is the active component, not the consumer. As 
+such, the consumer cannot ask the queue for anything (like n number of messages) 
+but rather is activated by the queue itself.  As such, a queue somewhat 
+resembles a "living thing" whereas the outputs are just tools that this 
+"living thing" uses.
 
-Note that I left out a couple of subtleties, especially when it comes to error handling and terminating a queue (you hopefully have now at least a rough idea why I say "terminating a queue" and not "terminating an action" - who is the "living thing"?). An action returns a status to the queue, but it is the queue that ultimately decides which messages can finally be considered processed and which not. Please note that the queue may even cancel an output right in the middle of its action. This happens, if configured, if an output needs more than a configured maximum processing time and is a guard condition to prevent slow outputs from deferring a rsyslog restart for too long. Especially in this case re-queuing and cleanup is not trivial. Also, note that I did not discuss disk-assisted queue modes. The basic rules apply, but there are some additional constraints, especially in regard to the threading model. Transitioning between actual disk-assisted mode and pure-in-memory-mode (which is done automatically when needed) is also far from trivial and a real joy for an implementer to work on ;).
+Note that I left out a couple of subtleties, especially when it comes to error 
+handling and terminating a queue (you hopefully have now at least a rough idea 
+why I say "terminating a queue" and not "terminating an action" - who is the 
+"living thing"?). An action returns a status to the queue, but it is the queue 
+that ultimately decides which messages can finally be considered processed and 
+which not. Please note that the queue may even cancel an output right in the 
+middle of its action. This happens, if configured, if an output needs more than 
+a configured maximum processing time and is a guard condition to prevent slow 
+outputs from deferring a rsyslog restart for too long. Especially in this case 
+re-queuing and cleanup is not trivial. Also, note that I did not discuss 
+disk-assisted queue modes. The basic rules apply, but there are some additional 
+constraints, especially in regard to the threading model. Transitioning between 
+actual disk-assisted mode and pure-in-memory-mode (which is done automatically 
+when needed) is also far from trivial and a real joy for an implementer to 
+work on ;).
 
 === Worker Thread Pools
 
-Each queue (except in "direct" mode) has an associated pool of worker threads.  Worker threads 
-carry out the action to be performed on the data elements enqueued.  As an actual sample, the 
-main message queue's worker task is to apply filter logic to each incoming message and enqueue 
+Each queue (except in "direct" mode) has an associated pool of worker threads.  
+Worker threads carry out the action to be performed on the data elements 
+enqueued.  As an actual sample, the main message queue's worker task is to apply 
+filter logic to each incoming message and enqueue 
 them to the relevant output queues (actions).
 
 
@@ -1595,12 +1854,13 @@ or several action queues (depending on filter results).  They leave rsyslog on
 "the right side" where output modules (like the file or database writer) consume 
 them.
 
-So there are always two stages where a message (conceptually) is queued - first in the 
-main queue and later on in n action specific queues (with n being the number of actions 
-that the message in question needs to be processed by, what is being decided by the 
-"Filter Engine").  As such, a message will be in at least two queues during its lifetime
-(with the exception of messages being discarded by the queue itself, but for the purpose 
-of this document, we will ignore that possibility).
+So there are always two stages where a message (conceptually) is queued - first 
+in the main queue and later on in n action specific queues (with n being the 
+number of actions that the message in question needs to be processed by, what is 
+being decided by the "Filter Engine").  As such, a message will be in at least 
+two queues during its lifetime(with the exception of messages being discarded by 
+the queue itself, but for the purpose of this document, we will ignore that 
+possibility).
 
 Also, it is vitally important to understand that each action has a queue sitting
 in front of it.  If you have dug into the details of rsyslog configuration, you 
@@ -1628,35 +1888,37 @@ http://www.rsyslog.com/doc/mmnormalize.html[Article Source]
 === Description
 
 This module provides the capability to normalize log messages via liblognorm.  
-Thanks to liblognorm, unstructured text, like usually found in log messages, can very 
-quickly be parsed and put into a normal form. This is done so quickly, that it should 
-be possible to normalize events in realtime.
+Thanks to liblognorm, unstructured text, like usually found in log messages, can 
+very quickly be parsed and put into a normal form. This is done so quickly, that 
+it should be possible to normalize events in realtime.
 
-This module is implemented via the output module interface.  This means that mmnormalize 
-should be called just like an action. After it has been called, the normalized message 
-properties are available and can be accessed. These properties are called the "CEE/lumberjack" 
-properties, because liblognorm creates a format that is inspired by the CEE/lumberjack approach.
+This module is implemented via the output module interface.  This means that 
+mmnormalize should be called just like an action. After it has been called, the 
+normalized message properties are available and can be accessed.  These 
+properties are called the "CEE/lumberjack" properties, because liblognorm 
+creates a format that is inspired by the CEE/lumberjack approach.
 
-Please note: CEE/lumberjack properties are different from regular properties.  They 
-always have "$!" prepended to the property name given in the rulebase. Such a property 
-needs to be called with %$!propertyname%.
+Please note: CEE/lumberjack properties are different from regular properties.  
+They always have "$!" prepended to the property name given in the rulebase. 
+Such a property needs to be called with %$!propertyname%.
 
-Note that mmnormalize should only be called once on each message. Behaviour is undefined 
-if multiple calls to mmnormalize happen for the same message.
+Note that mmnormalize should only be called once on each message. Behaviour is 
+undefined if multiple calls to mmnormalize happen for the same message.
 
 
 === Action Parameters
 
 * ruleBase [word]
-Specifies which rulebase file is to use. If there are multiple mmnormalize instances, each one 
-can use a different file. However, a single instance can use only a single file. This parameter 
-MUST be given, because normalization can only happen based on a rulebase. It is recommended that 
-an absolute path name is given. Information on how to create the rulebase can be found in the
+Specifies which rulebase file is to use. If there are multiple mmnormalize 
+instances, each one can use a different file. However, a single instance can use 
+only a single file. This parameter MUST be given, because normalization can only 
+happen based on a rulebase. It is recommended that an absolute path name is 
+given. Information on how to create the rulebase can be found in the
 liblognorm manual.
 
 * useRawMsg [boolean]
-Specifies if the raw message should be used for normalization (on) or just the MSG part of 
-the message (off). Default is "off".
+Specifies if the raw message should be used for normalization (on) or just the 
+MSG part of the message (off). Default is "off".
 
 
 === Sample
@@ -1770,12 +2032,9 @@ perform the equivalent of a `$RulesetCreateMainQueue on`
 
 == $RulesetParser
 
-Type: ruleset-specific configuration directive
-
-Parameter Values: string
-
-Available since: 5.3.4+
-
+Type: ruleset-specific configuration directive +
+Parameter Values: string +
+Available since: 5.3.4+ +
 Default: rsyslog.rfc5424 followed by rsyslog.rfc3164
 
 === Description
@@ -1785,28 +2044,57 @@ ruleset in question. It no ruleset is explicitely specified, the default ruleset
 is used. Message parsers are contained in (loadable) parser modules with the 
 most common cases (RFC3164 and RFC5424) being build-in into rsyslogd.
 
-When this directive is specified the first time for a ruleset, it will not only add the parser to the ruleset's parser chain, it will also wipe out the default parser chain. So if you need to have them in addition to the custom parser, you need to specify those as well.
+When this directive is specified the first time for a ruleset, it will not only 
+add the parser to the ruleset's parser chain, it will also wipe out the default 
+parser chain. So if you need to have them in addition to the custom parser, you 
+need to specify those as well.
 
-Order of directives is important. Parsers are tried one after another, in the order they are specified inside the config. As soon as a parser is able to parse the message, it will do so and no other parsers will be executed. If no matching parser can be found, the message will be discarded and a warning message be issued (but only for the first 1,000 instances of this problem, to prevent message generation loops).
+Order of directives is important. Parsers are tried one after another, in the 
+order they are specified inside the config. As soon as a parser is able to parse 
+the message, it will do so and no other parsers will be executed. If no matching 
+parser can be found, the message will be discarded and a warning message be 
+issued (but only for the first 1,000 instances of this problem, to prevent 
+message generation loops).
 
-Note that the rfc3164 parser will always be able to parse a message - it may just not be the format that you like. This has two important implications: 1) always place that parser at the END of the parser list, or the other parsers after it will never be tried and 2) if you would like to make sure no message is lost, placing the rfc3164 parser at the end of the parser list ensures that.
+Note that the rfc3164 parser will always be able to parse a message - it may 
+just not be the format that you like. This has two important implications: 1) 
+always place that parser at the END of the parser list, or the other parsers 
+after it will never be tried and 2) if you would like to make sure no message is 
+lost, placing the rfc3164 parser at the end of the parser list ensures that.
 
-Multiple parser modules are very useful if you have various devices that emit messages that are malformed in various ways. The route to take then is
+Multiple parser modules are very useful if you have various devices that emit 
+messages that are malformed in various ways. The route to take then is
 
-make sure you find a custom parser for that device; if there is no one, you may consider writing one yourself (it is not that hard) or getting one written as part of Adiscon's professional services for rsyslog.
-load your custom parsers via $ModLoad
-create a ruleset for each malformed format; assign the custom parser to it
-create a specific listening port for all devices that emit the same malformed format
-bind the listener to the ruleset with the required parser
-Note that it may be cumbersome to add all rules to all rulesets. To avoid this, you can either use $Include or omruleset (what probably provides the best solution).
+* make sure you find a custom parser for that device; if there is no one, you 
+may consider writing one yourself (it is not that hard) or getting one written 
+as part of Adiscon's professional services for rsyslog.
+* load your custom parsers via $ModLoad
+* create a ruleset for each malformed format; assign the custom parser to it
+* create a specific listening port for all devices that emit the same malformed 
+format
+*bind the listener to the ruleset with the required parser
 
-More information about rulesets in general can be found in multi-ruleset support in rsyslog.
+Note that it may be cumbersome to add all rules to all rulesets. To avoid this, 
+you can either use $Include or omruleset (what probably provides the best 
+solution).
+
+More information about rulesets in general can be found in multi-ruleset support 
+in rsyslog.
 
 === Example
 
-This example assumes there are two devices emiting malformed messages via UDP. We have two custom parsers for them, named "device1.parser" and "device2.parser". In addition to that, we have a number of other devices sending wellformed messages, also via UDP.
+This example assumes there are two devices emiting malformed messages via UDP. 
+We have two custom parsers for them, named "device1.parser" and 
+"device2.parser". In addition to that, we have a number of other devices sending 
+wellformed messages, also via UDP.
 
-The solution is to listen for data from the two devices on two special ports (10514 and 10515 in this example), create a ruleset for each and assign the custom parsers to them. The rest of the messages are received via port 514 using the regular parsers. Processing shall be equal for all messages. So we simply forward the malformed messages to the regular queue once they are parsed (keep in mind that a message is never again parsed once any parser properly processed it).
+The solution is to listen for data from the two devices on two special ports 
+(10514 and 10515 in this example), create a ruleset for each and assign the 
+custom parsers to them. The rest of the messages are received via port 514 using 
+the regular parsers. Processing shall be equal for all messages. So we simply 
+forward the malformed messages to the regular queue once they are parsed (keep 
+in mind that a message is never again parsed once any parser properly processed 
+it).
 
 [source]
 ----
@@ -1849,6 +2137,7 @@ $UDPServerRun 10514
 $InputUDPServerBindRuleset maldev2
 $UDPServerRun 10515
 ----
+
 For an example of how multiple parser can be chained (and an actual use case), 
 please see the example section on the pmlastmsg parser module.
 
@@ -1859,13 +2148,9 @@ way it currently works.
 
 
 
-
-
-
-
 [[actionlegaccy]]
 == Action Statement ==
-        
+
 Action object describe what is to be done with a message.  They are implemented 
 via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
 
@@ -1879,7 +2164,7 @@ The action object has different parameters:
     These are specific to a certain type of actions. 
     They are documented by the output module in question.
 
-## Legacy Format ##
+=== Legacy Format
 
 Be warned that legacy action format is hard to get right. It is
 recommended to use RainerScript-Style action format whenever possible!
@@ -1899,7 +2184,8 @@ RainerScript action objects. So if you define for example:
     action(type="omfwd" target="server1.example.net")
     @@server2.example.net
 
-server1's "action.resumeRetryCount" parameter is **not** set, instead server2's is!
+server1's "action.resumeRetryCount" parameter is *not* set, 
+instead server2's is!
 
 A goal of the new RainerScript action format was to avoid confusion
 which parameters are actually used. As such, it would be counter-productive
@@ -1912,7 +2198,7 @@ are used, one does not need to care about which legacy action parameters may
 Note that not all modules necessarily support legacy action format.
 Especially newer modules are recommended to NOT support it.
 
-### Legacy Description ###
+=== Legacy Description
 
 Templates can be used with many actions. If used, the specified template
 is used to generate the message content (instead of the default
@@ -1946,66 +2232,75 @@ compared to the otherwise-equal config directives below:
     *.=crit /var/log/critmsgs
 
 
-### Regular File ###
+=== Regular File
 
-<p>Typically messages are logged to real files. The file usually is
-specified by full pathname, beginning with a slash "/".
-Starting with version 4.6.2 and 5.4.1 (previous v5 version do NOT support this)
-relative file names can also be specified.  To do so, these must begin with a
+Typically messages are logged to real files. The file usually is specified by 
+full pathname, beginning with a slash "/".
+Relative file names can also be specified.  To do so, these must begin with a
 dot. For example, use "./file-in-current-dir.log" to specify a file in the
 current directory. Please note that rsyslogd usually changes its working 
 directory to the root, so relative file names must be tested with care (they
-were introduced primarily as a debugging vehicle, but may have useful other applications
-as well).    
-    
+were introduced primarily as a debugging vehicle, but may have useful other 
+applications as well).    
     
 You may prefix each entry with the minus "-'' sign to omit syncing the
-file after every logging. Note that you might lose information if the
-system crashes right behind a write attempt. Nevertheless this might
+file after every logging.  Note that you might lose information if the
+system crashes right behind a write attempt.  Nevertheless this might
 give you back some performance, especially if you run programs that use
 logging in a very verbose manner.
 
-<p>If your system is connected to a reliable UPS and you receive
+If your system is connected to a reliable UPS and you receive
 lots of log data (e.g. firewall logs), it might be a very good idea to
-turn of
-syncing by specifying the "-" in front of the file name.
+turn of syncing by specifying the "-" in front of the file name.
 
-**The filename can be either static **(always
-the same) or <b>dynamic</b> (different based on message
-received). The later is useful if you would automatically split
-messages into different files based on some message criteria. For
-example, dynamic file name selectors allow you to split messages into
+*The filename can be either static* (alwaysthe same) or *dynamic<* (different 
+based on message received). The later is useful if you would automatically split
+messages into different files based on some message criteria. For example, 
+dynamic file name selectors allow you to split messages into
 different files based on the host that sent them. With dynamic file
-names, everything is automatic and you do not need any filters. </p>
-<p>It works via the template system. First, you define a template
+names, everything is automatic and you do not need any filters. 
+
+It works via the template system. First, you define a template
 for the file name. An example can be seen above in the description of
 template. We will use the "DynFile" template defined there. Dynamic
 filenames are indicated by specifying a questions mark "?" instead of a
 slash, followed by the template name. Thus, the selector line for our
-dynamic file name would look as follows:</p>
-<blockquote>
-<code>*.* ?DynFile</code>
-</blockquote>
-<p>That's all you need to do. Rsyslog will now automatically
+dynamic file name would look as follows:
+
+[source]
+----
+*.* ?DynFile
+----
+
+That's all you need to do. Rsyslog will now automatically
 generate file names for you and store the right messages into the right
 files. Please note that the minus sign also works with dynamic file
-name selectors. Thus, to avoid syncing, you may use</p>
-<blockquote>
-<code>*.* -?DynFile</code></blockquote>
-<p>And of course you can use templates to specify the output
-format:</p>
-<blockquote>
-<code>*.* ?DynFile;MyTemplate</code></blockquote>
-<p><b>A word of caution:</b> rsyslog creates files as
-needed. So if a new host is using your syslog server, rsyslog will
-automatically create a new file for it.</p>
-<p><b>Creating directories is also supported</b>. For
-example you can use the hostname as directory and the program name as
-file name:</p>
-<blockquote>
-<code>$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"</code></blockquote>
+name selectors. Thus, to avoid syncing, you may use
 
-### Named Pipes ###
+[source]
+----
+*.* -?DynFile
+----
+
+And of course you can use templates to specify the output format:
+
+[source]
+*.* ?DynFile;MyTemplate
+----
+
+*A word of caution:* rsyslog creates files as needed. So if a new host is using 
+your syslog server, rsyslog will automatically create a new file for it.
+
+
+*Creating directories is also supported*.  For example you can use the hostname 
+as directory and the program name as file name:
+
+[source]
+----
+$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"
+----
+
+=== Named Pipes
 
 <p>This version of rsyslogd(8) has support for logging output to
 named pipes (fifos). A fifo or named pipe can be used as a destination
@@ -2013,12 +2308,12 @@ for log messages by prepending a pipe symbol ("|'') to the name of the
 file. This is handy for debugging. Note that the fifo must be created
 with the mkfifo(1) command before rsyslogd(8) is started.</p>
 
-### Terminal and Console ###
+=== Terminal and Console
 
-If the file you specified is a tty, special tty-handling is
-done, same with /dev/console.
+If the file you specified is a tty, special tty-handling is done, same 
+with /dev/console.
 
-### Remote Machine ###
+=== Remote Machine
 
 Rsyslogd provides full remote logging, i.e. is able to send
 messages to a remote host running rsyslogd(8) and to receive messages
@@ -2026,14 +2321,13 @@ from remote hosts. Using this feature you're able to control all syslog
 messages on one host, if all other machines will log remotely to that.
 This tears down administration needs.
 
-To forward messages to another host, prepend the hostname with
-the at sign ("@"). A single at sign means that messages will
-be forwarded via UDP protocol (the standard for syslog). If you prepend
-two at signs ("@@"), the messages will be transmitted via TCP. Please
-note that plain TCP based syslog is not officially standardized, but
-most major syslogds support it (e.g. syslog-ng or
-<a href="http://www.winsyslog.com/">WinSyslog</a>). The
-forwarding action indicator (at-sign) can be followed by one or more
+To forward messages to another host, prepend the hostname with the at sign 
+("@"). A single at sign means that messages will be forwarded via UDP protocol 
+(the standard for syslog). If you prepend two at signs ("@@"), the messages will 
+be transmitted via TCP. Please note that plain TCP based syslog is not 
+officially standardized, but most major syslogds support it (e.g. syslog-ng or
+http://www.winsyslog.com/[WinSyslog]). 
+The forwarding action indicator (at-sign) can be followed by one or more
 options. If they are given, they must be immediately (without a space)
 following the final at sign and be enclosed in parenthesis. The
 individual options must be separated by commas. The following options
@@ -2046,7 +2340,7 @@ are right now defined:
 <p align="center"><b>z&lt;number&gt;</b></p>
 </td>
 <td>Enable zlib-compression for the message. The
-&lt;number&gt; is the compression level. It can be 1 (lowest
+<number> is the compression level. It can be 1 (lowest
 gain, lowest CPU overhead) to 9 (maximum compression, highest CPU
 overhead). The level can also be 0, which means "no compression". If
 given, the "z" option is ignored. So this does not make an awful lot of
@@ -2063,22 +2357,23 @@ the uncompressed messages is transmitted. This saves the receiver CPU
 cycles for decompression. It also prevents small message to actually
 become larger in compressed form.
 
-<p><b>Please note that when a TCP transport is used,
+*Please note that when a TCP transport is used,
 compression will also turn on syslog-transport-tls framing. See the "o"
-option for important information on the implications.</b></p>
-<p>Compressed messages are automatically detected and
+option for important information on the implications.*
+
+Compressed messages are automatically detected and
 decompressed by the receiver. There is nothing that needs to be
-configured on the receiver side.</p>
+configured on the receiver side.
 </td>
 </tr>
 <tr>
 <td>
 <p align="center"><b>o</b></p>
 </td>
-<td><b>This option is experimental. Use at your own
-risk and only if you know why you need it! If in doubt, do NOT turn it
-on.</b>
-<p>This option is only valid for plain TCP based
+<td>*This option is experimental. Use at your own risk and only if you know why 
+you need it! If in doubt, do NOT turn it on.*
+
+This option is only valid for plain TCP based
 transports. It selects a different framing based on IETF internet draft
 syslog-transport-tls-06. This framing offers some benefits over
 traditional LF-based framing. However, the standardization effort is
@@ -2093,118 +2388,146 @@ some of those changes. So you should take this note very serious. It is
 not something we do not *like* to do (and may change our mind if enough
 people beg...), it is something we most probably *can not* do for
 technical reasons (aka: you can beg as much as you like, it won't
-change anything...).</p>
-<p>The most important implication is that compressed syslog
+change anything...).
+
+The most important implication is that compressed syslog
 messages via TCP must be considered with care. Unfortunately, it is
 technically impossible to transfer compressed records over traditional
-syslog plain tcp transports, so you are left with two evil choices...</p>
+syslog plain tcp transports, so you are left with two evil choices...
 </td>
 </tr>
 </tbody>
 </table>
-<p><br>
-The hostname may be followed by a colon and the destination port.</p>
-<p>The following is an example selector line with forwarding:</p>
-<p>*.*&nbsp;&nbsp;&nbsp; @@(o,z9)192.168.0.1:1470</p>
-<p>In this example, messages are forwarded via plain TCP with
+
+The hostname may be followed by a colon and the destination port.
+
+The following is an example selector line with forwarding:
+
+----
+*.*   @@(o,z9)192.168.0.1:1470
+----
+
+In this example, messages are forwarded via plain TCP with
 experimental framing and maximum compression to the host 192.168.0.1 at
-port 1470.</p>
-<p>*.* @192.168.0.1</p>
-<p>In the example above, messages are forwarded via UDP to the
+port 1470.
+
+----
+*.* @192.168.0.1
+----
+
+In the example above, messages are forwarded via UDP to the
 machine 192.168.0.1, the destination port defaults to 514. Messages
-will not be compressed.</p>
-<p>Note that IPv6 addresses contain colons. So if an IPv6 address is specified
+will not be compressed.
+
+Note that IPv6 addresses contain colons.  So if an IPv6 address is specified
 in the hostname part, rsyslogd could not detect where the IP address ends
-and where the port starts. There is a syntax extension to support this:
-put squary brackets around the address (e.g. "[2001::1]"). Square
+and where the port starts.  There is a syntax extension to support this:
+put squary brackets around the address (e.g. "[2001::1]").  Square
 brackets also work with real host names and IPv4 addresses, too.
-</p><p>A valid sample to send messages to the IPv6 host 2001::1 at port 515
+
+A valid sample to send messages to the IPv6 host 2001::1 at port 515
 is as follows:
-</p><p>*.* @[2001::1]:515
-</p><p>This works with TCP, too.
-</p><p><b>Note to sysklogd users:</b> sysklogd does <b>not</b>
-support RFC 3164 format, which is the default forwarding template in
-rsyslog. As such, you will experience duplicate hostnames if rsyslog is
-the sender and sysklogd is the receiver. The fix is simple: you need to
-use a different template. Use that one:</p>
-<p class="MsoPlainText">$template
-sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""<br>
-*.* @192.168.0.1;sysklogd</p>
 
-### List of Users ###
+----
+*.* @[2001::1]:515
+----
 
-<p>Usually critical messages are also directed to "root'' on
-that machine. You can specify a list of users that shall get the
-message by simply writing ":omusrmsg: followed by the login name. For example,
-the send messages to root, use ":omusrmsg:root".
-You may specify more than one user
-by separating them with commas (",''). Do not repeat the ":omusrmsg:" prefix in
-this case. For example, to send data to users root and rger, use
-":omusrmsg:root,rger" (do not use ":omusrmsg:root,:omusrmsg:rger", this is invalid).
-If they're logged in they get
-the message.
+This works with TCP, too.
 
-### Everyone logged on ###
+*Note to sysklogd users:* sysklogd does *not* support RFC 3164 format, which is 
+the default forwarding template in rsyslog.  As such, you will experience 
+duplicate hostnames if rsyslog is the sender and sysklogd is the receiver. 
+The fix is simple: you need to use a different template. Use that one:
+
+----
+$template
+sysklogd,>%PRI%>%TIMESTAMP% %syslogtag%%msg%\""
+*.* @192.168.0.1;sysklogd
+----
+
+=== List of Users
+
+Usually critical messages are also directed to "root'' on that machine. You can
+specify a list of users that shall get the message by simply writing 
+":omusrmsg:" followed by the login name. For example, the send messages to root, 
+use ":omusrmsg:root".
+
+You may specify more than one user by separating them with commas (",''). Do not 
+repeat the ":omusrmsg:" prefix in this case. For example, to send data to users 
+root and rger, use ":omusrmsg:root,rger" (do not use 
+":omusrmsg:root,:omusrmsg:rger", this is invalid).  If they're logged in they 
+get the message.
+
+=== Everyone logged on 
 
 Emergency messages often go to all users currently online to
 notify them that something strange is happening with the system. To
 specify this wall(1)-feature use an asterisk as the user message
 destination(":omusrmsg:*'').
 
-### Call Plugin ###
+=== Call Plugin
+
 This is a generic way to call an output plugin. The plugin
 must support this functionality. Actual parameters depend on the
 module, so see the module's doc on what to supply. The general syntax
 is as follows:
 
-<p>:modname:params;template</p>
+----
+:modname:params;template
+----
 
-<p>Currently, the ommysql database output module supports this
+Currently, the ommysql database output module supports this
 syntax (in addtion to the "&gt;" syntax it traditionally
 supported). For ommysql, the module name is "ommysql" and the params
 are the traditional ones. The ;template part is not module specific, it
-is generic rsyslog functionality available to all modules.</p>
+is generic rsyslog functionality available to all modules.
 
-<p>As an example, the ommysql module may be called as follows:</p>
-<p>:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+As an example, the ommysql module may be called as follows:
 
-<p>For details, please see the "Database Table" section of this
-documentation.</p>
+----
+:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate
+----
+
+For details, please see the "Database Table" section of this documentation.
 
 Note: as of this writing, the ":modname:" part is hardcoded
 into the module. So the name to use is not necessarily the name the
 module's plugin file is called.
 
-### Database Table ###
+==== Database Table
 
-<p>This allows logging of the message to a database table.
+This allows logging of the message to a database table.
 Currently, only MySQL databases are supported. However, other database
-drivers will most probably be developed as plugins. By default, a <a href="http://www.monitorware.com/">MonitorWare</a>-compatible
-schema is required for this to work. You can create that schema with
-the createDB.SQL file that came with the rsyslog package. You can also<br>
-use any other schema of your liking - you just need to define a proper
-template and assign this template to the action.<br>
-<br>
+drivers will most probably be developed as plugins. By default, a 
+http://www.monitorware.com/[MonitorWare]-compatible schema is required for this 
+to work.  You can create that schema with the createDB.SQL file that came with 
+the rsyslog package. You can also use any other schema of your liking - you just 
+need to define a proper template and assign this template to the action.
+
 The database writer is called by specifying a greater-then sign
-("&gt;") in front of the database connect information. Immediately
-after that<br>
+(">") in front of the database connect information. Immediately
+after that +
 sign the database host name must be given, a comma, the database name,
 another comma, the database user, a comma and then the user's password.
 If a specific template is to be used, a semicolon followed by the
-template name can follow the connect information. This is as follows:<br>
-<br>
-&gt;dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+template name can follow the connect information. This is as follows:
+
+----
+>dbhost,dbname,dbuser,dbpassword;dbtemplate
+----
 
 **Important: to use the database functionality, the
 MySQL output module must be loaded in the config file** BEFORE
 the first database table action is used. This is done by placing the
 
-    $ModLoad ommysql 
+----
+$ModLoad ommysql
+----
 
 directive some place above the first use of the database write
 (we recommend doing at the the beginning of the config file).
 
-### Discard ###
+=== Discard
 
 If the discard action is carried out, the received message is
 immediately discarded. No further processing of it occurs. Discard has
@@ -2223,12 +2546,16 @@ specifying what you do not want.
 Discard is just the single tilde character with no further parameters:
 
 <p>~</p>
-<p>For example,</p>
-<p>*.*&nbsp;&nbsp; ~</p>
-<p>discards everything (ok, you can achive the same by not
-running rsyslogd at all...).</p>
 
-### Output Channel ###
+<p>For example,</p>
+
+<p>*.*&nbsp;&nbsp; ~</p>
+
+discards everything (ok, you can achive the same by not running rsyslogd at 
+all...).
+
+
+=== Output Channel
 
 Binds an output channel definition (see there for details) to
 this action. Output channel actions must start with a $-sign, e.g. if
@@ -2236,19 +2563,20 @@ you would like to bind your output channel definition "mychannel" to
 the action, use "$mychannel". Output channels support template
 definitions like all all other actions.
 
-### Shell Execute ###
+=== Shell Execute
 
-This executes a program in a subshell. The program is passed
-the template-generated message as the only command line parameter.
-Rsyslog waits until the program terminates and only then continues to
-run.
+This executes a program in a subshell. The program is passed the 
+template-generated message as the only command line parameter.
+Rsyslog waits until the program terminates and only then continues to run.
 
+----
 ^program-to-execute;template
+----
 
 The program-to-execute can be any valid executable. It
 receives the template string as a single parameter (argv[1]).
 
-**WARNING:** The Shell Execute action was added to serve an urgent need. 
+*WARNING:* The Shell Execute action was added to serve an urgent need. 
 While it is considered reasonable save when
 used with some thinking, its implications must be considered. The
 current implementation uses a system() call to execute the command.
@@ -2272,7 +2600,7 @@ messages to rsyslog. Point c) is especially important: if rsyslog is
 accepting message from any hosts, chances are much higher that an
 attacker might try to exploit the "shell execute" action.
 
-### Template Name ###
+=== Template Name
 
 Every ACTION can be followed by a template name. If so, that
 template is used for message formatting. If no name is given, a
@@ -2299,7 +2627,7 @@ The action object has different parameters:
     These are specific to a certain type of actions. 
     They are documented by the output module in question.
 
-### General Action Parameters ###
+=== General Action Parameters
 
 * **name**  word    
     used for statistics gathering and documentation    
@@ -2372,7 +2700,7 @@ The action object has different parameters:
     and after the 100th try it is 330.
 
 
-### Queue Parameters ###
+=== Queue Parameters
 
 
 * **queue.filename**  word     
@@ -2594,7 +2922,7 @@ We configure rsyslog
 * to filter them depending on the IP of the host, and
 * to store them in a file.
 
-### How to configure the module ###
+=== How to configure the module
 
 The module has to be configured first. The general line for this configuration is: 
 
@@ -2604,7 +2932,7 @@ So in our example, where we want UDP, it will look like this:
 
     module (load=”imudp”)
 
-### How to configure the input for rsyslog ###
+=== How to configure the input for rsyslog
 
 For the input, you have to give two different information to rsyslog. 
 
@@ -2620,7 +2948,7 @@ This means for the example, the line has to be
 
     input (type=”imudp” port=”514”)
 
-### How to configure a filter for fromhost-IPs and store them in a file ###
+=== How to configure a filter for fromhost-IPs and store them in a file
 
 A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure 
 it to do something with all notes from a specific IP, between “if” and “then” will be the property 
@@ -2649,30 +2977,47 @@ All the lines together now are
         Action (type=”omfile” File=”/var/log/network1.log”)
     ]
 
-All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
+All in all it means: The input for rsyslog will listen to syslog via UDP on 
+port 514. If the IP from the Computer, which sends the messages, is 
+172.19.1.135, then the action in the brackets will get activated for these. 
+In the action the messages will be stored in the file /var/log/network1.log.
 
- 
 
-Rsyslog and rulesets
+=== Rsyslog and rulesets
 
-Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
+Rulesets are a bit more complicated. A ruleset is a set of rules, as the name 
+implies. These are bound to an input. This works by adding an option to the 
+input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a 
+ruleset “rs1” to a input the line will look like this:
 
 Input (type=”imudp” port=”514” ruleset=”rs1”)
-But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
+But you still have to define, what the ruleset should do. In this guide I will 
+limit myself to explain, how to create a ruleset, which has one action: to store 
+all the messages in a file. In my example I want to store the messages in the 
+file /var/log/network1.log”.
 
-You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+You define a ruleset like the normal configuration. To define it, you first name 
+it with ruleset (name=”-rulesetname-“). After this you write what it does, in my 
+example the action action (type=”omfile” file=”/var/log/network1.log”). This 
+action you write in these curly brackets: {}.
 
 So my full example looks like this
 
-    Module (load=”imudp”)
+[source]
+----
+Module (load=”imudp”)
 
-    Input (type=”imudp” port=”514” ruleset=”rs1”)
+Input (type=”imudp” port=”514” ruleset=”rs1”)
 
-    Ruleset (name=”rs1”) {
-        Action (type=”omfile” file=”/var/log/network1.log”)
-    }
+Ruleset (name=”rs1”) {
+    Action (type=”omfile” file=”/var/log/network1.log”)
+}
+----
 
-In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
+In that second example for configurations you can see, how to store all messages 
+from the input into a file by using a ruleset. A rulesset can consist of 
+multiple rules, but without binding it to the input it is useless. It can be 
+bound to an input multiple times or even other rulesets can be called.
 
 
 
@@ -2840,7 +3185,7 @@ On the rsyslog side, you need to add the following to your "action" line: uid="m
 
 Then restart rsyslog and it should work :)
 
-### Using bulk indexing ###
+=== Using bulk indexing
 Elasticsearch can index multiple documents at a time (eg: in the same request), which makes this approach faster than indexing one log line at a time. You can make omelasticsearch use this feature by setting bulkmode="on" in your action() line.
 
 The bulk size depends on your queue settings. The default is 16, but, depending on your setup, a value of a few hundred will probably increase the indexing performance.
@@ -2856,7 +3201,7 @@ http://www.rsyslog.com/doc/queues.html
 
 <img src="http://www.rsyslog.com/doc/dataflow.png" width="680" height="305" alt="Drawing"/>
 
-### Bird's Eye View of Rsyslog Configuration Elements ###
+=== Bird's Eye View of Rsyslog Configuration Elements
 
 In a rsyslog cnfiguration file, **rulesets** are not the only elements that must
 be defined at the top level.  Inputs, templates, modules, and a few directives must 

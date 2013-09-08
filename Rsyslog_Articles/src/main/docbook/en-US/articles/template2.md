@@ -1,5 +1,5 @@
-Filter optimization with arrays
-===============================
+## Filter optimization with arrays
+
 [Thursday, January 10th, 2013](http://www.rsyslog.com/tag/template/)
 
 If you are using a lot of filters and templates in rsyslog, this can not only be affecting the 
@@ -76,11 +76,28 @@ Here are some sample config lines.
         stop
     }
 
-These are some basic services, which are often run together. Please note, that these are just a few examples. As you can see here, the template is created first. It is given a name, type and format. Templates of type string are usually used for file names. Here the log messages get stored in the folder /syslog a subfolder for the host where the message occured and then a filename which reflects the type of message that occured.
+These are some basic services, which are often run together. Please note, that these 
+are just a few examples. As you can see here, the template is created first. 
+It is given a name, type and format. Templates of type string are usually used for file names. 
+Here the log messages get stored in the folder /syslog a subfolder for the host 
+where the message occured and then a filename which reflects the type of message 
+that occured.
 
-The second line holds the actions. First you see the property based filter (programname) and the condition. After that the actions get chained with the curly braces. The log messages where the filter evaluates to true get stored in a file. The filename and path is generated dynamically with the DynaFile parameter. Through this, the above written template will be used to generate the path and filename. The second action is represented by stop. Please note that this is case sensitive. Basically, stop means to stop the message processing. No further processing of the message will take place.
+The second line holds the actions. First you see the property based filter (programname) 
+and the condition. After that the actions get chained with the curly braces. 
+The log messages where the filter evaluates to true get stored in a file. 
+The filename and path is generated dynamically with the DynaFile parameter. 
+Through this, the above written template will be used to generate the path and filename. 
+The second action is represented by stop. Please note that this is case sensitive. 
+Basically, stop means to stop the message processing. No further processing of the 
+message will take place.
 
-If we look closely at the sample config lines, we see, that the filter condition is basically always the same. It will always filter the programname property for a certain value. This is a predestinated case for using an array for simplification. We can use the property programname in the file template as well and filter an array of values. This will greatly save the overhead for all the seperate filter, not only in the configuration, but also in processing the messages.
+If we look closely at the sample config lines, we see, that the filter condition is 
+basically always the same. It will always filter the programname property for a certain value. 
+This is a predestinated case for using an array for simplification. 
+We can use the property programname in the file template as well and filter an array of values. 
+This will greatly save the overhead for all the seperate filter, not only in the configuration, 
+but also in processing the messages.
 
     template(
         name="DailyPerHost_app" 

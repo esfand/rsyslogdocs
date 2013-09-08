@@ -1,5 +1,5 @@
-Storing and forwarding remote messages
---------------------------------------
+## Storing and forwarding remote messages
+
 Friday, April 1st, 2011
 
 In this scenario, we want to store remote sent messages into a specific local file and 

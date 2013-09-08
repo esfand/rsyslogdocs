@@ -1,13 +1,13 @@
-Understanding rsyslog Queues
-============================
+## Understanding rsyslog Queues
+
 Rsyslog uses queues whenever two activities need to be loosely coupled. With a queue, one part of the system "produces" something while another part "consumes" this something. The "something" is most often syslog messages, but queues may also be used for other purposes.
 
 This document provides a good insight into technical details, operation modes and implications. In addition to it, an rsyslog queue concepts overview document exists which tries to explain queues with the help of some analogies. This may probably be a better place to start reading about queues. I assume that once you have understood that document, the material here will be much easier to grasp and look much more natural.
 
 The most prominent example is the main message queue. Whenever rsyslog receives a message (e.g. locally, via UDP, TCP or in whatever else way), it places these messages into the main message queue. Later, it is dequeued by the rule processor, which then evaluates which actions are to be carried out. In front of each action, there is also a queue, which potentially de-couples the filter processing from the actual action (e.g. writing to file, database or forwarding to another host).
 
-Where are Queues Used?
-----------------------
+### Where are Queues Used?
+
 Currently, queues are used for the main message queue and for the actions.
 
 There is a single main message queue inside rsyslog. Each input module delivers messages to it. The main message queue worker filters messages based on rules specified in rsyslog.conf and dispatches them to the individual action queues. Once a message is in an action queue, it is deleted from the main message queue.
@@ -22,8 +22,8 @@ If the same parameter is specified multiple times before a queue is created, the
 
 Not all queues necessarily support the full set of queue configuration parameters, because not all are applicable. For example, in current output module design, actions do not support multi-threading. Consequently, the number of worker threads is fixed to one for action queues and can not be changed.
 
-Queue Modes
------------
+### Queue Modes
+
 Rsyslog supports different queue modes, some with submodes. Each of them has specific advantages and disadvantages. Selecting the right queue mode is quite important when tuning rsyslogd. The queue mode (aka "type") is set via the "$<object>QueueType" config directive.
 
 ### Direct Queues ###
@@ -78,16 +78,16 @@ This algorithm prevents unnecessary disk writes, but also leaves some additional
 
 The water marks can be set via the "$<object>QueueHighWatermark" and  "$<object>QueueHighWatermark" configuration file directives. Note that these are actual numbers, not precentages. Be sure they make sense (also in respect to "$<object>QueueSize"), as rsyslodg does currently not perform any checks on the numbers provided. It is easy to screw up the system here (yes, a feature enhancement request is filed ;)).
 
-Limiting the Queue Size
------------------------
+### Limiting the Queue Size
+
 All queues, including disk queues, have a limit of the number of elements they can enqueue. This is set via the "$<object>QueueSize" config parameter. Note that the size is specified in number of enqueued elements, not their actual memory size. Memory size limits can not be set. A conservative assumption is that a single syslog messages takes up 512 bytes on average (in-memory, NOT on the wire, this *is* a difference).
 
 Disk assisted queues are special in that they do not have any size limit. The enqueue an unlimited amount of elements. To prevent running out of space, disk and disk-assisted queues can be size-limited via the "$<object>QueueMaxDiskSpace" configuration parameter. If it is not set, the limit is only available free space (and reaching this limit is currently not very gracefully handled, so avoid running into it!). If a limit is set, the queue can not grow larger than it. Note, however, that the limit is approximate. The engine always writes complete records. As such, it is possible that slightly more than the set limit is used (usually less than 1k, given the average message size). Keeping strictly on the limit would be a performance hurt, and thus the design decision was to favour performance. If you don't like that policy, simply specify a slightly lower limit (e.g. 999,999K instead of 1G).
 
 In general, it is a good idea to limit the pysical disk space even if you dedicate a whole disk to rsyslog. That way, you prevent it from running out of space (future version will have an auto-size-limit logic, that then kicks in in such situations).
 
-Worker Thread Pools
--------------------
+### Worker Thread Pools
+
 Each queue (except in "direct" mode) has an associated pool of worker threads. Worker threads carry out the action to be performed on the data elements enqueued. As an actual sample, the main message queue's worker task is to apply filter logic to each incoming message and enqueue them to the relevant output queues (actions).
 
 Worker threads are started and stopped on an as-needed basis. On a system without activity, there may be no worker at all running. One is automatically started when a message comes in. Similarily, additional workers are started if the queue grows above a specific size. The "$<object>QueueWorkerThreadMinimumMessages"  config parameter controls worker startup. If it is set to the minimum number of elements that must be enqueued in order to justify a new worker startup. For example, let's assume it is set to 100. As long as no more than 100 messages are in the queue, a single worker will be used. When more than 100 messages arrive, a new worker thread is automatically started. Similarily, a third worker will be started when there are at least 300 messages, a forth when reaching 400 and so on.
@@ -96,8 +96,8 @@ It, however, does not make sense to have too many worker threads running in para
 
 Worker threads that have been started are kept running until an inactivity timeout happens. The timeout can be set via "$<object>QueueWorkerTimeoutThreadShutdown" and is specified in milliseconds. If you do not like to keep the workers running, simply set it to 0, which means immediate timeout and thus immediate shutdown. But consider that creating threads involves some overhead, and this is why we keep them running. If you would like to never shutdown any worker threads, specify -1 for this parameter.
 
-Discarding Messages
--------------------
+### Discarding Messages
+
 If the queue reaches the so called "discard watermark" (a number of queued elements), less important messages can automatically be discarded. This is in an effort to save queue space for more important messages, which you even less like to loose. Please note that whenever there are more than "discard watermark" messages, both newly incoming as well as already enqueued low-priority messages are discarded. The algorithm discards messages newly coming in and those at the front of the queue.
 
 The discard watermark is a last resort setting. It should be set sufficiently high, but low enough to allow for large message burst. Please note that it take effect immediately and thus shows effect promptly - but that doesn't help if the burst mainly consist of high-priority messages...
@@ -120,8 +120,8 @@ Anything of the specified severity and (numerically) above it is discarded. To t
 
 An interesting application is with disk-assisted queues: if the discard watermark is set lower than the high watermark, message discarding will start before the queue becomes disk-assisted. This may be a good thing if you would like to switch to disk-assisted mode only in cases where it is absolutely unavoidable and you prefer to discard less important messages first.
 
-Filled-Up Queues
-----------------
+### Filled-Up Queues
+
 If the queue has either reached its configured maximum number of entries or disk space, it is finally full. If so, rsyslogd throttles the data element submitter. If that, for example, is a reliable input (TCP, local log socket), that will slow down the message originator which is a good resolution for this scenario.
 
 During throtteling, a disk-assisted queue continues to write to disk and messages are also discarded based on severity as well as regular dequeuing and processing continues. So chances are good the situation will be resolved by simply throttling. Note, though, that throtteling is highly undesirable for unreliable sources, like UDP message reception. So it is not a good thing to run into throtteling mode at all.
@@ -130,8 +130,8 @@ We can not hold processing infinitely, not even when throtteling. For example, t
 
 If you do not like throtteling, set the timeout to 0 - the message will then immediately be discarded. If you use a high timeout, be sure you know what you do. If a high main message queue enqueue timeout is set, it can lead to something like a complete hang of the system. The same problem does not apply to action queues.
 
-Rate Limiting
--------------
+### Rate Limiting
+
 Rate limiting provides a way to prevent rsyslogd from processing things too fast. It can, for example, prevent overruning a receiver system.
 
 Currently, there are only limited rate-limiting features available. The "$<object>QueueDequeueSlowdown"  directive allows to specify how long (in microseconds) dequeueing should be delayed. While simple, it still is powerful. For example, using a DequeueSlowdown delay of 1,000 microseconds on a UDP send action ensures that no more than 1,000 messages can be sent within a second (actually less, as there is also some time needed for the processing itself).
@@ -141,19 +141,25 @@ Queues can be set to dequeue (process) messages only during certain timeframes. 
 
 Currently, only a single timeframe is supported and, even worse, it can only be specified by the hour. It is not hard to extend rsyslog's capabilities in this regard - it was just not requested so far. So if you need more fine-grained control, let us know and we'll probably implement it. There are two configuration directives, both should be used together or results are unpredictable:" $<object>QueueDequeueTimeBegin <hour>" and "$<object>QueueDequeueTimeEnd <hour>". The hour parameter must be specified in 24-hour format (so 10pm is 22). A use case for this parameter can be found in the rsyslog wiki.
 
-Performance
------------
+### Performance
+
 The locking involved with maintaining the queue has a potentially large performance impact. How large this is, and if it exists at all, depends much on the configuration and actual use case. However, the queue is able to work on so-called "batches" when dequeueing data elements. With batches, multiple data elements are dequeued at once (with a single locking call). The queue dequeues all available elements up to a configured upper limit (<object>DequeueBatchSize <number>). It is important to note that the actual upper limit is dictated by availability. The queue engine will never wait for a batch to fill. So even if a high upper limit is configured, batches may consist of fewer elements, even just one, if there are no more elements waiting in the queue.
 
 Batching can improve performance considerably. Note, however, that it affects the order in which messages are passed to the queue worker threads, as each worker now receive as batch of messages. Also, the larger the batch size and the higher the maximum number of permitted worker threads, the more main memory is needed. For a busy server, large batch sizes (around 1,000 or even more elements) may be useful. Please note that with batching, the main memory must hold BatchSize * NumOfWorkers objects in memory (worst-case scenario), even if running in disk-only mode. So if you use the default 5 workers at the main message queue and set the batch size to 1,000, you need to be prepared that the main message queue holds up to 5,000 messages in main memory in addition to the configured queue size limits!
 
 The queue object's default maximum batch size is eight, but there exists different defaults for the actual parts of rsyslog processing that utilize queues. So you need to check these object's defaults.
 
-Terminating Queues
+### Terminating Queues
 Terminating a process sounds easy, but can be complex. Terminating a running queue is in fact the most complex operation a queue object can perform. You don't see that from a user's point of view, but its quite hard work for the developer to do everything in the right order.
 
 The complexity arises when the queue has still data enqueued when it finishes. Rsyslog tries to preserve as much of it as possible. As a first measure, there is a regular queue time out ("$<object>QueueTimeoutShutdown", specified in milliseconds): the queue workers are given that time period to finish processing the queue.
 
 If after that period there is still data in the queue, workers are instructed to finish the current data element and then terminate. This essentially means any other data is lost. There is another timeout ("$<object>QueueTimeoutActionCompletion", also specified in milliseconds) that specifies how long the workers have to finish the current element. If that timeout expires, any remaining workers are cancelled and the queue is brought down.
 
-If you do not like to lose data on shutdown, the "$<object>QueueSaveOnShutdown" parameter can be set to "on". This requires either a disk or disk-assisted queue. If set, rsyslogd ensures that any queue elements are saved to disk before it terminates. This includes data elements there were begun being processed by workers that needed to be cancelled due to too-long processing. For a large queue, this operation may be lengthy. No timeout applies to a required shutdown save.
+If you do not like to lose data on shutdown, the "$<object>QueueSaveOnShutdown" 
+parameter can be set to "on". This requires either a disk or disk-assisted queue. 
+If set, rsyslogd ensures that any queue elements are saved to disk before it terminates. 
+This includes data elements there were begun being processed by workers that needed 
+to be cancelled due to too-long processing. For a large queue, this operation may be lengthy. 
+No timeout applies to a required shutdown save.
+

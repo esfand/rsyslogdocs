@@ -1,5 +1,5 @@
-Sending messages with tags larger than 32 characters
-----------------------------------------------------
+## Sending messages with tags larger than 32 characters
+
 Friday, October 21st, 2011    
 The relevant syslog RFCs 3164 and 5424 limit the syslog tag to 32 characters max. Messages with larger tag length are malformed and may be discarded by receivers. Anyhow, some folks sometimes need to send tags longer than permitted.
 

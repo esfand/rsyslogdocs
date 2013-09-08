@@ -13,6 +13,6 @@ guard :shell, :all_on_start => true do
   end
 end
 
-guard 'livereload' do
-  watch(%r{target/.+\.(css|js|html)})
-end
+#guard 'livereload' do
+#  watch(%r{target/.+\.(css|js|html)})
+#end

@@ -1,10 +1,61 @@
 = Rsyslog Guide
 
+[[chap-Rsyslog_Guide-Preface]]
+
+== Overview
+
+Rsyslog is an open-source *nix implementation of the syslog protocol. 
+It supports reliable syslog transport over TCP, local buffering, SSL/TLS/RELP, 
+logging to databases, and email alerting.
+
+
+== Message Life Cycle
+
+message life cyle to be written.....
+
+
+== Architecture
+
+Rsyslog architecture description
+
+== Configuration Scripts
+
+confi scripts
+
+
+== rsyslog.conf Configuration File
+
+Rsyslog is configured via the rsyslog.conf file, typically found in /etc. 
+By default, rsyslogd reads the file /etc/rsyslog.conf. 
+This may be changed by command line option "-f".
+
+Configuration file examples can be found in the rsyslog wiki. Also keep the 
+rsyslog  config snippets on your mind. These are ready-to-use real building blocks 
+for rsyslog configuration.
+
+While rsyslogd contains enhancements over standard syslogd, efforts have been made 
+to keep the configuration file as compatible as possible.  While, for obvious reasons, 
+enhanced features require a different config file syntax, rsyslogd should be able 
+to work with a standard syslog.conf file.  This is especially useful while you are 
+migrating from syslogd to rsyslogd.
+
+Follow the links below to learn more about specific topics:
+
+* http://www.rsyslog.com/doc/rsyslog_conf_basic_structure.html[Basic Structure]
+* http://www.rsyslog.com/doc/rsyslog_conf_modules.html[Modules]
+* http://www.rsyslog.com/doc/rsyslog_conf_templates.html[Templates]
+* http://www.rsyslog.com/doc/rsyslog_conf_filter.html[Filter Conditions]
+* http://www.rsyslog.com/doc/rsyslog_conf_actions.html[Actions]
+* http://www.rsyslog.com/doc/rsyslog_conf_output.html[Output Channels]
+* Legacy Configuration Directives
+* sysklogd compatibility
+
+
 [[chap-Rsyslog_Guide-Introduction]]
 
 == Introduction
 
-Rsyslog is a rich component library for JavaServer Faces ([acronym]#JSF#). 
+Rsyslog is a component library for capturing and processing log messages ([acronym]#JSF#). 
 The framework extends the Ajax capabilities of JSF with advanced features 
 for the development of enterprise web applications.
 

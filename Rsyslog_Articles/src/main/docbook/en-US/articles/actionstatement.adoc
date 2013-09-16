@@ -107,7 +107,7 @@ The action object has different parameters:
     Default: none +
     Mandatory: yes (for disk-based queues) +
 +
-    Disk-based queues create a set of files for queue content. 
+Disk-based queues create a set of files for queue content. 
     The value set via queue.filename acts as the basename to be used for 
     filename creation. For actual log data, a number is appended to 
     the file name. There is also a so-called "queue information" (qi) file created,
@@ -131,8 +131,9 @@ The action object has different parameters:
     will not be utilized by messages with lower loss potential (like TCP-received 
     messages).    
     
-    Warning: do not set the size to extremely small values (like less than 500 messages) unless you know 
-    exactly what you do (and why!). This could interfere with other internal settings like watermarks and 
+    Warning: do not set the size to extremely small values (like less than 500
+    messages) unless you know exactly what you do (and why!). This could
+    interfere with other internal settings like watermarks and 
     batch sizes. It is possible to specify very small values in order to support power users who customize
     the other settings accordingly. Usually there is no need to do that. Queues take only up memory when 
     messages are stored in them. So reducing queue sizes does not reduce memory usage, except in cases 

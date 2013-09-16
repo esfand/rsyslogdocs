@@ -107,7 +107,7 @@ If your system is connected to a reliable UPS and you receive
 lots of log data (e.g. firewall logs), it might be a very good idea to
 turn off syncing by specifying the "-" in front of the file name.
 
-**The filename can be either static **(always
+The filename can be either *static* (always
 the same) or *dynamic* (different based on message
 received). The later is useful if you would automatically split
 messages into different files based on some message criteria. For
@@ -139,7 +139,7 @@ And of course you can use templates to specify the output format:
 *.* ?DynFile;MyTemplate
 
 .A word of caution
-Note: rsyslog creates files as needed. So if a new host is using your syslog
+[Note] rsyslog creates files as needed. So if a new host is using your syslog
 server, rsyslog will automatically create a new file for it.
 
 *Creating directories is also supported*. For

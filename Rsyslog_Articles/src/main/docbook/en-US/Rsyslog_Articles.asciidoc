@@ -8140,3 +8140,831 @@ This includes data elements there were begun being processed by workers that nee
 to be cancelled due to too-long processing. For a large queue, this operation may be lengthy. 
 No timeout applies to a required shutdown save.
 
+
+[[rfc5234fields]]
+== RFC5234 Fields
+
+===  Syslog Message Format
+
+   The syslog message has the following ABNF [RFC5234] definition:
+
+      SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
+
+      HEADER          = PRI VERSION SP TIMESTAMP SP HOSTNAME SP APP-NAME SP PROCID SP MSGID
+      PRI             = "<" PRIVAL ">"
+      PRIVAL          = 1*3DIGIT ; range 0 .. 191
+      VERSION         = NONZERO-DIGIT 0*2DIGIT
+      HOSTNAME        = NILVALUE / 1*255PRINTUSASCII
+
+      APP-NAME        = NILVALUE / 1*48PRINTUSASCII
+      PROCID          = NILVALUE / 1*128PRINTUSASCII
+      MSGID           = NILVALUE / 1*32PRINTUSASCII
+
+      TIMESTAMP       = NILVALUE / FULL-DATE "T" FULL-TIME
+      FULL-DATE       = DATE-FULLYEAR "-" DATE-MONTH "-" DATE-MDAY
+      DATE-FULLYEAR   = 4DIGIT
+      DATE-MONTH      = 2DIGIT  ; 01-12
+      DATE-MDAY       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on
+                                ; month/year
+      FULL-TIME       = PARTIAL-TIME TIME-OFFSET
+      PARTIAL-TIME    = TIME-HOUR ":" TIME-MINUTE ":" TIME-SECOND
+                        [TIME-SECFRAC]
+      TIME-HOUR       = 2DIGIT  ; 00-23
+      TIME-MINUTE     = 2DIGIT  ; 00-59
+      TIME-SECOND     = 2DIGIT  ; 00-59
+      TIME-SECFRAC    = "." 1*6DIGIT
+      TIME-OFFSET     = "Z" / TIME-NUMOFFSET
+      TIME-NUMOFFSET  = ("+" / "-") TIME-HOUR ":" TIME-MINUTE
+
+
+      STRUCTURED-DATA = NILVALUE / 1*SD-ELEMENT
+      SD-ELEMENT      = "[" SD-ID *(SP SD-PARAM) "]"
+      SD-PARAM        = PARAM-NAME "=" %d34 PARAM-VALUE %d34
+      SD-ID           = SD-NAME
+      PARAM-NAME      = SD-NAME
+      PARAM-VALUE     = UTF-8-STRING ; characters '"', '\' and
+                                     ; ']' MUST be escaped.
+      SD-NAME         = 1*32PRINTUSASCII
+                        ; except '=', SP, ']', %d34 (")
+
+      MSG             = MSG-ANY / MSG-UTF8
+      MSG-ANY         = *OCTET ; not starting with BOM
+      MSG-UTF8        = BOM UTF-8-STRING
+      BOM             = %xEF.BB.BF
+
+      UTF-8-STRING    = *OCTET ; UTF-8 string as specified
+                        ; in RFC 3629
+
+      OCTET           = %d00-255
+      SP              = %d32
+      PRINTUSASCII    = %d33-126
+      NONZERO-DIGIT   = %d49-57
+      DIGIT           = %d48 / NONZERO-DIGIT
+      NILVALUE        = "-"
+
+
+6.1.  Message Length
+
+   Syslog message size limits are dictated by the syslog transport
+   mapping in use.  There is no upper limit per se.  Each transport
+   mapping defines the minimum maximum required message length support,
+   and the minimum maximum MUST be at least 480 octets in length.
+
+   Any transport receiver MUST be able to accept messages of up to and
+   including 480 octets in length.  All transport receiver
+   implementations SHOULD be able to accept messages of up to and
+   including 2048 octets in length.  Transport receivers MAY receive
+   messages larger than 2048 octets in length.  If a transport receiver
+   receives a message with a length larger than it supports, the
+   transport receiver SHOULD truncate the payload.  Alternatively, it
+   MAY discard the message.
+
+   If a transport receiver truncates messages, the truncation MUST occur
+   at the end of the message.  After truncation, the message MAY contain
+   invalid UTF-8 encoding or invalid STRUCTURED-DATA.  The transport
+   receiver MAY discard the message or MAY try to process as much as
+   possible in this case.
+
+6.2.  HEADER
+
+   The character set used in the HEADER MUST be seven-bit ASCII in an
+   eight-bit field as described in [RFC5234].  These are the ASCII codes
+   as defined in "USA Standard Code for Information Interchange"
+   [ANSI.X3-4.1968].
+
+   The header format is designed to provide some interoperability with
+   older BSD-based syslog.  For details on this, see Appendix A.1.
+
+6.2.1.  PRI
+
+   The PRI part MUST have three, four, or five characters and will be
+   bound with angle brackets as the first and last characters.  The PRI
+   part starts with a leading "<" ('less-than' character, %d60),
+   followed by a number, which is followed by a ">" ('greater-than'
+   character, %d62).  The number contained within these angle brackets
+   is known as the Priority value (PRIVAL) and represents both the
+   Facility and Severity.  The Priority value consists of one, two, or
+   three decimal integers (ABNF DIGITS) using values of %d48 (for "0")
+   through %d57 (for "9").
+
+   Facility and Severity values are not normative but often used.  They
+   are described in the following tables for purely informational
+   purposes.  Facility values MUST be in the range of 0 to 23 inclusive.
+
+          Numerical             Facility
+             Code
+
+              0             kernel messages
+              1             user-level messages
+              2             mail system
+              3             system daemons
+              4             security/authorization messages
+              5             messages generated internally by syslogd
+              6             line printer subsystem
+              7             network news subsystem
+              8             UUCP subsystem
+              9             clock daemon
+             10             security/authorization messages
+             11             FTP daemon
+             12             NTP subsystem
+             13             log audit
+             14             log alert
+             15             clock daemon (note 2)
+             16             local use 0  (local0)
+             17             local use 1  (local1)
+             18             local use 2  (local2)
+             19             local use 3  (local3)
+             20             local use 4  (local4)
+             21             local use 5  (local5)
+             22             local use 6  (local6)
+             23             local use 7  (local7)
+
+              Table 1.  Syslog Message Facilities
+
+   Each message Priority also has a decimal Severity level indicator.
+   These are described in the following table along with their numerical
+   values.  Severity values MUST be in the range of 0 to 7 inclusive.
+
+           Numerical         Severity
+             Code
+
+              0       Emergency: system is unusable
+              1       Alert: action must be taken immediately
+              2       Critical: critical conditions
+              3       Error: error conditions
+              4       Warning: warning conditions
+              5       Notice: normal but significant condition
+              6       Informational: informational messages
+              7       Debug: debug-level messages
+
+              Table 2. Syslog Message Severities
+
+   The Priority value is calculated by first multiplying the Facility
+   number by 8 and then adding the numerical value of the Severity.  For
+   example, a kernel message (Facility=0) with a Severity of Emergency
+   (Severity=0) would have a Priority value of 0.  Also, a "local use 4"
+   message (Facility=20) with a Severity of Notice (Severity=5) would
+   have a Priority value of 165.  In the PRI of a syslog message, these
+   values would be placed between the angle brackets as <0> and <165>
+   respectively.  The only time a value of "0" follows the "<" is for
+   the Priority value of "0".  Otherwise, leading "0"s MUST NOT be used.
+
+6.2.2.  VERSION
+
+   The VERSION field denotes the version of the syslog protocol
+   specification.  The version number MUST be incremented for any new
+   syslog protocol specification that changes any part of the HEADER
+   format.  Changes include the addition or removal of fields, or a
+   change of syntax or semantics of existing fields.  This document uses
+   a VERSION value of "1".  The VERSION values are IANA-assigned
+   (Section 9.1) via the Standards Action method as described in
+   [RFC5226].
+
+6.2.3.  TIMESTAMP
+
+   The TIMESTAMP field is a formalized timestamp derived from [RFC3339].
+
+   Whereas [RFC3339] makes allowances for multiple syntaxes, this
+   document imposes further restrictions.  The TIMESTAMP value MUST
+   follow these restrictions:
+
+   o  The "T" and "Z" characters in this syntax MUST be upper case.
+
+   o  Usage of the "T" character is REQUIRED.
+
+   o  Leap seconds MUST NOT be used.
+
+   The originator SHOULD include TIME-SECFRAC if its clock accuracy and
+   performance permit.  The "timeQuality" SD-ID described in Section 7.1
+   allows the originator to specify the accuracy and trustworthiness of
+   the timestamp.
+
+   A syslog application MUST use the NILVALUE as TIMESTAMP if the syslog
+   application is incapable of obtaining system time.
+
+6.2.3.1.  Examples
+
+   Example 1
+
+        1985-04-12T23:20:50.52Z
+
+   This represents 20 minutes and 50.52 seconds after the 23rd hour of
+   12 April 1985 in UTC.
+
+   Example 2
+
+        1985-04-12T19:20:50.52-04:00
+
+   This represents the same time as in example 1, but expressed in US
+   Eastern Standard Time (observing daylight savings time).
+
+   Example 3
+
+        2003-10-11T22:14:15.003Z
+
+   This represents 11 October 2003 at 10:14:15pm, 3 milliseconds into
+   the next second.  The timestamp is in UTC.  The timestamp provides
+   millisecond resolution.  The creator may have actually had a better
+   resolution, but providing just three digits for the fractional part
+   of a second does not tell us.
+
+   Example 4
+
+         2003-08-24T05:14:15.000003-07:00
+
+   This represents 24 August 2003 at 05:14:15am, 3 microseconds into the
+   next second.  The microsecond resolution is indicated by the
+   additional digits in TIME-SECFRAC.  The timestamp indicates that its
+   local time is -7 hours from UTC.  This timestamp might be created in
+   the US Pacific time zone during daylight savings time.
+
+   Example 5 - An Invalid TIMESTAMP
+
+         2003-08-24T05:14:15.000000003-07:00
+
+   This example is nearly the same as Example 4, but it is specifying
+   TIME-SECFRAC in nanoseconds.  This results in TIME-SECFRAC being
+   longer than the allowed 6 digits, which invalidates it.
+
+6.2.4.  HOSTNAME
+
+   The HOSTNAME field identifies the machine that originally sent the
+   syslog message.
+
+   The HOSTNAME field SHOULD contain the hostname and the domain name of
+   the originator in the format specified in STD 13 [RFC1034].  This
+   format is called a Fully Qualified Domain Name (FQDN) in this
+   document.
+
+   In practice, not all syslog applications are able to provide an FQDN.
+   As such, other values MAY also be present in HOSTNAME.  This document
+   makes provisions for using other values in such situations.  A syslog
+   application SHOULD provide the most specific available value first.
+   The order of preference for the contents of the HOSTNAME field is as
+   follows:
+
+   1.  FQDN
+
+   2.  Static IP address
+
+   3.  hostname
+
+   4.  Dynamic IP address
+
+   5.  the NILVALUE
+
+   If an IPv4 address is used, it MUST be in the format of the dotted
+   decimal notation as used in STD 13 [RFC1035].  If an IPv6 address is
+   used, a valid textual representation as described in [RFC4291],
+   Section 2.2, MUST be used.
+
+   Syslog applications SHOULD consistently use the same value in the
+   HOSTNAME field for as long as possible.
+
+   The NILVALUE SHOULD only be used when the syslog application has no
+   way to obtain its real hostname.  This situation is considered highly
+   unlikely.
+
+6.2.5.  APP-NAME
+
+   The APP-NAME field SHOULD identify the device or application that
+   originated the message.  It is a string without further semantics.
+   It is intended for filtering messages on a relay or collector.
+
+   The NILVALUE MAY be used when the syslog application has no idea of
+   its APP-NAME or cannot provide that information.  It may be that a
+   device is unable to provide that information either because of a
+   local policy decision, or because the information is not available,
+   or not applicable, on the device.
+
+   This field MAY be operator-assigned.
+
+6.2.6.  PROCID
+
+   PROCID is a value that is included in the message, having no
+   interoperable meaning, except that a change in the value indicates
+   there has been a discontinuity in syslog reporting.  The field does
+   not have any specific syntax or semantics; the value is
+   implementation-dependent and/or operator-assigned.  The NILVALUE MAY
+   be used when no value is provided.
+
+   The PROCID field is often used to provide the process name or process
+   ID associated with a syslog system.  The NILVALUE might be used when
+   a process ID is not available.  On an embedded system without any
+   operating system process ID, PROCID might be a reboot ID.
+
+   PROCID can enable log analyzers to detect discontinuities in syslog
+   reporting by detecting a change in the syslog process ID.  However,
+   PROCID is not a reliable identification of a restarted process since
+   the restarted syslog process might be assigned the same process ID as
+   the previous syslog process.
+
+   PROCID can also be used to identify which messages belong to a group
+   of messages.  For example, an SMTP mail transfer agent might put its
+   SMTP transaction ID into PROCID, which would allow the collector or
+   relay to group messages based on the SMTP transaction.
+
+6.2.7.  MSGID
+
+   The MSGID SHOULD identify the type of message.  For example, a
+   firewall might use the MSGID "TCPIN" for incoming TCP traffic and the
+   MSGID "TCPOUT" for outgoing TCP traffic.  Messages with the same
+   MSGID should reflect events of the same semantics.  The MSGID itself
+   is a string without further semantics.  It is intended for filtering
+   messages on a relay or collector.
+
+   The NILVALUE SHOULD be used when the syslog application does not, or
+   cannot, provide any value.
+
+   This field MAY be operator-assigned.
+
+6.3.  STRUCTURED-DATA
+
+   STRUCTURED-DATA provides a mechanism to express information in a well
+   defined, easily parseable and interpretable data format.  There are
+   multiple usage scenarios.  For example, it may express meta-
+   information about the syslog message or application-specific
+   information such as traffic counters or IP addresses.
+
+   STRUCTURED-DATA can contain zero, one, or multiple structured data
+   elements, which are referred to as "SD-ELEMENT" in this document.
+
+   In case of zero structured data elements, the STRUCTURED-DATA field
+   MUST contain the NILVALUE.
+
+   The character set used in STRUCTURED-DATA MUST be seven-bit ASCII in
+   an eight-bit field as described in [RFC5234].  These are the ASCII
+   codes as defined in "USA Standard Code for Information Interchange"
+   [ANSI.X3-4.1968].  An exception is the PARAM-VALUE field (see
+   Section 6.3.3), in which UTF-8 encoding MUST be used.
+
+   A collector MAY ignore malformed STRUCTURED-DATA elements.  A relay
+   MUST forward malformed STRUCTURED-DATA without any alteration.
+
+6.3.1.  SD-ELEMENT
+
+   An SD-ELEMENT consists of a name and parameter name-value pairs.  The
+   name is referred to as SD-ID.  The name-value pairs are referred to
+   as "SD-PARAM".
+
+6.3.2.  SD-ID
+
+   SD-IDs are case-sensitive and uniquely identify the type and purpose
+   of the SD-ELEMENT.  The same SD-ID MUST NOT exist more than once in a
+   message.
+
+   There are two formats for SD-ID names:
+
+   o  Names that do not contain an at-sign ("@", ABNF %d64) are reserved
+      to be assigned by IETF Review as described in BCP26 [RFC5226].
+      Currently, these are the names defined in Section 7.  Names of
+      this format are only valid if they are first registered with the
+      IANA.  Registered names MUST NOT contain an at-sign ('@', ABNF
+      %d64), an equal-sign ('=', ABNF %d61), a closing brace (']', ABNF
+      %d93), a quote-character ('"', ABNF %d34), whitespace, or control
+      characters (ASCII code 127 and codes 32 or less).
+
+   o  Anyone can define additional SD-IDs using names in the format
+      name@<private enterprise number>, e.g., "ourSDID@32473".  The
+      format of the part preceding the at-sign is not specified;
+      however, these names MUST be printable US-ASCII strings, and MUST
+      NOT contain an at-sign ('@', ABNF %d64), an equal-sign ('=', ABNF
+      %d61), a closing brace (']', ABNF %d93), a quote-character ('"',
+      ABNF %d34), whitespace, or control characters.  The part following
+      the at-sign MUST be a private enterprise number as specified in
+      Section 7.2.2.  Please note that throughout this document the
+      value of 32473 is used for all private enterprise numbers.  This
+      value has been reserved by IANA to be used as an example number in
+      documentation.  Implementors will need to use their own private
+      enterprise number for the enterpriseId parameter, and when
+      creating locally extensible SD-ID names.
+
+6.3.3.  SD-PARAM
+
+   Each SD-PARAM consists of a name, referred to as PARAM-NAME, and a
+   value, referred to as PARAM-VALUE.
+
+   PARAM-NAME is case-sensitive.  IANA controls all PARAM-NAMEs, with
+   the exception of those in SD-IDs whose names contain an at-sign.  The
+   PARAM-NAME scope is within a specific SD-ID.  Thus, equally named
+   PARAM-NAME values contained in two different SD-IDs are not the same.
+
+   To support international characters, the PARAM-VALUE field MUST be
+   encoded using UTF-8.  A syslog application MAY issue any valid UTF-8
+   sequence.  A syslog application MUST accept any valid UTF-8 sequence
+   in the "shortest form".  It MUST NOT fail if control characters are
+   present in PARAM-VALUE.  The syslog application MAY modify messages
+   containing control characters (e.g., by changing an octet with value
+   0 (USASCII NUL) to the four characters "#000").  For the reasons
+   outlined in UNICODE TR36 [UNICODE-TR36], section 3.1, an originator
+   MUST encode messages in the "shortest form" and a collector or relay
+   MUST NOT interpret messages in the "non-shortest form".
+
+   Inside PARAM-VALUE, the characters '"' (ABNF %d34), '\' (ABNF %d92),
+   and ']' (ABNF %d93) MUST be escaped.  This is necessary to avoid
+   parsing errors.  Escaping ']' would not strictly be necessary but is
+   REQUIRED by this specification to avoid syslog application
+   implementation errors.  Each of these three characters MUST be
+   escaped as '\"', '\\', and '\]' respectively.  The backslash is used
+   for control character escaping for consistency with its use for
+   escaping in other parts of the syslog message as well as in
+   traditional syslog.
+
+   A backslash ('\') followed by none of the three described characters
+   is considered an invalid escape sequence.  In this case, the
+   backslash MUST be treated as a regular backslash and the following
+   character as a regular character.  Thus, the invalid sequence MUST
+   not be altered.
+
+   An SD-PARAM MAY be repeated multiple times inside an SD-ELEMENT.
+
+6.3.4.  Change Control
+
+   Once SD-IDs and PARAM-NAMEs are defined, syntax and semantics of
+   these objects MUST NOT be altered.  Should a change to an existing
+   object be desired, a new SD-ID or PARAM-NAME MUST be created and the
+   old one remain unchanged.  OPTIONAL PARAM-NAMEs MAY be added to an
+   existing SD-ID.
+
+6.3.5.  Examples
+
+   All examples in this section show only the structured data part of
+   the message.  Examples should be considered to be on one line.  They
+   are wrapped on multiple lines in this document for readability
+   purposes.  A description is given after each example.
+
+   Example 1 - Valid
+
+           [exampleSDID@32473 iut="3" eventSource="Application"
+           eventID="1011"]
+
+   This example is a structured data element with a non-IANA controlled
+   SD-ID of type "exampleSDID@32473", which has three parameters.
+
+   Example 2 - Valid
+
+           [exampleSDID@32473 iut="3" eventSource="Application"
+           eventID="1011"][examplePriority@32473 class="high"]
+
+   This is the same example as in 1, but with a second structured data
+   element.  Please note that the structured data element immediately
+   follows the first one (there is no SP between them).
+
+   Example 3 - Invalid
+
+           [exampleSDID@32473 iut="3" eventSource="Application"
+           eventID="1011"] [examplePriority@32473 class="high"]
+
+   This is nearly the same example as 2, but it has a subtle error --
+   there is an SP character between the two structured data elements
+   ("]SP[").  This is invalid.  It will cause the STRUCTURED-DATA field
+   to end after the first element.  The second element will be
+   interpreted as part of the MSG field.
+
+   Example 4 - Invalid
+
+           [ exampleSDID@32473 iut="3" eventSource="Application"
+           eventID="1011"][examplePriority@32473 class="high"]
+
+   This example is nearly the same as 2.  It has another subtle error --
+   the SP character occurs after the initial bracket.  A structured data
+   element SD-ID MUST immediately follow the beginning bracket, so the
+   SP character invalidates the STRUCTURED-DATA.  A syslog application
+   MAY discard this message.
+
+   Example 5 - Valid
+
+           [sigSig ver="1" rsID="1234" ... signature="..."]
+
+   Example 5 is a valid example.  It shows a hypothetical IANA-assigned
+   SD-ID.  The ellipses denote missing content, which has been left out
+   of this example for brevity.
+
+6.4.  MSG
+
+   The MSG part contains a free-form message that provides information
+   about the event.
+
+   The character set used in MSG SHOULD be UNICODE, encoded using UTF-8
+   as specified in [RFC3629].  If the syslog application cannot encode
+   the MSG in Unicode, it MAY use any other encoding.
+
+   The syslog application SHOULD avoid octet values below 32 (the
+   traditional US-ASCII control character range except DEL).  These
+   values are legal, but a syslog application MAY modify these
+   characters upon reception.  For example, it might change them into an
+   escape sequence (e.g., value 0 may be changed to "\0").  A syslog
+   application SHOULD NOT modify any other octet values.
+
+   If a syslog application encodes MSG in UTF-8, the string MUST start
+   with the Unicode byte order mask (BOM), which for UTF-8 is ABNF
+   %xEF.BB.BF.  The syslog application MUST encode in the "shortest
+   form" and MAY use any valid UTF-8 sequence.
+
+   If a syslog application is processing an MSG starting with a BOM and
+   the MSG contains UTF-8 that is not shortest form, the MSG MUST NOT be
+   interpreted as being encoded in UTF-8, for the reasons outlined in
+   [UNICODE-TR36], Section 3.1.  Guidance about this is given in
+   Appendix A.8.
+
+   Also, according to UNICODE TR36 [UNICODE-TR36], a syslog application
+   MUST NOT interpret messages in the "non-shortest form".  It MUST NOT
+   interpret invalid UTF-8 sequences.
+
+6.5.  Examples
+
+   The following are examples of valid syslog messages.  A description
+   of each example can be found below it.  The examples are based on
+   similar examples from [RFC3164] and may be familiar to readers.  The
+   otherwise-unprintable Unicode BOM is represented as "BOM" in the
+   examples.
+
+   Example 1 - with no STRUCTURED-DATA
+
+        <34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47
+        - BOM'su root' failed for lonvick on /dev/pts/8
+
+   In this example, the VERSION is 1 and the Facility has the value of
+   4.  The Severity is 2.  The message was created on 11 October 2003 at
+   10:14:15pm UTC, 3 milliseconds into the next second.  The message
+   originated from a host that identifies itself as
+   "mymachine.example.com".  The APP-NAME is "su" and the PROCID is
+   unknown.  The MSGID is "ID47".  The MSG is "'su root' failed for
+   lonvick...", encoded in UTF-8.  The encoding is defined by the BOM.
+   There is no STRUCTURED-DATA present in the message; this is indicated
+   by "-" in the STRUCTURED-DATA field.
+
+   Example 2 - with no STRUCTURED-DATA
+
+         <165>1 2003-08-24T05:14:15.000003-07:00 192.0.2.1
+         myproc 8710 - - %% It's time to make the do-nuts.
+
+   In this example, the VERSION is again 1.  The Facility is 20, the
+   Severity 5.  The message was created on 24 August 2003 at 5:14:15am,
+   with a -7 hour offset from UTC, 3 microseconds into the next second.
+   The HOSTNAME is "192.0.2.1", so the syslog application did not know
+   its FQDN and used one of its IPv4 addresses instead.  The APP-NAME is
+   "myproc" and the PROCID is "8710" (for example, this could be the
+   UNIX PID).  There is no STRUCTURED-DATA present in the message; this
+   is indicated by "-" in the STRUCTURED-DATA field.  There is no
+   specific MSGID and this is indicated by the "-" in the MSGID field.
+
+   The message is "%% It's time to make the do-nuts.".  As the Unicode
+   BOM is missing, the syslog application does not know the encoding of
+   the MSG part.
+
+   Example 3 - with STRUCTURED-DATA
+
+           <165>1 2003-10-11T22:14:15.003Z mymachine.example.com
+           evntslog - ID47 [exampleSDID@32473 iut="3" eventSource=
+           "Application" eventID="1011"] BOMAn application
+           event log entry...
+
+   This example is modeled after Example 1.  However, this time it
+   contains STRUCTURED-DATA, a single element with the value
+   "[exampleSDID@32473 iut="3" eventSource="Application"
+   eventID="1011"]".  The MSG itself is "An application event log
+   entry..."  The BOM at the beginning of MSG indicates UTF-8 encoding.
+
+   Example 4 - STRUCTURED-DATA Only
+
+           <165>1 2003-10-11T22:14:15.003Z mymachine.example.com
+           evntslog - ID47 [exampleSDID@32473 iut="3" eventSource=
+           "Application" eventID="1011"][examplePriority@32473
+           class="high"]
+
+   This example shows a message with only STRUCTURED-DATA and no MSG
+   part.  This is a valid message.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[[rfc3164format]]
+== RFC3164 Message Format
+
+4. Packet Format and Contents
+
+   The payload of any IP packet that has a UDP destination port of 514
+   MUST be treated as a syslog message.  There MAY be differences
+   between the format of an originally transmitted syslog message and
+   the format of a relayed message.  In essence, it is RECOMMENDED to
+   transmit a syslog message in the format specified in this document,
+   but it is not required.  If a relay is able to recognize the message
+   as adhering to that format then it MUST retransmit the message
+   without making any changes to it.  However, if a relay receives a
+   message but cannot discern the proper implementation of the format,
+   it is REQUIRED to modify the message so that it conforms to that
+   format before it retransmits it.  Section 4.1 will describe the
+   RECOMMENDED format for syslog messages.  Section 4.2 will describe
+   the requirements for originally transmitted messages and Section 4.3
+   will describe the requirements for relayed messages.
+
+4.1 syslog Message Parts
+
+   The full format of a syslog message seen on the wire has three
+   discernable parts.  The first part is called the PRI, the second part
+   is the HEADER, and the third part is the MSG.  The total length of
+   the packet MUST be 1024 bytes or less.  There is no minimum length of
+   the syslog message although sending a syslog packet with no contents
+   is worthless and SHOULD NOT be transmitted.
+
+4.1.1 PRI Part
+
+   The PRI part MUST have three, four, or five characters and will be
+   bound with angle brackets as the first and last characters.  The PRI
+   part starts with a leading "<" ('less-than' character), followed by a
+   number, which is followed by a ">" ('greater-than' character). The
+   code set used in this part MUST be seven-bit ASCII in an eight-bit
+   field as described in RFC 2234 [2].  These are the ASCII codes as
+   defined in "USA Standard Code for Information Interchange" [3].  In
+   this, the "<" character is defined as the Augmented Backus-Naur Form
+   (ABNF) %d60, and the ">" character has ABNF value %d62.  The number
+   contained within these angle brackets is known as the Priority value
+   and represents both the Facility and Severity as described below.
+   The Priority value consists of one, two, or three decimal integers
+   (ABNF DIGITS) using values of %d48 (for "0") through %d57 (for "9").
+
+   The Facilities and Severities of the messages are numerically coded
+   with decimal values.  Some of the operating system daemons and
+   processes have been assigned Facility values.  Processes and daemons
+   that have not been explicitly assigned a Facility may use any of the
+   "local use" facilities or they may use the "user-level" Facility.
+   Those Facilities that have been designated are shown in the following
+   table along with their numerical code values.
+
+       Numerical             Facility
+          Code
+
+           0             kernel messages
+           1             user-level messages
+           2             mail system
+           3             system daemons
+           4             security/authorization messages (note 1)
+           5             messages generated internally by syslogd
+           6             line printer subsystem
+           7             network news subsystem
+           8             UUCP subsystem
+           9             clock daemon (note 2)
+          10             security/authorization messages (note 1)
+          11             FTP daemon
+          12             NTP subsystem
+          13             log audit (note 1)
+          14             log alert (note 1)
+          15             clock daemon (note 2)
+          16             local use 0  (local0)
+          17             local use 1  (local1)
+          18             local use 2  (local2)
+          19             local use 3  (local3)
+          20             local use 4  (local4)
+          21             local use 5  (local5)
+          22             local use 6  (local6)
+          23             local use 7  (local7)
+
+           Table 1.  syslog Message Facilities
+
+        Note 1 - Various operating systems have been found to utilize
+           Facilities 4, 10, 13 and 14 for security/authorization,
+           audit, and alert messages which seem to be similar.
+        Note 2 - Various operating systems have been found to utilize
+           both Facilities 9 and 15 for clock (cron/at) messages.
+
+   Each message Priority also has a decimal Severity level indicator.
+   These are described in the following table along with their numerical
+   values.
+
+        Numerical         Severity
+          Code
+
+           0       Emergency: system is unusable
+           1       Alert: action must be taken immediately
+           2       Critical: critical conditions
+           3       Error: error conditions
+           4       Warning: warning conditions
+           5       Notice: normal but significant condition
+           6       Informational: informational messages
+           7       Debug: debug-level messages
+
+           Table 2. syslog Message Severities
+
+   The Priority value is calculated by first multiplying the Facility
+   number by 8 and then adding the numerical value of the Severity. For
+   example, a kernel message (Facility=0) with a Severity of Emergency
+   (Severity=0) would have a Priority value of 0.  Also, a "local use 4"
+   message (Facility=20) with a Severity of Notice (Severity=5) would
+   have a Priority value of 165.  In the PRI part of a syslog message,
+   these values would be placed between the angle brackets as <0> and
+   <165> respectively.  The only time a value of "0" will follow the "<"
+   is for the Priority value of "0". Otherwise, leading "0"s MUST NOT be
+   used.
+
+4.1.2 HEADER Part of a syslog Packet
+
+   The HEADER part contains a timestamp and an indication of the
+   hostname or IP address of the device.  The HEADER part of the syslog
+   packet MUST contain visible (printing) characters.  The code set used
+   MUST also be seven-bit ASCII in an eight-bit field like that used in
+   the PRI part.  In this code set, the only allowable characters are
+   the ABNF VCHAR values (%d33-126) and spaces (SP value %d32).
+
+   The HEADER contains two fields called the TIMESTAMP and the HOSTNAME.
+   The TIMESTAMP will immediately follow the trailing ">" from the PRI
+   part and single space characters MUST follow each of the TIMESTAMP
+   and HOSTNAME fields.  HOSTNAME will contain the hostname, as it knows
+   itself.  If it does not have a hostname, then it will contain its own
+   IP address.  If a device has multiple IP addresses, it has usually
+   been seen to use the IP address from which the message is
+   transmitted.  An alternative to this behavior has also been seen.  In
+   that case, a device may be configured to send all messages using a
+   single source IP address regardless of the interface from which the
+   message is sent.  This will provide a single consistent HOSTNAME for
+   all messages sent from a device.
+
+   The TIMESTAMP field is the local time and is in the format of "Mmm dd
+   hh:mm:ss" (without the quote marks) where:
+
+         Mmm is the English language abbreviation for the month of the
+         year with the first character in uppercase and the other two
+         characters in lowercase.  The following are the only acceptable
+         values:
+
+         Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+
+         dd is the day of the month.  If the day of the month is less
+         than 10, then it MUST be represented as a space and then the
+         number.  For example, the 7th day of August would be
+         represented as "Aug  7", with two spaces between the "g" and
+         the "7".
+
+         hh:mm:ss is the local time.  The hour (hh) is represented in a
+         24-hour format.  Valid entries are between 00 and 23,
+         inclusive.  The minute (mm) and second (ss) entries are between
+         00 and 59 inclusive.
+
+   A single space character MUST follow the TIMESTAMP field.
+
+   The HOSTNAME field will contain only the hostname, the IPv4 address,
+   or the IPv6 address of the originator of the message.  The preferred
+   value is the hostname.  If the hostname is used, the HOSTNAME field
+   MUST contain the hostname of the device as specified in STD 13 [4].
+   It should be noted that this MUST NOT contain any embedded spaces.
+   The Domain Name MUST NOT be included in the HOSTNAME field.  If the
+   IPv4 address is used, it MUST be shown as the dotted decimal notation
+   as used in STD 13 [5].  If an IPv6 address is used, any valid
+   representation used in RFC 2373 [6] MAY be used.  A single space
+   character MUST also follow the HOSTNAME field.
+
+4.1.3 MSG Part of a syslog Packet
+
+   The MSG part will fill the remainder of the syslog packet.  This will
+   usually contain some additional information of the process that
+   generated the message, and then the text of the message.  There is no
+   ending delimiter to this part.  The MSG part of the syslog packet
+   MUST contain visible (printing) characters.  The code set
+   traditionally and most often used has also been seven-bit ASCII in an
+   eight-bit field like that used in the PRI and HEADER parts.  In this
+   code set, the only allowable characters are the ABNF VCHAR values
+   (%d33-126) and spaces (SP value %d32).  However, no indication of the
+   code set used within the MSG is required, nor is it expected.  Other
+   code sets MAY be used as long as the characters used in the MSG are
+   exclusively visible characters and spaces similar to those described
+   above.  The selection of a code set used in the MSG part SHOULD be
+   made with thoughts of the intended receiver.  A message containing
+   characters in a code set that cannot be viewed or understood by a
+   recipient will yield no information of value to an operator or
+   administrator looking at it.
+
+   The MSG part has two fields known as the TAG field and the CONTENT
+   field.  The value in the TAG field will be the name of the program or
+   process that generated the message.  The CONTENT contains the details
+   of the message.  This has traditionally been a freeform message that
+   gives some detailed information of the event.  The TAG is a string of
+   ABNF alphanumeric characters that MUST NOT exceed 32 characters.  Any
+   non-alphanumeric character will terminate the TAG field and will be
+   assumed to be the starting character of the CONTENT field.  Most
+   commonly, the first character of the CONTENT field that signifies the
+   conclusion of the TAG field has been seen to be the left square
+   bracket character ("["), a colon character (":"), or a space
+   character.  This is explained in more detail in Section 5.3.
+
+
+
+
+
+
+
+

@@ -139,7 +139,7 @@ And of course you can use templates to specify the output format:
 *.* ?DynFile;MyTemplate
 
 .A word of caution
-[Note] rsyslog creates files as needed. So if a new host is using your syslog
+[NOTE] rsyslog creates files as needed. So if a new host is using your syslog
 server, rsyslog will automatically create a new file for it.
 
 *Creating directories is also supported*. For

@@ -1,7 +1,9 @@
-## Action Statement ##
-		
+= Action Statement
+
+== Action Statement
+
 Action object describe what is to be done with a message. 
-They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+They are implemented via http://rsyslog_conf_modules.html#om[outpout modules].
 
 The action object has different parameters:
 * those that apply to all actions and are action specific.     
@@ -13,7 +15,7 @@ The action object has different parameters:
     These are specific to a certain type of actions. 
     They are documented by the output module in question.
 
-## Legacy Format ##
+== Legacy Format
 
 Be warned that legacy action format is hard to get right. It is
 recommended to use RainerScript-Style action format whenever possible!
@@ -29,9 +31,10 @@ closely together.
 Please also note that legacy action parameters **do not** affect
 RainerScript action objects. So if you define for example:
 
-    $actionResumeRetryCount 10
-    action(type="omfwd" target="server1.example.net")
-    @@server2.example.net
+[source]
+$actionResumeRetryCount 10
+action(type="omfwd" target="server1.example.net")
+@@server2.example.net
 
 server1's "action.resumeRetryCount" parameter is **not** set, instead server2's is!
 

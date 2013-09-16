@@ -38,7 +38,7 @@ $actionResumeRetryCount 10
 action(type="omfwd" target="server1.example.net")
 @@server2.example.net
 
-server1's "action.resumeRetryCount" parameter is **not** set, instead server2's is!
+server1's "action.resumeRetryCount" parameter is *not* set, instead server2's is!
 
 A goal of the new RainerScript action format was to avoid confusion
 which parameters are actually used. As such, it would be counter-productive
@@ -64,7 +64,7 @@ templates and use use them in the following selector lines. But it is
 NOT permitted to use a template in a selector line that is above its
 definition. If you do this, the action will be ignored.
 
-**You can have multiple actions for a single selector ** (or
+*You can have multiple actions for a single selector * (or
 more precisely a single filter of such a selector line). Each action
 must be on its own line and the line must start with an ampersand
 ('&amp;') character and have no filters. An example would be
@@ -120,7 +120,7 @@ for the file name. An example can be seen above in the description of
 template. We will use the "DynFile" template defined there. Dynamic
 filenames are indicated by specifying a questions mark "?" instead of a
 slash, followed by the template name. Thus, the selector line for our
-dynamic file name would look as follows:</p>
+dynamic file name would look as follows:
 
 [source]
 *.* ?DynFile
@@ -138,29 +138,31 @@ And of course you can use templates to specify the output format:
 [source]
 *.* ?DynFile;MyTemplate
 
-<p><b>A word of caution:</b> rsyslog creates files as
-needed. So if a new host is using your syslog server, rsyslog will
-automatically create a new file for it.</p>
-<p><b>Creating directories is also supported</b>. For
+.A word of caution
+Note: rsyslog creates files as needed. So if a new host is using your syslog
+server, rsyslog will automatically create a new file for it.
+
+*Creating directories is also supported*. For
 example you can use the hostname as directory and the program name as
-file name:</p>
-<blockquote>
-<code>$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"</code></blockquote>
+file name:
 
-### Named Pipes ###
+[source]
+$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"
 
-<p>This version of rsyslogd(8) has support for logging output to
+=== Named Pipes
+
+This version of rsyslogd(8) has support for logging output to
 named pipes (fifos). A fifo or named pipe can be used as a destination
 for log messages by prepending a pipe symbol ("|'') to the name of the
 file. This is handy for debugging. Note that the fifo must be created
 with the mkfifo(1) command before rsyslogd(8) is started.</p>
 
-### Terminal and Console ###
+=== Terminal and Console
 
 If the file you specified is a tty, special tty-handling is
 done, same with /dev/console.
 
-### Remote Machine ###
+=== Remote Machine
 
 Rsyslogd provides full remote logging, i.e. is able to send
 messages to a remote host running rsyslogd(8) and to receive messages
@@ -260,40 +262,45 @@ in the hostname part, rsyslogd could not detect where the IP address ends
 and where the port starts. There is a syntax extension to support this:
 put squary brackets around the address (e.g. "[2001::1]"). Square
 brackets also work with real host names and IPv4 addresses, too.
-</p><p>A valid sample to send messages to the IPv6 host 2001::1 at port 515
+
+A valid sample to send messages to the IPv6 host 2001::1 at port 515
 is as follows:
-</p><p>*.* @[2001::1]:515
-</p><p>This works with TCP, too.
-</p><p><b>Note to sysklogd users:</b> sysklogd does <b>not</b>
+
+[source]
+*.* @[2001::1]:515
+
+This works with TCP, too.
+
+.Note to sysklogd users:
+Note: sysklogd does <b>not</b>
 support RFC 3164 format, which is the default forwarding template in
 rsyslog. As such, you will experience duplicate hostnames if rsyslog is
 the sender and sysklogd is the receiver. The fix is simple: you need to
-use a different template. Use that one:</p>
-<p class="MsoPlainText">$template
-sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""<br>
-*.* @192.168.0.1;sysklogd</p>
+use a different template. Use that one:
 
-### List of Users ###
+[source]
+$template sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""
+*.* @192.168.0.1;sysklogd
 
-<p>Usually critical messages are also directed to "root'' on
+=== List of Users
+
+Usually critical messages are also directed to "root'' on
 that machine. You can specify a list of users that shall get the
-message by simply writing ":omusrmsg: followed by the login name. For example,
-the send messages to root, use ":omusrmsg:root".
+message by simply writing ":omusrmsg: followed by the login name. For example, the send messages to root, use ":omusrmsg:root".
 You may specify more than one user
 by separating them with commas (",''). Do not repeat the ":omusrmsg:" prefix in
 this case. For example, to send data to users root and rger, use
-":omusrmsg:root,rger" (do not use ":omusrmsg:root,:omusrmsg:rger", this is invalid).
-If they're logged in they get
-the message.
+":omusrmsg:root,rger" (do not use ":omusrmsg:root,:omusrmsg:rger", this is invalid). If they're logged in they get the message.
 
-### Everyone logged on ###
+=== Everyone logged on
 
 Emergency messages often go to all users currently online to
 notify them that something strange is happening with the system. To
 specify this wall(1)-feature use an asterisk as the user message
 destination(":omusrmsg:*'').
 
-### Call Plugin ###
+=== Call Plugin
+
 This is a generic way to call an output plugin. The plugin
 must support this functionality. Actual parameters depend on the
 module, so see the module's doc on what to supply. The general syntax
@@ -307,41 +314,44 @@ supported). For ommysql, the module name is "ommysql" and the params
 are the traditional ones. The ;template part is not module specific, it
 is generic rsyslog functionality available to all modules.</p>
 
-<p>As an example, the ommysql module may be called as follows:</p>
-<p>:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+As an example, the ommysql module may be called as follows:
 
-<p>For details, please see the "Database Table" section of this
-documentation.</p>
+:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate
+
+For details, please see the "Database Table" section of this
+documentation.
 
 Note: as of this writing, the ":modname:" part is hardcoded
 into the module. So the name to use is not necessarily the name the
 module's plugin file is called.
 
-### Database Table ###
+=== Database Table 
 
-<p>This allows logging of the message to a database table.
+This allows logging of the message to a database table.
 Currently, only MySQL databases are supported. However, other database
-drivers will most probably be developed as plugins. By default, a <a href="http://www.monitorware.com/">MonitorWare</a>-compatible
+drivers will most probably be developed as plugins. By default, a
+http://www.monitorware.com/[MonitorWare]-compatible
 schema is required for this to work. You can create that schema with
 the createDB.SQL file that came with the rsyslog package. You can also<br>
 use any other schema of your liking - you just need to define a proper
-template and assign this template to the action.<br>
-<br>
+template and assign this template to the action.
+
 The database writer is called by specifying a greater-then sign
 ("&gt;") in front of the database connect information. Immediately
-after that<br>
+after that +
 sign the database host name must be given, a comma, the database name,
 another comma, the database user, a comma and then the user's password.
 If a specific template is to be used, a semicolon followed by the
-template name can follow the connect information. This is as follows:<br>
-<br>
-&gt;dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+template name can follow the connect information. This is as follows:
 
-**Important: to use the database functionality, the
+&gt;dbhost,dbname,dbuser,dbpassword;dbtemplate
+
+.Important
+Note: to use the database functionality, the
 MySQL output module must be loaded in the config file** BEFORE
 the first database table action is used. This is done by placing the
 
-    $ModLoad ommysql 
+$ModLoad ommysql 
 
 directive some place above the first use of the database write
 (we recommend doing at the the beginning of the config file).
@@ -364,13 +374,18 @@ specifying what you do not want.
 
 Discard is just the single tilde character with no further parameters:
 
-<p>~</p>
-<p>For example,</p>
-<p>*.*&nbsp;&nbsp; ~</p>
-<p>discards everything (ok, you can achive the same by not
-running rsyslogd at all...).</p>
+[source]
+~
 
-### Output Channel ###
+For example,
+
+[source]
+*.*&nbsp;&nbsp; ~
+
+discards everything (ok, you can achive the same by not
+running rsyslogd at all...).
+
+=== Output Channel 
 
 Binds an output channel definition (see there for details) to
 this action. Output channel actions must start with a $-sign, e.g. if
@@ -378,19 +393,20 @@ you would like to bind your output channel definition "mychannel" to
 the action, use "$mychannel". Output channels support template
 definitions like all all other actions.
 
-### Shell Execute ###
+=== Shell Execute
 
 This executes a program in a subshell. The program is passed
 the template-generated message as the only command line parameter.
 Rsyslog waits until the program terminates and only then continues to
 run.
 
+[source]
 ^program-to-execute;template
 
 The program-to-execute can be any valid executable. It
 receives the template string as a single parameter (argv[1]).
 
-**WARNING:** The Shell Execute action was added to serve an urgent need. 
+WARNING: The Shell Execute action was added to serve an urgent need. 
 While it is considered reasonable save when
 used with some thinking, its implications must be considered. The
 current implementation uses a system() call to execute the command.
@@ -414,7 +430,7 @@ messages to rsyslog. Point c) is especially important: if rsyslog is
 accepting message from any hosts, chances are much higher that an
 attacker might try to exploit the "shell execute" action.
 
-### Template Name ###
+=== Template Name
 
 Every ACTION can be followed by a template name. If so, that
 template is used for message formatting. If no name is given, a

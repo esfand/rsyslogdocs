@@ -2568,13 +2568,15 @@ If you are interested in a more technical coverage, have a look at my
 ### JSON and rsyslog templates ###
 
 Rsyslog already supports JSON parsing and formatting (for all cee properties). 
-However, the way formatting currently is done is unsatisfactory to me. Right now, 
+However, the way formatting currently is done is unsatisfactory to me. Right
+now, 
 we just take the cee properties as they are and format them into JSON format. 
 In this mode, we do not have any way to specify which fields to use and we also 
 do not have a way to modify the field contents (e.g. pick substrings or do case 
 conversions). Exactly these are the use cases rsyslog invented templates for.
 
-One way to handle the situation is to have the user write the JSON code inside the 
+One way to handle the situation is to have the user write the JSON code inside
+the 
 template and just inject the data field where desired. This almost works (and I 
 know Brian Knox tries to explore that route).  IT just works "almost" as there is 
 currently no property replacer option to ensure proper JSON escaping. Adding this 
@@ -2716,6 +2718,8 @@ but speeds up the whole process.
 [[loggly]]
 == loggly
 
+[source]
+----
 source s_all {
     file ("/proc/kmsg" log_prefix("kernel: "));
     unix-stream ("/dev/log");
@@ -2731,7 +2735,7 @@ filter f_loggly {
 log {
     source(s_all); filter(f_loggly); destination(d_loggly);
 };
-
+----
 
 [[misc]]
 == How to write to a local socket?
@@ -3161,7 +3165,7 @@ template(name="testTemplate"
 [[omrelp]]
 == RELP Output Module (omrelp)
 
-#### Description ####
+=== Description 
 
 This module supports sending syslog messages over the reliable RELP protocol.    
 For RELP's advantages over plain tcp syslog, please see the documentation for imrelp (the server counterpart). 
@@ -3394,7 +3398,8 @@ For exmaple, "queue.size" specifies the maximum number of messages a queue may h
 
 To configure an action queue, the queue settings can simply be specified inside the action object, as seen in the example below:
 
-    action(type="omfile" 
+[source]
+action(type="omfile" 
            queue.size="10000" queue.type="linkedlist"
            file="/var/log/logfile")
 

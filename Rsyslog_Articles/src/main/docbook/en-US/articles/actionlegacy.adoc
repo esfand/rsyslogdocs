@@ -183,6 +183,7 @@ following the final at sign and be enclosed in parenthesis. The
 individual options must be separated by commas. The following options
 are right now defined:
 
+++++
 <table id="table2" border="1" width="100%">
 <tbody>
 <tr>
@@ -252,7 +253,7 @@ syslog plain tcp transports, so you are left with two evil choices...</p>
 </tr>
 </tbody>
 </table>
-
+++++
 
 The hostname may be followed by a colon and the destination port.
 

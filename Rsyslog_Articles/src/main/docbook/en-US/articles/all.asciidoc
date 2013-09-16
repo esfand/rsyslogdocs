@@ -1318,6 +1318,8 @@ You define a ruleset like the normal configuration. To define it, you first name
 
 So my full example looks like this
 
+[source]
+----
     Module (load=”imudp”)
 
     Input (type=”imudp” port=”514” ruleset=”rs1”)
@@ -1325,9 +1327,9 @@ So my full example looks like this
     Ruleset (name=”rs1”) {
         Action (type=”omfile” file=”/var/log/network1.log”)
     }
+----
 
 In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
-
 
 
 [[configuration]]
@@ -1338,17 +1340,24 @@ In this part I’ll explain some basic configuration steps for rsyslog. We confi
 ### How to configure the module
 The module has to be configured first. The general line for this configuration is: “module (load=”im-type of protocol-”). So in our example, where we want UDP, it will look like this:
 
-    Module (load=”imudp”)
+[source]
+Module (load=”imudp”)
 
 ### How to configure the input for rsyslog
+
 For the input, you have to give two different information to rsyslog. The first information needed is the protocol type of the input; in my example again UDP. Like in the first line there is an “im-” in front of the protocol-type. The other information is to configure a port for rsyslog, in my example 514. These two information are together in only one line. The line is: “Input (type=”-protocol of input-“port=”-number of port-“). This means for my example, the line has to be
 Input (type=”imudp” port=”514”)
 
 ### How to configure a filter for fromhost-IPs and store them in a file
+
 A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure it to do something with all notes from a specific IP, between “if” and “then” will be the property “$fromhost-ip ==”-IP, you want to filter-”. After this stays a “then” and after the “then” follows an action in brackets, which I will explain later. In my example I want only the notes from the host with the IP 172.19.1.135. So the line will be
+
+[source]
 If $fromhost-ip == “172.19.1.135” then [
+
 After this we have to tell the computer, what to do if that case is given. In this example we want him to store these messages in the file “/var/log/network1.log”. This is an action with the type “omfile”. To configure the file where to store the messages, the action is “action (type=”omfile” File=”-filename-“). So in this example, it will look like this:
 
+[source]
 Action (type=”omfile” file=”/var/log/network1.log”)
 ]
  
@@ -1369,17 +1378,19 @@ All in all it means: The input for rsyslog will listen to syslog via UDP on port
 
  
 
-Rsyslog and rulesets
-====================
+=== Rsyslog and rulesets
 Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
 
 Input (type=”imudp” port=”514” ruleset=”rs1”)
+
 But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
 
 You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
 
 So my full example looks like this
 
+[source]
+----
     Module (load=”imudp”)
     
     Input (type=”imudp” port=”514” ruleset=”rs1”)
@@ -1387,6 +1398,7 @@ So my full example looks like this
     Ruleset (name=”rs1”) {
         Action (type=”omfile” file=”/var/log/network1.log”)
     }
+----
 
 In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
 
@@ -1401,58 +1413,75 @@ and search for them. Much like Graylog2 does, only not as nice but more flexible
 I'm running Ubuntu 12.04 x86_64, but I guess on any Linux the steps would be similar.
 
 ### Installing Elasticsearch ###
+
 Download it from here: http://www.elasticsearch.org/download/
 
-For Ubuntu there's a nice .deb package which you can simply install. For any other Linux, 
-it's as easy as extracting the .tar.gz archive and running bin\elasticsearch
+For Ubuntu there's a nice .deb package which you can simply install. For any
+other Linux, it's as easy as extracting the .tar.gz archive and running
++bin\elasticsearch+
 
-If you have a complex setup, with many logs maybe, you would probably want to build or 
-adapt a custom interface. But for now we'll use elasticsearch-head as our GUI. To install
-it, simply do:
+If you have a complex setup, with many logs maybe, you would probably want to
+build or adapt a custom interface. But for now we'll use elasticsearch-head as 
+our GUI. To install it, simply do:
 
-    git clone git://github.com/mobz/elasticsearch-head.git
+[source]
+git clone git://github.com/mobz/elasticsearch-head.git
 
-Then open index.html in your browser. In the Overview tab you will see your shards and 
-replicas, while in the Browser tab you can search for your logs. Trouble is, at this
-point we have no shards/replicas and no logs in it.  But that's going to change soon :D
+Then open index.html in your browser. In the Overview tab you will see your
+shards and replicas, while in the Browser tab you can search for your logs.
+Trouble is, at this point we have no shards/replicas and no logs in it.  But that's
+going to change soon :D
 
 The default settings for Elasticsearch are quite sensible, but if you have a lot of
 logs, you might find this tutorial useful:
+
+[source]
 http://www.elasticsearch.org/tutorials/2012/05/19/elasticsearch-for-logging.html
 
 ### Installing rsyslog with omelasticsearch ###
+
 At the time of writing this omelasticsearch is experimental, so you would have to 
 download it from the master-elasticsearch branch here:
+
 http://git.adiscon.com/?p=rsyslog.git;a=shortlog;h=refs/heads/master-elasticsearch
 
 Before compiling it, you need libestr:
-http://libestr.adiscon.com/download/
-and libee:
-http://www.libee.org/download/
++http://libestr.adiscon.com/download/+
+and libee: +http://www.libee.org/download/+
 
 Here, it was as easy as:
+
+[source]
  # tar zxf $PACKAGE_NAME.tar.gz
  # cd $PACKAGE_NAME*
  # ./configure
  # make && make install
 
-When doing the same thing with rsyslog, you would need to add "--enable-elasticsearch" 
-when you run the configure script.
+When doing the same thing with rsyslog, you would need to add +--enable-elasticsearch+ when you run the configure script.
 
 ### Configuring rsyslog for elasticsearch ###
+
 For a basic setup, you need to add the following lines:
 
-    $ModLoad /usr/local/lib/rsyslog/omelasticsearch.so
-    *.*     action(type="omelasticsearch" server="myelasticsearch.mydomain.com")
+[source]
+$ModLoad /usr/local/lib/rsyslog/omelasticsearch.so
+*.*     action(type="omelasticsearch" server="myelasticsearch.mydomain.com")
 
-This would add send all your logs to the specified Elasticsearch server. Your index will be named "system" and your type would be "events".
+This would add send all your logs to the specified Elasticsearch server. Your
+index will be named "system" and your type would be "events".
 
-Now let's suppose you want to add just some specific properties. For that, you would need to define a custom template, that would properly escape the JSON fields for you, and then tell omelasticsearch to use that template.
+Now let's suppose you want to add just some specific properties. For that, you
+would need to define a custom template, that would properly escape the JSON
+fields for you, and then tell omelasticsearch to use that template.
 
-You can also use templates for defining index names. For example, you might want to have an index per day. This way, for "rotating" logs, you can just remove old indices.
+You can also use templates for defining index names. For example, you might
+want to have an index per day. This way, for "rotating" logs, you can just remove
+old indices.
 
 Our config might become something like this:
 
+[source]
+----
  $ModLoad /usr/local/lib/rsyslog/omelasticsearch.so
  #
  # the template below will output a JSON like this:
@@ -1467,8 +1496,10 @@ Our config might become something like this:
  # dynSearchIndex="on" is for having variable index names
  # searchIndex is for letting rsyslog know where to get these names
  *.*     action(type="omelasticsearch" template="customSchema" searchIndex="srchidx" dynSearchIndex="on" server="myserver")
+----
 
 There are some other nice things you can use:
+
 * searchType="mycustomtype" - to specify a different type than "events". You can have dynSearchType="on" to have it variable, like you can with indices
 * serverport="9200" - this is the default setting, but you can specify a different port
 * asyncrepl="on" to enable asyncronous replication. That is, Elasticsearch gives an answer imediately after inserting to the main shard(s). It doesn't wait for replicas to be updated as well, which is the default setting
@@ -1516,27 +1547,29 @@ In a rsyslog cnfiguration file, **rulesets** are not the only elements that must
 be defined at the top level.  Inputs, templates, modules, and a few directives must 
 also be defined at the top level alongside the templates.
 
-There are a few **directives** that need to be defined outside of any statements,
-i.e. at the top level.  Examples of such directives are `xxx` 
+There are a few **directives** that need to be defined outside of any
+statements, i.e. at the top level.  Examples of such directives are `xxx` 
 and 'yyy'.  A directive always starts with a $-sign.
 
 Among the top-level defineable elements, **primary-rulesets** are conceptually
-at a higher level than other elements, including **subordinate-rulesets**.  rulesets 
-can be defined hierarchically, i.e. one ruleset can call another ruleset
+at a higher level than other elements, including **subordinate-rulesets**.  
+rulesets can be defined hierarchically, i.e. one ruleset can call another ruleset
 (called subordinate-ruleset as opposed to primary-ruleset)  A primary-ruleset is
 a ruleset not reachable via any other ruleset.
 
-Even though an **input** element must also be defined at the top level, i.e. the same
-level as rulesets, it is conceptually contained in and belongs to one and only one
-particular ruleset.  A ruleset contains, and is pointed to by, one or more inputs using 
-the input statement's `ruleset=<ruleset-name>` option.  In other words, there is a 
-one-to-many relationship between rulesets and inputs.
+Even though an **input** element must also be defined at the top level, i.e. the
+same level as rulesets, it is conceptually contained in and belongs to one and
+only one particular ruleset.  A ruleset contains, and is pointed to by, one or more
+inputs using the input statement's `ruleset=<ruleset-name>` option.  In other
+words, there is a one-to-many relationship between rulesets and inputs.
 
-There is also a one-to-many relationship between **input-modules** and inputs.  Each 
-input must be linked to one and only one input-module using its `type=<input-module-name>`.
+There is also a one-to-many relationship between **input-modules** and inputs.
+Each input must be linked to one and only one input-module using its 
+`type=<input-module-name>`.
 
 Also, there is an implied many-to-many relationship between 
-rulesets and **output-modules** via nested action statements.  Each nested action statement of 
+rulesets and **output-modules** via nested action statements.  Each nested
+action statement of 
 a ruleset, via its `type=<output-module-name>`, must specify one and only one output-module
 to be utilized for sinking the qualified messages.  On the other hand, the same output-module
 can be referred to by more than one ruleset.
@@ -1557,15 +1590,17 @@ In a sense, primary-rulesets are the top of the food-chain reaching all the othe
 except a few directives that don't have an structured equivalent.
 
 
-### Ruleset Elements ###
+=== Ruleset Elements
 
 A ruleset is a construct defined with the following syntax:  
 
-    ruleset (<option> ...) { <if or action or stop statement> ... }
+[source]
+ruleset (<option> ...) { <if or action or stop statement> ... }
 
 An example of a rullset is:
 
-    ruleset (name=”rs1”) {
+[source]
+ruleset (name=”rs1”) {
         if $fromhost-ip == '192.168.152.137' then {
             action(
                 type="omfile"
@@ -1573,11 +1608,10 @@ An example of a rullset is:
             )
             stop
         }
-    }
+}
 
-
-Using the `ruleset=<rulesetname>` option of the input statement, a rulesets can be 
-bound to an input.  For example, to bind a ruleset “rs1” to an input:
+Using the `ruleset=<rulesetname>` option of the input statement, a rulesets can
+be bound to an input.  For example, to bind a ruleset “rs1” to an input:
 
     input (
         type=”imudp” 
@@ -1598,7 +1632,8 @@ So, an a fully defined configuration may looks like:
         }
     }
 
-As a result of the above configuration, the rsyslog will listen to syslog via TCP on port 514.
+As a result of the above configuration, the rsyslog will listen to syslog via TCP
+on port 514.
 If a received message is sent by a computr with the IP 172.19.1.135, then the messages will be 
 stored in the file /var/log/network1.log.
 
@@ -1615,16 +1650,13 @@ be served by a single worker-thread dedicated to the loaded module associated to
 action element involved. 
 
 
-## Input Elements ##
+== Input Elements
 
 Input Elements are the second most important configuration elements of
 rsyslog, after rulesets.   
 
 
-
-
-
-### Multiple Rulesets ###
+=== Multiple Rulesets
 
 Starting with version 4.5.0 and 5.1.1, rsyslog supports multiple rulesets within a single configuration.
 This is especially useful for routing the reception of remote messages to a set of specific rules.
@@ -1633,13 +1665,15 @@ Note that the **input module** must support binding to non-standard rulesets, so
 not be available with all inputs.  In this document, I am using imtcp, an input module that supports 
 binding to non-standard rulesets since rsyslog started to support them.
 
-### What is a Ruleset? ###
+=== What is a Ruleset?
 
-If you have worked with (r)syslog.conf, you know that it is made up of what I call **rules** (others tend 
-to call them selectors, a sysklogd term).  Each rule consist of a **filter** and one or more **actions**
-to be carried out when the filter evaluates to true.  A filter may be as simple as a traditional syslog 
-priority based filter (like "*.*" or "mail.info" or as complex as a script-like expression.
-Details on that are covered in the config file documentation. After the filter come action specifiers,
+If you have worked with (r)syslog.conf, you know that it is made up of what I call 
+**rules** (others tend to call them selectors, a sysklogd term).  Each rule consist 
+of a **filter** and one or more *actions* to be carried out when the filter 
+evaluates to true.  A filter may be as simple as a traditional syslog priority based
+filter (like "*.*" or "mail.info" or as complex as a script-like expression.
+Details on that are covered in the config file documentation. After the filter come
+action specifiers,
 and an action is something that does something to a message, e.g. write it to a file or forward it to
 a remote logging server.
 
@@ -1672,7 +1706,7 @@ Inputs must explicitly bind to rulesets. If they don't do, the default ruleset i
 
 This brings up the next question:
 
-### What does "To bind to a Ruleset" mean? ###
+=== What does "To bind to a Ruleset" mean?
 
 This term is used in the same sense as "to bind an IP address to an interface": it means that a 
 specific input, or part of an input (like a tcp listener) will use a specific ruleset to "pass its
@@ -1697,7 +1731,7 @@ best to define all rule sets at the top of rsyslog.conf and define the inputs at
 of reverses the traditional recommended ordering, but seems to be a really useful and straightforward 
 way of doing things.
 
-### Why are rulesets important for different parser configurations? ###
+=== Why are rulesets important for different parser configurations? 
 
 Custom message parsers, used to handle different (and potentially otherwise-invalid) message formats, 
 can be bound to rulesets. So multiple rulesets can be a very useful way to handle devices sending 
@@ -1705,24 +1739,28 @@ messages in different malformed formats in a consistent way. Unfortunately, this
 the syslog world. An in-depth explanation with configuration sample can be found at the $RulesetParser
 configuration directive.
 
-### Can I use a different Ruleset as the default? ###
+=== Can I use a different Ruleset as the default?
 
 This is possible by using the following directive:
 
-    $DefaultRuleset <name>
+[source]
+$DefaultRuleset <name>
 
-Please note, however, that this directive is actually global: that is, it does not modify the
-ruleset to which the next input is bound but rather provides a system-wide default rule set for those 
+Please note, however, that this directive is actually global: that is, it does not
+modify the ruleset to which the next input is bound but rather provides a 
+system-wide default rule set for those 
 inputs that did not explicitly bind to one. As such, the directive can not be used as a work-around to 
 bind inputs to non-default rulesets that do not support ruleset binding.
 
-### Examples ###
+=== Examples 
 
-#### Split local and remote logging ####
+====Split local and remote logging
 
 Let's say you have a pretty standard system that logs its local messages to the usual bunch of files 
 that are specified in the default rsyslog.conf. As an example, your rsyslog.conf might look like this:
 
+[source]
+----
     # ... module loading ...
     # The authpriv file has restricted access.
     authpriv.*  /var/log/secure
@@ -1733,11 +1771,15 @@ that are specified in the default rsyslog.conf. As an example, your rsyslog.conf
     # Everybody gets emergency messages
     *.emerg     *
     ... more ...
+----
 
-Now, you want to add receive messages from a remote system and log these to a special file, but you do
-not want to have these messages written to the files specified above. The traditional approach is to 
-add a rule in front of all others that filters on the message, processes it and then discards it:
+Now, you want to add receive messages from a remote system and log these
+to a special file, but you do not want to have these messages written to the files
+specified above. The traditional approach is to add a rule in front of all others
+that filters on the message, processes it and then discards it:
 
+[source]
+----
     # ... module loading ...
     # process remote messages
     if $fromhost-ip == '192.168.152.137' then {
@@ -1759,6 +1801,7 @@ add a rule in front of all others that filters on the message, processes it and 
     # Everybody gets emergency messages
     *.emerg                               *
     ... more ...
+----
 
 Note that "stop" is the discard action!. Also note that we assume that 192.0.2.1 is the sole remote 
 sender (to keep it simple).
@@ -1766,6 +1809,8 @@ sender (to keep it simple).
 With multiple rulesets, we can simply define a dedicated ruleset for the remote reception case and 
 bind it to the receiver. This may be written as follows:
 
+[source]
+----
     # ... module loading ...
     # process remote messages
     # define new ruleset and add rules to it:
@@ -1779,21 +1824,25 @@ bind it to the receiver. This may be written as follows:
 
     # bind ruleset to tcp listener and activate it:
     input(type="imptcp" port="10514" ruleset="remote")
+----
 
-#### Split local and remote logging for three different ports ####
+==== Split local and remote logging for three different ports
 
-This example is almost like the first one, but it extends it a little bit. While it is very similar,
-I hope it is different enough to provide a useful example why you may want to have more than two 
-rulesets.
+This example is almost like the first one, but it extends it a little bit. While it is
+very similar, I hope it is different enough to provide a useful example why you 
+may want to have more than two rulesets.
 
-Again, we would like to use the "regular" log files for local logging, only. But this time we set 
-up three syslog/tcp listeners, each one listening to a different port (in this example 10514, 
+Again, we would like to use the "regular" log files for local logging, only. But this
+time we set up three syslog/tcp listeners, each one listening to a different port 
+(in this example 10514, 
 10515, and 10516). Logs received from these receivers shall go into different files. Also, logs 
 received from 10516 (and only from that port!) with "mail.*" priority, shall be written into a 
 specif file and not be written to 10516's general log file.
 
 This is the config:
 
+[source]
+----
     # ... module loading ...
     # process remote messages
 
@@ -1837,13 +1886,15 @@ This is the config:
         port="10516"
         ruleset="remote10516"
     )
+----
 
-### Performance ###
+=== Performance 
 
-#### Fewer Filters ####
+==== Fewer Filters
 
-No rule processing can be faster than not processing a rule at all. As such, it is useful for a 
-high performance system to identify disjunct actions and try to split these off to different rule
+No rule processing can be faster than not processing a rule at all. As such, it is
+useful for a high performance system to identify disjunct actions and try to split
+these off to different rule
 sets. In the example section, we had a case where three different tcp listeners need to write to 
 three different files. This is a perfect example of where multiple rule sets are easier to use 
 and offer more performance. The performance is better simply because there is no need to check 

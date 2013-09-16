@@ -72,7 +72,7 @@ must be on its own line and the line must start with an ampersand
 [source]
 *.=crit :omusrmsg:rger
 &root
-& /var/log/critmsgs</b></code></p>
+& /var/log/critmsgs
 
 These three lines send critical messages to the user rger and
 root and also store them in /var/log/critmsgs.  **Using multiple
@@ -155,7 +155,7 @@ This version of rsyslogd(8) has support for logging output to
 named pipes (fifos). A fifo or named pipe can be used as a destination
 for log messages by prepending a pipe symbol ("|'') to the name of the
 file. This is handy for debugging. Note that the fifo must be created
-with the mkfifo(1) command before rsyslogd(8) is started.</p>
+with the mkfifo(1) command before rsyslogd(8) is started.
 
 === Terminal and Console
 
@@ -189,7 +189,8 @@ are right now defined:
 <td>
 <p align="center"><b>z&lt;number&gt;</b></p>
 </td>
-<td>Enable zlib-compression for the message. The
+<td>
+Enable zlib-compression for the message. The
 &lt;number&gt; is the compression level. It can be 1 (lowest
 gain, lowest CPU overhead) to 9 (maximum compression, highest CPU
 overhead). The level can also be 0, which means "no compression". If
@@ -207,22 +208,26 @@ the uncompressed messages is transmitted. This saves the receiver CPU
 cycles for decompression. It also prevents small message to actually
 become larger in compressed form.
 
-<p><b>Please note that when a TCP transport is used,
+*Please note that when a TCP transport is used,
 compression will also turn on syslog-transport-tls framing. See the "o"
-option for important information on the implications.</b></p>
-<p>Compressed messages are automatically detected and
+option for important information on the implications.*
+
+Compressed messages are automatically detected and
 decompressed by the receiver. There is nothing that needs to be
-configured on the receiver side.</p>
+configured on the receiver side.
+
 </td>
 </tr>
 <tr>
 <td>
 <p align="center"><b>o</b></p>
 </td>
-<td><b>This option is experimental. Use at your own
+<td>
+*This option is experimental. Use at your own
 risk and only if you know why you need it! If in doubt, do NOT turn it
-on.</b>
-<p>This option is only valid for plain TCP based
+on.*
+
+This option is only valid for plain TCP based
 transports. It selects a different framing based on IETF internet draft
 syslog-transport-tls-06. This framing offers some benefits over
 traditional LF-based framing. However, the standardization effort is
@@ -237,8 +242,9 @@ some of those changes. So you should take this note very serious. It is
 not something we do not *like* to do (and may change our mind if enough
 people beg...), it is something we most probably *can not* do for
 technical reasons (aka: you can beg as much as you like, it won't
-change anything...).</p>
-<p>The most important implication is that compressed syslog
+change anything...).
+
+The most important implication is that compressed syslog
 messages via TCP must be considered with care. Unfortunately, it is
 technically impossible to transfer compressed records over traditional
 syslog plain tcp transports, so you are left with two evil choices...</p>
@@ -246,18 +252,27 @@ syslog plain tcp transports, so you are left with two evil choices...</p>
 </tr>
 </tbody>
 </table>
-<p><br>
-The hostname may be followed by a colon and the destination port.</p>
-<p>The following is an example selector line with forwarding:</p>
-<p>*.*&nbsp;&nbsp;&nbsp; @@(o,z9)192.168.0.1:1470</p>
-<p>In this example, messages are forwarded via plain TCP with
+
+
+The hostname may be followed by a colon and the destination port.
+
+The following is an example selector line with forwarding:
+
+[source]
+*.*&nbsp;&nbsp;&nbsp; @@(o,z9)192.168.0.1:1470
+
+In this example, messages are forwarded via plain TCP with
 experimental framing and maximum compression to the host 192.168.0.1 at
-port 1470.</p>
-<p>*.* @192.168.0.1</p>
-<p>In the example above, messages are forwarded via UDP to the
+port 1470.
+
+[source]
+*.* @192.168.0.1
+
+In the example above, messages are forwarded via UDP to the
 machine 192.168.0.1, the destination port defaults to 514. Messages
-will not be compressed.</p>
-<p>Note that IPv6 addresses contain colons. So if an IPv6 address is specified
+will not be compressed.
+
+Note that IPv6 addresses contain colons. So if an IPv6 address is specified
 in the hostname part, rsyslogd could not detect where the IP address ends
 and where the port starts. There is a syntax extension to support this:
 put squary brackets around the address (e.g. "[2001::1]"). Square
@@ -306,16 +321,18 @@ must support this functionality. Actual parameters depend on the
 module, so see the module's doc on what to supply. The general syntax
 is as follows:
 
-<p>:modname:params;template</p>
+[source]
+:modname:params;template
 
-<p>Currently, the ommysql database output module supports this
+Currently, the ommysql database output module supports this
 syntax (in addtion to the "&gt;" syntax it traditionally
 supported). For ommysql, the module name is "ommysql" and the params
 are the traditional ones. The ;template part is not module specific, it
-is generic rsyslog functionality available to all modules.</p>
+is generic rsyslog functionality available to all modules.
 
 As an example, the ommysql module may be called as follows:
 
+[source]
 :ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate
 
 For details, please see the "Database Table" section of this
@@ -344,6 +361,7 @@ another comma, the database user, a comma and then the user's password.
 If a specific template is to be used, a semicolon followed by the
 template name can follow the connect information. This is as follows:
 
+[source]
 &gt;dbhost,dbname,dbuser,dbpassword;dbtemplate
 
 .Important
@@ -351,12 +369,13 @@ Note: to use the database functionality, the
 MySQL output module must be loaded in the config file** BEFORE
 the first database table action is used. This is done by placing the
 
+[source]
 $ModLoad ommysql 
 
 directive some place above the first use of the database write
 (we recommend doing at the the beginning of the config file).
 
-### Discard ###
+=== Discard 
 
 If the discard action is carried out, the received message is
 immediately discarded. No further processing of it occurs. Discard has

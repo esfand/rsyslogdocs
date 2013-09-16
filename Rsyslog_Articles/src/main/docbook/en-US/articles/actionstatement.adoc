@@ -1,0 +1,316 @@
+## Action Statement ##
+		
+Action object describe what is to be done with a message. 
+They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+
+The action object has different parameters:
+* those that apply to all actions and are action specific.     
+    These are documented below.
+* parameters for the action queue.     
+    While they also apply to all parameters, they are queue-specific, not action-specific 
+    (they are the same that are used in rulesets, for example).
+* action-specific parameters.     
+    These are specific to a certain type of actions. 
+    They are documented by the output module in question.
+
+### General Action Parameters ###
+
+* **name**  word    
+    used for statistics gathering and documentation    
+
+* **type** string    
+    Mandatory parameter for every action. The name of the module that should be used.    
+
+* **action.writeAllMarkMessages** on/off    
+    Normally, mark messages are written to actions only if the action was not recently executed 
+    (by default, recently means within the past 20 minutes). If this setting is switched to "on", 
+    mark messages are always sent to actions, no matter how recently they have been executed. 
+    In this mode, mark messages can be used as a kind of heartbeat. Note that this option 
+    auto-resets to "off", so if you intend to use it with multiple actions, it must be specified 
+    in front off all selector lines that should provide this functionality.    
+
+* **action.execOnlyEveryNthTime** integer    
+    If configured, the next action will only be executed every n-th time. 
+    For example, if configured to 3, the first two messages that go into the action will be dropped, 
+    the 3rd will actually cause the action to execute, the 4th and 5th will be dropped, 
+    the 6th executed under the action, ... and so on. 
+    Note: this setting is automatically re-set when the actual action is defined.    
+
+* **action.execOnlyEveryNthTimeout** integer    
+    Has a meaning only if Action.ExecOnlyEveryNthTime is also configured for the same action. 
+    If so, the timeout setting specifies after which period the counting of "previous actions" 
+    expires and a new action count is begun. Specify 0 (the default) to disable timeouts.
+    Why is this option needed? Consider this case: a message comes in at, eg., 10am. That's count 1. 
+    Then, nothing happens for the next 10 hours. At 8pm, the next one occurs. 
+    That's count 2. Another 5 hours later, the next message occurs, bringing the total count to 3. 
+    Thus, this message now triggers the rule.
+    The question is if this is desired behavior? Or should the rule only be triggered if the 
+    messages occur within an e.g. 20 minute window? If the later is the case, you need a    
+    Action.ExecOnlyEveryNthTimeTimeout="1200"    
+    This directive will timeout previous messages seen if they are older than 20 minutes. 
+    In the example above, the count would now be always 1 and consequently no rule would 
+    ever be triggered.    
+    
+* **action.execOnlyOnceEveryInterval** integer    
+    Execute action only if the last execute is at last <seconds> seconds in the past (more info in ommail, 
+    but may be used with any action)</seconds>    
+
+* **action.execOnlyWhenpReviousIsSuspended** on/off    
+    This directive allows to specify if actions should always be executed ("off," the default) or only 
+    if the previous action is suspended ("on"). This directive works hand-in-hand with the multiple 
+    actions per selector feature. It can be used, for example, to create rules that automatically 
+    switch destination servers or databases to a (set of) backup(s), if the primary server fails. 
+    Note that this feature depends on proper implementation of the suspend feature in the output module.
+    All built-in output modules properly support it (most importantly the database write and the 
+    syslog message forwarder).    
+
+* **action.repeatedmsgcontainsoriginalmsg** on/off    
+    "last message repeated n times" messages, if generated, have a different format that contains 
+    the message that is being repeated. Note that only the first "n" characters are included, 
+    with n to be at least 80 characters, most probably more (this may change from version to version, 
+    thus no specific limit is given). The bottom line is that n is large enough to get a good idea 
+    which message was repeated but it is not necessarily large enough for the whole message.
+   (Introduced with 4.1.5). Once set, it affects all following actions.
+
+* **action.resumeRetryCount** integer    
+    [default 0, -1 means eternal]
+
+* **action.resumeInterval** integer    
+    Sets the ActionResumeInterval for the action. The interval provided is always in seconds. 
+    Thus, multiply by 60 if you need minutes and 3,600 if you need hours (not recommended).
+    When an action is suspended (e.g. destination can not be connected), the action is resumed 
+    for the configured interval. Thereafter, it is retried. If multiple retires fail, the interval 
+    is automatically extended. This is to prevent excessive ressource use for retires. 
+    After each 10 retries, the interval is extended by itself. To be precise, the actual interval 
+    is (numRetries / 10 + 1) * Action.ResumeInterval. so after the 10th try, it by default is 60 
+    and after the 100th try it is 330.
+
+
+### Queue Parameters ###
+
+
+* **queue.filename**  word     
+    Specifes the base name to be used for queue files.    
+    Default: none    
+    Mandatory: yes (for disk-based queues)    
+ 	 
+    Disk-based queues create a set of files for queue content. The value set via queue.filename acts 
+    as the basename to be used for filename creation. For actual log data, a number is appended to 
+    the file name. There is also a so-called "queue information" (qi) file created, which holds 
+    administrative information about the queue status. This file is named with the base name plus 
+    ".qi" as suffix.    
+
+
+* **queue.size**  size      
+    Specifes the maximum number of (in-core) messages a queue can hold.    
+    Default: 10,000 for ruleset queues, 1,000 for action queues    
+    Mandatory: no    
+ 	 
+    This setting affects the in-memory queue size. Disk based queues may hold more data inside the queue, 
+    but not in main memory but on disk. The size is specified in number of messages. The representation 
+    of a typical syslog message object should require less than 1K, but excessively large messages may 
+    also result in excessively large objects. Note that not all message types may utilize the full queue. 
+    This depends on other queue parameters like the watermark settings. Most importantly, a small amount
+    (seven percent) is reserved for messages with high loss potential (like UDP-received messages) and 
+    will not be utilized by messages with lower loss potential (like TCP-received messages).    
+    
+    Warning: do not set the size to extremely small values (like less than 500 messages) unless you know 
+    exactly what you do (and why!). This could interfere with other internal settings like watermarks and 
+    batch sizes. It is possible to specify very small values in order to support power users who customize
+    the other settings accordingly. Usually there is no need to do that. Queues take only up memory when 
+    messages are stored in them. So reducing queue sizes does not reduce memory usage, except in cases 
+    where queues are actually full. The default settings permit small message bursts to be buffered 
+    without message loss.
+
+
+* **queue.dequeuebatchsize** number     
+    Specifies how many messages can be dequeued at once.    
+    Default:    
+    Mandatory: no    
+    
+    Specifies the batch size for dequeue operations. This setting affects performance. As a rule of thumb, 
+    larger batch sizes (up to a environment-induced upper limit) provide better performance. 
+    For the average system, there usually should be no need to adjust batch sizes as the defaults are sufficient.
+
+
+* **queue.maxdiskspace** size
+    Specifies maximum amount of disk space a queue may use.    
+    Default: unlimited    
+    Mandatory: no    
+ 	 
+    This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
+If the size limit is hit, messages are discarded until sufficient messages have been dequeued and queue files been deleted
+
+
+* **queue.highwatermark** number    
+    Specifies ...    
+    Default:    
+    Mandatory: no
+
+* **queue.lowwatermark** number    
+    Specifies ...    
+    Default:    
+    Mandatory: no
+
+queue.fulldelaymark
+-------------------
+Specifies .
+
+Available Since: 6.3.3    
+Format: number    
+Default:    
+Mandatory: no
+
+
+queue.discardmark
+-----------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.discardseverity
+---------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	severity
+Default:	 
+Mandatory:	no
+
+queue.checkpointinterval
+------------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.syncqueuefiles
+--------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	binary
+Default:	 
+Mandatory:	no
+
+queue.type
+----------
+Specifies
+
+Available Since:	6.3.3
+Format:	queue type
+Default: LinkedList for ruleset queues, Direct for action queues
+Mandatory:	no
+
+
+queue.workerthreads
+-------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+queue.timeoutshutdown
+---------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.timeoutactioncompletion
+-----------------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.timeoutenqueue
+--------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.timeoutworkerthreadshutdown
+---------------------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+queue.workerthreadminimummessages
+---------------------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+
+queue.maxfilesize
+-----------------
+Specifies
+
+Available Since:	6.3.3
+Format:	size
+Default:	 
+Mandatory:	no
+
+
+queue.saveonshutdown
+--------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	binary
+Default:	no
+Mandatory:	no
+
+queue.dequeueslowdown
+---------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+queue.dequeuetimebegin
+----------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+
+queue.dequeuetimeend
+--------------------
+Specifies
+
+Available Since:	6.3.3
+Format:	number
+Default:	 
+Mandatory:	no
+

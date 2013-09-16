@@ -161,11 +161,12 @@ message text and/or the msg object.
 
 http://www.rsyslog.com/doc/queues.html[Article Source]
 
-Rsyslog uses queues whenever two activities need to be loosely coupled.  With a
-queue, one part of the system "produces" syslog messages while another part 
-"consumes" the messages. 
+Rsyslog uses queues whenever two activities need to be loosely coupled.  
+With a queue, one part of the system "produces" syslog messages while
+another part "consumes" the messages. 
 
-The most prominent example is the main message queue. Whenever rsyslog receives 
+The most prominent example is the main message queue. Whenever rsyslog
+receives 
 a message (e.g. locally, via UDP, TCP or in whatever else way), it places these
 messages into the main message queue.  Later, it is dequeued by the rule 
 processor, which then evaluates which actions are to be carried out. In front of
@@ -277,23 +278,25 @@ Thanks to liblognorm, unstructured text, like usually found in log messages, can
 quickly be parsed and put into a normal form. This is done so quickly, that it should 
 be possible to normalize events in realtime.
 
-This module is implemented via the output module interface.  This means that mmnormalize 
-should be called just like an action. After it has been called, the normalized message 
-properties are available and can be accessed. These properties are called the "CEE/lumberjack" 
-properties, because liblognorm creates a format that is inspired by the CEE/lumberjack approach.
+This module is implemented via the output module interface.  This means that
+mmnormalize should be called just like an action. After it has been called, the
+normalized message properties are available and can be accessed. These
+properties are called the "CEE/lumberjack" properties, because liblognorm
+creates a format that is inspired by the CEE/lumberjack approach.
 
-Please note: CEE/lumberjack properties are different from regular properties.  They 
-always have "$!" prepended to the property name given in the rulebase. Such a property 
-needs to be called with %$!propertyname%.
+Please note: CEE/lumberjack properties are different from regular properties.
+They always have "$!" prepended to the property name given in the rulebase.
+Such a property needs to be called with %$!propertyname%.
 
-Note that mmnormalize should only be called once on each message. Behaviour is undefined 
-if multiple calls to mmnormalize happen for the same message.
+Note that mmnormalize should only be called once on each message. Behaviour is undefined if multiple calls to mmnormalize happen for the same
+message.
 
 
 === Action Parameters
 
-* ruleBase [word]
-Specifies which rulebase file is to use. If there are multiple mmnormalize instances, each one 
+* *ruleBase* [word]
+Specifies which rulebase file is to use. If there are multiple mmnormalize
+instances, each one 
 can use a different file. However, a single instance can use only a single file. This parameter 
 MUST be given, because normalization can only happen based on a rulebase. It is recommended that 
 an absolute path name is given. Information on how to create the rulebase can be found in the
@@ -328,22 +331,22 @@ different inputs within the same rsyslogd instance) to use different types of
 main message queues.
 
 The ruleset queue is created with the parameters that are specified for the main
-message queue at the time the directive is given. If different queue 
-configurations are desired, different main message queue directives must be used
-in front of the $RulesetCreateMainQueue directive. Note that this directive may 
-only be given once per ruleset. If multiple statements are specified, only the 
-first is used and for the others error messages are emitted.
+message queue at the time the directive is given. If different queue
+configurations are desired, different main message queue directives must be
+used in front of the $RulesetCreateMainQueue directive. Note that this directive
+may only be given once per ruleset. If multiple statements are specified, only
+the first is used and for the others error messages are emitted.
 
 Note that the final set of ruleset configuration directives specifies the 
 parameters for the default main message queue.
 
-To learn more about this feature, please be sure to read about multi-ruleset 
+To learn more about this feature, please be sure to read about multi-ruleset
 support in rsyslog.
 
 === Caveats
 
-The configuration statement "$RulesetCreateMainQueue off" has no effect at all. 
-The capability to specify this is an artifact of the current (ugly!) 
+The configuration statement "$RulesetCreateMainQueue off" has no effect at
+all.  The capability to specify this is an artifact of the current (ugly!) 
 configuration language.
 
 === Example
@@ -413,7 +416,7 @@ specifying any queue parameters in the ruleset definition will as a side effect
 perform the equivalent of a `$RulesetCreateMainQueue on`
 
 
-== $RulesetParser
+* *$RulesetParser*
 
 Type: ruleset-specific configuration directive
 
@@ -600,9 +603,7 @@ relative file names can also be specified.  To do so, these must begin with a
 dot. For example, use "./file-in-current-dir.log" to specify a file in the
 current directory. Please note that rsyslogd usually changes its working 
 directory to the root, so relative file names must be tested with care (they
-were introduced primarily as a debugging vehicle, but may have useful other applications
-as well).    
-    
+were introduced primarily as a debugging vehicle, but may have useful other applications as well).    
     
 You may prefix each entry with the minus "-'' sign to omit syncing the
 file after every logging. Note that you might lose information if the
@@ -610,60 +611,67 @@ system crashes right behind a write attempt. Nevertheless this might
 give you back some performance, especially if you run programs that use
 logging in a very verbose manner.
 
-<p>If your system is connected to a reliable UPS and you receive
+If your system is connected to a reliable UPS and you receive
 lots of log data (e.g. firewall logs), it might be a very good idea to
-turn of
-syncing by specifying the "-" in front of the file name.
+turn of syncing by specifying the "-" in front of the file name.
 
-**The filename can be either static **(always
-the same) or <b>dynamic</b> (different based on message
+The filename can be either *static* (always
+the same) or *dynamic* (different based on message
 received). The later is useful if you would automatically split
 messages into different files based on some message criteria. For
 example, dynamic file name selectors allow you to split messages into
 different files based on the host that sent them. With dynamic file
-names, everything is automatic and you do not need any filters. </p>
-<p>It works via the template system. First, you define a template
+names, everything is automatic and you do not need any filters. 
+
+It works via the template system. First, you define a template
 for the file name. An example can be seen above in the description of
 template. We will use the "DynFile" template defined there. Dynamic
 filenames are indicated by specifying a questions mark "?" instead of a
 slash, followed by the template name. Thus, the selector line for our
-dynamic file name would look as follows:</p>
-<blockquote>
-<code>*.* ?DynFile</code>
-</blockquote>
-<p>That's all you need to do. Rsyslog will now automatically
+dynamic file name would look as follows:
+
+[source]
+*.* ?DynFile
+
+That's all you need to do. Rsyslog will now automatically
 generate file names for you and store the right messages into the right
 files. Please note that the minus sign also works with dynamic file
 name selectors. Thus, to avoid syncing, you may use</p>
+
 <blockquote>
 <code>*.* -?DynFile</code></blockquote>
-<p>And of course you can use templates to specify the output
-format:</p>
-<blockquote>
-<code>*.* ?DynFile;MyTemplate</code></blockquote>
-<p><b>A word of caution:</b> rsyslog creates files as
-needed. So if a new host is using your syslog server, rsyslog will
-automatically create a new file for it.</p>
-<p><b>Creating directories is also supported</b>. For
-example you can use the hostname as directory and the program name as
-file name:</p>
-<blockquote>
-<code>$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"</code></blockquote>
 
-### Named Pipes ###
+And of course you can use templates to specify the output format:
 
-<p>This version of rsyslogd(8) has support for logging output to
+[source]
+----
+*.* ?DynFile;MyTemplate
+----
+
+.A word of caution:
+[WARNING] rsyslog creates files as needed. So if a new host is using your 
+syslog server, rsyslog will automatically create a new file for it.
+
+*Creating directories is also supported*. For example you can use the 
+hostname as directory and the program name as file name:
+
+[source]
+$template DynFile,"/var/log/%HOSTNAME%/%programname%.log"
+
+=== Named Pipes
+
+This version of rsyslogd(8) has support for logging output to
 named pipes (fifos). A fifo or named pipe can be used as a destination
 for log messages by prepending a pipe symbol ("|'') to the name of the
 file. This is handy for debugging. Note that the fifo must be created
-with the mkfifo(1) command before rsyslogd(8) is started.</p>
+with the mkfifo(1) command before rsyslogd(8) is started.
 
-### Terminal and Console ###
+=== Terminal and Console
 
 If the file you specified is a tty, special tty-handling is
 done, same with /dev/console.
 
-### Remote Machine ###
+=== Remote Machine 
 
 Rsyslogd provides full remote logging, i.e. is able to send
 messages to a remote host running rsyslogd(8) and to receive messages
@@ -684,14 +692,13 @@ following the final at sign and be enclosed in parenthesis. The
 individual options must be separated by commas. The following options
 are right now defined:
 
-<table id="table2" border="1" width="100%">
-<tbody>
-<tr>
-<td>
-<p align="center"><b>z&lt;number&gt;</b></p>
-</td>
-<td>Enable zlib-compression for the message. The
-&lt;number&gt; is the compression level. It can be 1 (lowest
+[options="header"]
+|============================
+| ABC | CDE 
+// <table id="table2" border="1" width="100%">
+*z<number>* |
+Enable zlib-compression for the message. The
+<number> is the compression level. It can be 1 (lowest
 gain, lowest CPU overhead) to 9 (maximum compression, highest CPU
 overhead). The level can also be 0, which means "no compression". If
 given, the "z" option is ignored. So this does not make an awful lot of
@@ -708,12 +715,14 @@ the uncompressed messages is transmitted. This saves the receiver CPU
 cycles for decompression. It also prevents small message to actually
 become larger in compressed form.
 
-<p><b>Please note that when a TCP transport is used,
+*Please note that when a TCP transport is used,
 compression will also turn on syslog-transport-tls framing. See the "o"
-option for important information on the implications.</b></p>
-<p>Compressed messages are automatically detected and
+option for important information on the implications.*
+
+Compressed messages are automatically detected and
 decompressed by the receiver. There is nothing that needs to be
-configured on the receiver side.</p>
+configured on the receiver side.
+
 </td>
 </tr>
 <tr>

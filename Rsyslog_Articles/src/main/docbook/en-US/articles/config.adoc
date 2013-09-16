@@ -63,12 +63,14 @@ Action (type=”omfile” file=”/var/log/network1.log”)
 All the lines together now are
 
 [source]
+----
 Module (load=“imupd“)
 
 Input (type=”imudp” port=”514”)
 If $fromhost-ip == “172.19.1.135“ then [
     Action (type=”omfile” File=”/var/log/network1.log”)
 ]
+----
 
 All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
 

@@ -70,9 +70,10 @@ The action object has different parameters:
      feature. It can be used, for example, to create rules that automatically 
     switch destination servers or databases to a (set of) backup(s), if the primary
     server fails. 
-    Note that this feature depends on proper implementation of the suspend feature in the output module.
-    All built-in output modules properly support it (most importantly the database write and the 
-    syslog message forwarder).    
+    Note that this feature depends on proper implementation of the suspend
+    feature in the output module.
+    All built-in output modules properly support it (most importantly the database
+    write and the syslog message forwarder).    
 
 * *action.repeatedmsgcontainsoriginalmsg* on/off +
     "last message repeated n times" messages, if generated, have a different
@@ -81,8 +82,7 @@ The action object has different parameters:
      probably more (this may change from version to version, thus no specific
      limit is given). The bottom line is that n is large enough to get a good idea 
      which message was repeated but it is not necessarily large enough for the
-     whole message.
-   (Introduced with 4.1.5). Once set, it affects all following actions.
+     whole message. Once set, it affects all following actions.
 
 * *action.resumeRetryCount* integer +
     [default 0, -1 means eternal]
@@ -102,12 +102,11 @@ The action object has different parameters:
 
 === Queue Parameters 
 
-
 * *queue.filename*  word     
     Specifes the base name to be used for queue files. +
     Default: none +
-    Mandatory: yes (for disk-based queues)    
- 	 
+    Mandatory: yes (for disk-based queues) +
++
     Disk-based queues create a set of files for queue content. 
     The value set via queue.filename acts as the basename to be used for 
     filename creation. For actual log data, a number is appended to 
@@ -118,17 +117,19 @@ The action object has different parameters:
 * *queue.size*  size +
     Specifes the maximum number of (in-core) messages a queue can hold. +
     Default: 10,000 for ruleset queues, 1,000 for action queues +
-    Mandatory: no    
- 	 
+    Mandatory: no  +
++
     This setting affects the in-memory queue size. Disk based queues may hold
     more data inside the queue, but not in main memory but on disk. The size is
     specified in number of messages. The representation of a typical syslog
     message object should require less than 1K, but excessively large
     messages may also result in excessively large objects. Note that not all
     message types may utilize the full queue. 
-    This depends on other queue parameters like the watermark settings. Most importantly, a small amount
-    (seven percent) is reserved for messages with high loss potential (like UDP-received messages) and 
-    will not be utilized by messages with lower loss potential (like TCP-received messages).    
+    This depends on other queue parameters like the watermark settings. 
+    Most importantly, a small amount (seven percent) is reserved for messages
+    with high loss potential (like UDP-received messages) and 
+    will not be utilized by messages with lower loss potential (like TCP-received 
+    messages).    
     
     Warning: do not set the size to extremely small values (like less than 500 messages) unless you know 
     exactly what you do (and why!). This could interfere with other internal settings like watermarks and 
@@ -148,28 +149,25 @@ The action object has different parameters:
     larger batch sizes (up to a environment-induced upper limit) provide better performance. 
     For the average system, there usually should be no need to adjust batch sizes as the defaults are sufficient.
 
-
-* **queue.maxdiskspace** size
-    Specifies maximum amount of disk space a queue may use.    
-    Default: unlimited    
-    Mandatory: no    
- 	 
+* *queue.maxdiskspace* size +
+    Specifies maximum amount of disk space a queue may use. +
+    Default: unlimited +
+    Mandatory: no +
++ 	 
     This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
 If the size limit is hit, messages are discarded until sufficient messages have been dequeued and queue files been deleted
 
-
-* **queue.highwatermark** number    
-    Specifies ...    
-    Default:    
+* *queue.highwatermark* number +
+    Specifies ...  +
+    Default: +
     Mandatory: no
 
-* **queue.lowwatermark** number    
-    Specifies ...    
-    Default:    
+* *queue.lowwatermark* number  +
+    Specifies ... +
+    Default:  +
     Mandatory: no
 
-queue.fulldelaymark
--------------------
+* *queue.fulldelaymark* +
 Specifies .
 
 Available Since: 6.3.3    
@@ -178,8 +176,7 @@ Default:
 Mandatory: no
 
 
-queue.discardmark
------------------
+* *queue.discardmark* +
 Specifies
 
 Available Since:	6.3.3

@@ -1,11 +1,11 @@
-== Configure rsyslog ###
+== Configure rsyslog
 
 We configure rsyslog 
 * to recive UDP messages, 
 * to filter them depending on the IP of the host, and
 * to store them in a file.
 
-== How to configure the module ###
+== How to configure the module
 
 The module has to be configured first. The general line for this configuration is: 
 
@@ -17,7 +17,7 @@ So in our example, where we want UDP, it will look like this:
 [source]
 module (load=”imudp”)
 
-== How to configure the input for rsyslog ###
+== How to configure the input for rsyslog ==
 
 For the input, you have to give two different information to rsyslog. 
 
@@ -35,7 +35,7 @@ This means for the example, the line has to be
 [source]
 input (type=”imudp” port=”514”)
 
-== How to configure a filter for fromhost-IPs and store them in a file ###
+== How to configure a filter for fromhost-IPs and store them in a file
 
 A filter always has, like a normal conditional sentence, an “if…then” part. 
 If you want to configure it to do something with all notes from a specific IP, 
@@ -78,10 +78,12 @@ All in all it means: The input for rsyslog will listen to syslog via UDP on port
 
 Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
 
+[source]
 Input (type=”imudp” port=”514” ruleset=”rs1”)
-But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
 
-You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file.  In my example I want to store the messages in the file +/var/log/network1.log+.
+
+You define a ruleset like the normal configuration. To define it, you first name it with +ruleset (name=”-rulesetname-“)+. After this you write what it does, in my example the action +action (type=”omfile” file=”/var/log/network1.log”)+. This action you write in these curly brackets: {}.
 
 So my full example looks like this
 

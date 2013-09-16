@@ -129,8 +129,8 @@ This setting affects the in-memory queue size. Disk based queues may hold
     Most importantly, a small amount (seven percent) is reserved for messages
     with high loss potential (like UDP-received messages) and 
     will not be utilized by messages with lower loss potential (like TCP-received 
-    messages).    
-    
+    messages). +
++
 Warning: do not set the size to extremely small values (like less than 500
     messages) unless you know exactly what you do (and why!). This could
     interfere with other internal settings like watermarks and 
@@ -142,20 +142,22 @@ Warning: do not set the size to extremely small values (like less than 500
     message bursts to be buffered without message loss.
 
 * *queue.dequeuebatchsize* number +    
-    Specifies how many messages can be dequeued at once.    
-    Default:    
-    Mandatory: no    
-    
-    Specifies the batch size for dequeue operations. This setting affects performance. As a rule of thumb, 
-    larger batch sizes (up to a environment-induced upper limit) provide better performance. 
-    For the average system, there usually should be no need to adjust batch sizes as the defaults are sufficient.
+    Specifies how many messages can be dequeued at once. +
+    Default: +
+    Mandatory: no +
+    +
+Specifies the batch size for dequeue operations. This setting affects
+    performance. As a rule of thumb, larger batch sizes (up to an 
+    environment-induced upper limit) provide better performance. 
+    For the average system, there usually should be no need to adjust batch
+    sizes as the defaults are sufficient.
 
 * *queue.maxdiskspace* size +
     Specifies maximum amount of disk space a queue may use. +
     Default: unlimited +
     Mandatory: no +
 + 	 
-    This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
+This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
 If the size limit is hit, messages are discarded until sufficient messages have been dequeued and queue files been deleted
 
 * *queue.highwatermark* number +
@@ -179,24 +181,20 @@ Mandatory: no
 
 * *queue.discardmark* +
 Specifies
-
 Available Since:	6.3.3
 Format:	number
 Default:	 
 Mandatory:	no
 
 
-queue.discardseverity
----------------------
-Specifies
-
-Available Since:	6.3.3
-Format:	severity
-Default:	 
-Mandatory:	no
+* *queue.discardseverity* +
+Specifies +
+Available Since:	6.3.3 +
+Format:	severity +
+Default: +
+Mandatory:	no +
 
 queue.checkpointinterval
-------------------------
 Specifies
 
 Available Since:	6.3.3

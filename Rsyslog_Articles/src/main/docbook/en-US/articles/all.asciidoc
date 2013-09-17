@@ -719,7 +719,7 @@ option for important information on the implications.*
 
 Compressed messages are automatically detected and
 decompressed by the receiver. There is nothing that needs to be
-configured on the receiver side. |
+configured on the receiver side. 
 
 | o |
 This option is experimental. Use at your own

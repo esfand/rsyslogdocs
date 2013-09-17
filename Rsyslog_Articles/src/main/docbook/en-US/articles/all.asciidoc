@@ -506,12 +506,6 @@ sequence of statements is very important. This is ugly, but unfortunately the
 way it currently works.
 
 
-
-
-
-
-
-
 [[actionlegaccy]]
 == Action Statement ==
         
@@ -528,7 +522,7 @@ The action object has different parameters:
     These are specific to a certain type of actions. 
     They are documented by the output module in question.
 
-## Legacy Format ##
+=== Legacy Format 
 
 Be warned that legacy action format is hard to get right. It is
 recommended to use RainerScript-Style action format whenever possible!
@@ -597,7 +591,7 @@ compared to the otherwise-equal config directives below:
 
 ### Regular File ###
 
-<p>Typically messages are logged to real files. The file usually is
+Typically messages are logged to real files. The file usually is
 specified by full pathname, beginning with a slash "/".
 Starting with version 4.6.2 and 5.4.1 (previous v5 version do NOT support this)
 relative file names can also be specified.  To do so, these must begin with a
@@ -759,31 +753,39 @@ In this example, messages are forwarded via plain TCP with
 experimental framing and maximum compression to the host 192.168.0.1 at
 port 1470.
 
-<p>*.* @192.168.0.1</p>
-<p>In the example above, messages are forwarded via UDP to the
+[source]
+*.* @192.168.0.1
+
+In the example above, messages are forwarded via UDP to the
 machine 192.168.0.1, the destination port defaults to 514. Messages
-will not be compressed.</p>
-<p>Note that IPv6 addresses contain colons. So if an IPv6 address is specified
+will not be compressed.
+
+Note that IPv6 addresses contain colons. So if an IPv6 address is specified
 in the hostname part, rsyslogd could not detect where the IP address ends
 and where the port starts. There is a syntax extension to support this:
 put squary brackets around the address (e.g. "[2001::1]"). Square
 brackets also work with real host names and IPv4 addresses, too.
-</p><p>A valid sample to send messages to the IPv6 host 2001::1 at port 515
+
+A valid sample to send messages to the IPv6 host 2001::1 at port 515
 is as follows:
-</p><p>*.* @[2001::1]:515
-</p><p>This works with TCP, too.
-</p><p><b>Note to sysklogd users:</b> sysklogd does <b>not</b>
+
+*.* @[2001::1]:515
+
+This works with TCP, too.
+
+*Note to sysklogd users:* sysklogd does <b>not</b>
 support RFC 3164 format, which is the default forwarding template in
 rsyslog. As such, you will experience duplicate hostnames if rsyslog is
 the sender and sysklogd is the receiver. The fix is simple: you need to
-use a different template. Use that one:</p>
-<p class="MsoPlainText">$template
-sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""<br>
-*.* @192.168.0.1;sysklogd</p>
+use a different template. Use that one:
+
+[source]
+$template sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""
+*.* @192.168.0.1;sysklogd
 
 ### List of Users ###
 
-<p>Usually critical messages are also directed to "root'' on
+Usually critical messages are also directed to "root'' on
 that machine. You can specify a list of users that shall get the
 message by simply writing ":omusrmsg: followed by the login name. For example,
 the send messages to root, use ":omusrmsg:root".
@@ -807,16 +809,19 @@ must support this functionality. Actual parameters depend on the
 module, so see the module's doc on what to supply. The general syntax
 is as follows:
 
-<p>:modname:params;template</p>
+[source]
+:modname:params;template
 
-<p>Currently, the ommysql database output module supports this
+Currently, the ommysql database output module supports this
 syntax (in addtion to the "&gt;" syntax it traditionally
 supported). For ommysql, the module name is "ommysql" and the params
 are the traditional ones. The ;template part is not module specific, it
 is generic rsyslog functionality available to all modules.</p>
 
-<p>As an example, the ommysql module may be called as follows:</p>
-<p>:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+As an example, the ommysql module may be called as follows:
+
+[source]
+:ommysql:dbhost,dbname,dbuser,dbpassword;dbtemplate
 
 <p>For details, please see the "Database Table" section of this
 documentation.</p>
@@ -827,34 +832,36 @@ module's plugin file is called.
 
 ### Database Table ###
 
-<p>This allows logging of the message to a database table.
+This allows logging of the message to a database table.
 Currently, only MySQL databases are supported. However, other database
 drivers will most probably be developed as plugins. By default, a <a href="http://www.monitorware.com/">MonitorWare</a>-compatible
 schema is required for this to work. You can create that schema with
 the createDB.SQL file that came with the rsyslog package. You can also<br>
 use any other schema of your liking - you just need to define a proper
-template and assign this template to the action.<br>
-<br>
+template and assign this template to the action.
+
 The database writer is called by specifying a greater-then sign
 ("&gt;") in front of the database connect information. Immediately
-after that<br>
+after that +
 sign the database host name must be given, a comma, the database name,
 another comma, the database user, a comma and then the user's password.
 If a specific template is to be used, a semicolon followed by the
-template name can follow the connect information. This is as follows:<br>
-<br>
-&gt;dbhost,dbname,dbuser,dbpassword;dbtemplate</p>
+template name can follow the connect information. This is as follows:
 
-**Important: to use the database functionality, the
+[source]
+>dbhost,dbname,dbuser,dbpassword;dbtemplate
+
+[IMPORTANT] To use the database functionality, the
 MySQL output module must be loaded in the config file** BEFORE
 the first database table action is used. This is done by placing the
 
-    $ModLoad ommysql 
+[source]
+$ModLoad ommysql 
 
 directive some place above the first use of the database write
 (we recommend doing at the the beginning of the config file).
 
-### Discard ###
+=== Discard 
 
 If the discard action is carried out, the received message is
 immediately discarded. No further processing of it occurs. Discard has
@@ -872,13 +879,18 @@ specifying what you do not want.
 
 Discard is just the single tilde character with no further parameters:
 
-<p>~</p>
-<p>For example,</p>
-<p>*.*&nbsp;&nbsp; ~</p>
-<p>discards everything (ok, you can achive the same by not
-running rsyslogd at all...).</p>
+[source]
+~
 
-### Output Channel ###
+For example,
+
+[source]
+*.*   ~
+
+discards everything (ok, you can achive the same by not
+running rsyslogd at all...).
+
+=== Output Channel
 
 Binds an output channel definition (see there for details) to
 this action. Output channel actions must start with a $-sign, e.g. if
@@ -886,13 +898,14 @@ you would like to bind your output channel definition "mychannel" to
 the action, use "$mychannel". Output channels support template
 definitions like all all other actions.
 
-### Shell Execute ###
+=== Shell Execute
 
 This executes a program in a subshell. The program is passed
 the template-generated message as the only command line parameter.
 Rsyslog waits until the program terminates and only then continues to
 run.
 
+[source]
 ^program-to-execute;template
 
 The program-to-execute can be any valid executable. It
@@ -922,7 +935,7 @@ messages to rsyslog. Point c) is especially important: if rsyslog is
 accepting message from any hosts, chances are much higher that an
 attacker might try to exploit the "shell execute" action.
 
-### Template Name ###
+=== Template Name
 
 Every ACTION can be followed by a template name. If so, that
 template is used for message formatting. If no name is given, a
@@ -949,50 +962,57 @@ The action object has different parameters:
     These are specific to a certain type of actions. 
     They are documented by the output module in question.
 
-### General Action Parameters ###
+=== General Action Parameters
 
-* **name**  word    
+* **name**  word  +
     used for statistics gathering and documentation    
 
-* **type** string    
-    Mandatory parameter for every action. The name of the module that should be used.    
+* **type** string +
+    Mandatory parameter for every action. The name of the module that 
+    should be used.    
 
-* **action.writeAllMarkMessages** on/off    
-    Normally, mark messages are written to actions only if the action was not recently executed 
-    (by default, recently means within the past 20 minutes). If this setting is switched to "on", 
-    mark messages are always sent to actions, no matter how recently they have been executed. 
-    In this mode, mark messages can be used as a kind of heartbeat. Note that this option 
-    auto-resets to "off", so if you intend to use it with multiple actions, it must be specified 
-    in front off all selector lines that should provide this functionality.    
+* **action.writeAllMarkMessages** on/off   +
+    Normally, mark messages are written to actions only if the action was not
+    recently executed (by default, recently means within the past 20 minutes). 
+    If this setting is switched to "on", mark messages are always sent to actions,
+    no matter how recently they have been executed. 
+    In this mode, mark messages can be used as a kind of heartbeat. Note that
+    this option auto-resets to "off", so if you intend to use it with multiple actions, 
+    it must be specified in front off all selector lines that should provide this
+    functionality.    
 
-* **action.execOnlyEveryNthTime** integer    
-    If configured, the next action will only be executed every n-th time. 
-    For example, if configured to 3, the first two messages that go into the action will be dropped, 
-    the 3rd will actually cause the action to execute, the 4th and 5th will be dropped, 
-    the 6th executed under the action, ... and so on. 
+* **action.execOnlyEveryNthTime** integer +
+    If configured, the next action will only be executed every n-th time.
+    For example, if configured to 3, the first two messages that go into the action
+    will be dropped, the 3rd will actually cause the action to execute, the 4th and 
+    5th will be dropped, the 6th executed under the action, ... and so on. 
     Note: this setting is automatically re-set when the actual action is defined.    
 
-* **action.execOnlyEveryNthTimeout** integer    
-    Has a meaning only if Action.ExecOnlyEveryNthTime is also configured for the same action. 
-    If so, the timeout setting specifies after which period the counting of "previous actions" 
-    expires and a new action count is begun. Specify 0 (the default) to disable timeouts.
-    Why is this option needed? Consider this case: a message comes in at, eg., 10am. That's count 1. 
-    Then, nothing happens for the next 10 hours. At 8pm, the next one occurs. 
-    That's count 2. Another 5 hours later, the next message occurs, bringing the total count to 3. 
-    Thus, this message now triggers the rule.
-    The question is if this is desired behavior? Or should the rule only be triggered if the 
-    messages occur within an e.g. 20 minute window? If the later is the case, you need a    
-    Action.ExecOnlyEveryNthTimeTimeout="1200"    
-    This directive will timeout previous messages seen if they are older than 20 minutes. 
-    In the example above, the count would now be always 1 and consequently no rule would 
-    ever be triggered.    
+* **action.execOnlyEveryNthTimeout** integer +
+    Has a meaning only if Action.ExecOnlyEveryNthTime is also configured for
+    the same action. If so, the timeout setting specifies after which period the
+    counting of "previous actions" expires and a new action count is begun. 
+    Specify 0 (the default) to disable timeouts.  Why is this option needed? 
+    Consider this case: a message comes in at, eg., 10am. That's count 1. 
+    Then, nothing happens for the next 10 hours. At 8pm, the next one occurs.
+    That's count 2. Another 5 hours later, the next message occurs, bringing the
+     total count to 3. Thus, this message now triggers the rule.
+    The question is if this is desired behavior? Or should the rule only be
+    triggered if the messages occur within an e.g. 20 minute window? If the later 
+    is the case, you need an +
+    +Action.ExecOnlyEveryNthTimeTimeout="1200"+ +
++
+    This directive will timeout previous messages seen if they are older than 20
+     minutes. In the example above, the count would now be always 1 and
+     consequently no rule would ever be triggered.    
     
-* **action.execOnlyOnceEveryInterval** integer    
-    Execute action only if the last execute is at last <seconds> seconds in the past (more info in ommail, 
-    but may be used with any action)</seconds>    
+* **action.execOnlyOnceEveryInterval** integer +
+    Execute action only if the last execute is at last <seconds> seconds in the
+    past (more info in ommail, but may be used with any action)</seconds>    
 
-* **action.execOnlyWhenpReviousIsSuspended** on/off    
-    This directive allows to specify if actions should always be executed ("off," the default) or only 
+* **action.execOnlyWhenpReviousIsSuspended** on/off +   
+    This directive allows to specify if actions should always be executed
+     ("off," the default) or only 
     if the previous action is suspended ("on"). This directive works hand-in-hand with the multiple 
     actions per selector feature. It can be used, for example, to create rules that automatically 
     switch destination servers or databases to a (set of) backup(s), if the primary server fails. 
@@ -1022,7 +1042,7 @@ The action object has different parameters:
     and after the 100th try it is 330.
 
 
-### Queue Parameters ###
+=== Queue Parameters
 
 
 * **queue.filename**  word     
@@ -2389,22 +2409,24 @@ lines will also be written to the file allmsgs-but-informational.log.
 \\ - the backslash character (e.g. "C:\\tmp")
 
 Escape sequences always start with a backslash. Additional
-escape sequences might be added in the future. Backslash characters <b>must</b>
+escape sequences might be added in the future. Backslash characters *must*
 be escaped. Any other sequence then those outlined above is invalid and
 may lead to unpredictable results.
 
-<p>Probably, "msg" is the most prominent use case of property
+Probably, "msg" is the most prominent use case of property
 based filters. It is the actual message text. If you would like to
 filter based on some message content (e.g. the presence of a specific
-code), this can be done easily by:</p>
+code), this can be done easily by:
 
-    :msg, contains, "ID-4711"
+[source]
+:msg, contains, "ID-4711"
 
 This filter will match when the message contains the string
 "ID-4711". Please note that the comparison is case-sensitive, so it
 would not match if "id-4711" would be contained in the message.
 
-    :msg, regex, "fatal .* error"
+[source]
+:msg, regex, "fatal .* error"
 
 This filter uses a POSIX regular expression. It matches when the
 string contains the words "fatal" and "error" with anything in between
@@ -3034,15 +3056,14 @@ Defaults to "events"
 * **dynSearchType** <on|**off**>
 Like <strong>dynSearchIndex</strong>, it allows you to specify a <a href="http://www.rsyslog.com/doc/rsyslog_conf_templates.html">template</a> for <strong>searchType</strong>, instead of a static string.
 
-* **asyncrepl** <on|**off>
-By default, an indexing operation returns after 
-all <a href="http://www.elasticsearch.org/guide/appendix/glossary.html#replica_shard">replica shards</a> 
-have indexed the document. With asyncrepl="on" it will return after it was indexed on 
-the <a href="http://www.elasticsearch.org/guide/appendix/glossary.html#primary_shard">primary shard</a> 
-only - thus trading some consistency for speed.
-* **timeout**
-How long Elasticsearch will wait for a primary shard to be available for indexing your log before sending 
-back an error. Defaults to "1m".
+* **asyncrepl** <on|**off> +
+By default, an indexing operation returns after all http://www.elasticsearch.org/guide/appendix/glossary.html#replica_shard[replica shards] have indexed the document. With asyncrepl="on" it will return after it
+was indexed on the http://www.elasticsearch.org/guide/appendix/glossary.html#primary_shard[primary shard] only - thus trading some consistency for speed.
+
+* *timeout* +
+How long Elasticsearch will wait for a primary shard to be available for indexing
+your log before sending back an error. Defaults to "1m".
+
 * **template**
 This is the JSON document that will be indexed in Elasticsearch. 
 The resulting string needs to be a valid JSON, otherwise Elasticsearch will return an error. Defaults to:
@@ -3050,20 +3071,22 @@ The resulting string needs to be a valid JSON, otherwise Elasticsearch will retu
         <pre>$template JSONDefault, "{\"message\":\"%msg:::json%\",\"fromhost\":\"%HOSTNAME:::json%\",\"facility\":\"%syslogfacility-text%\",\"priority\":\"%syslogpriority-text%\",\"timereported\":\"%timereported:::date-rfc3339%\",\"timegenerated\":\"%timegenerated:::date-rfc3339%\"}"
 </pre>
 
-<p>Which will produce this sort of documents (pretty-printed here for readability):</p>
+Which will produce this sort of documents (pretty-printed here for readability):
 
-
-<pre>{
-&nbsp;&nbsp;&nbsp; "message": " this is a test message",
-&nbsp;&nbsp;&nbsp; "fromhost": "test-host",
+[source]
+{
+    "message": " this is a test message",
+    "fromhost": "test-host",
 &nbsp;&nbsp;&nbsp; "facility": "user",
 &nbsp;&nbsp;&nbsp; "priority": "info",
 &nbsp;&nbsp;&nbsp; "timereported": "2013-03-12T18:05:01.344864+02:00",
 &nbsp;&nbsp;&nbsp; "timegenerated": "2013-03-12T18:05:01.344864+02:00"
-}</pre>
+}<
 
-* **bulkmode** <on|**off**>
-The default "off" setting means logs are shipped one by one. Each in its own HTTP request, using the <a href="http://www.elasticsearch.org/guide/reference/api/index_.html">Index API</a>. Set it to "on" and it will use Elasticsearch's <a href="http://www.elasticsearch.org/guide/reference/api/bulk.html">Bulk API</a> to send multiple logs in the same request. The maximum number of logs sent in a single bulk request depends on your queue settings - usually limited by the <a href="http://www.rsyslog.com/doc/node35.html">dequeue batch size</a>. More information about queues can be found <a href="http://www.rsyslog.com/doc/node32.html">here</a>.</li>
+* *bulkmode* <on|**off**> +
+The default "off" setting means logs are shipped one by one. Each in its own
+HTTP request, using the http://www.elasticsearch.org/guide/reference/api/index_.html"[Index API]. 
+Set it to "on" and it will use Elasticsearch's <a href="http://www.elasticsearch.org/guide/reference/api/bulk.html">Bulk API</a> to send multiple logs in the same request. The maximum number of logs sent in a single bulk request depends on your queue settings - usually limited by the <a href="http://www.rsyslog.com/doc/node35.html">dequeue batch size</a>. More information about queues can be found <a href="http://www.rsyslog.com/doc/node32.html">here</a>.</li>
             <li>
                 <strong>parent</strong><br>
                 Specifying a string here will index your logs with that string the parent ID of those logs. Please note that you need to define the <a href="http://www.elasticsearch.org/guide/reference/mapping/parent-field.html">parent field</a> in your <a href="http://www.elasticsearch.org/guide/reference/mapping/">mapping</a> for that to work. By default, logs are indexed without a parent.</li>
@@ -3166,10 +3189,10 @@ template(name="testTemplate"
 This module supports sending syslog messages over the reliable RELP protocol.    
 For RELP's advantages over plain tcp syslog, please see the documentation for imrelp (the server counterpart). 
 
-#### Setup ####
+=== Setup
 Please note that librelp is required for imrelp (it provides the core relp protocol implementation).
 
-#### Action Configuration Parameters ####
+=== Action Configuration Parameters
 
 * **target** (mandatory)    
 The target server to connect to.
@@ -3238,7 +3261,7 @@ Full information about how to construct a priority string can be found in the Gn
 At the time of this writing, this information was contained in section 6.10 of the GnuTLS manual.    
 Note: this is an expert parameter. Do not use if you do not exactly know what you are doing.
 
-#### Sample ####
+=== Sample
 
 The following sample sends all messages to the central server "centralserv" at port 2514 (note that that 
 server must run imrelp on port 2514).
@@ -3307,25 +3330,20 @@ Now let's look at the action queues: here, the active part, the producer, is the
 
 Armed with this knowledge, we can now look at the way action queue modes work. My analogy here is a junction, as shown below (note that the colors in the pictures below are not related to the colors in the pictures above!):
 
-
-
+[source]
 ![cross](http://www.rsyslog.com/doc/direct_queue0.png)
-
-
 
 This is a very simple real-life traffic case: one road joins another. We look at traffic on the straight road, here shown by blue and green arrows. Traffic in the opposing direction is shown in blue. Traffic flows without any delays as long as nobody takes turns. To be more precise, if the opposing traffic takes a (right) turn, traffic still continues to flow without delay. However, if a car in the red traffic flow intends to do a (left, then) turn, the situation changes:
 
+[source]
 ![jjj](http://www.rsyslog.com/doc/direct_queue1.png)
 
 The turning car is represented by the green arrow. It cannot turn unless there is a gap in the "blue traffic stream". And as this car blocks the roadway, the remaining traffic (now shown in red, which should indicate the block condition), must wait until the "green" car has made its turn. So a queue will build up on that lane, waiting for the turn to be completed. Note that in the examples below I do not care that much about the properties of the opposing traffic. That is, because its structure is not really important for what I intend to show. Think about the blue arrow as being a traffic stream that most of the time blocks left-turners, but from time to time has a gap that is sufficiently large for a left-turn to complete.
 
 Our road network designers know that this may be unfortunate, and for more important roads and junctions, they came up with the concept of turning lanes:
 
-
+[source]
 ![kk]http://www.rsyslog.com/doc/direct_queue2.png)
-
-
-
 
 Now, the car taking the turn can wait in a special area, the turning lane. As such, the "straight" traffic is no longer blocked and can flow in parallel to the turning lane (indicated by a now-green-again arrow).
 

@@ -1,7 +1,8 @@
 [[objectmodel]]
 == rsyslog object model and message flow
 
-http://blog.gerhards.net/2007/08/rsyslog-v3-object-model-and-message.html[Article Source]
+http://blog.gerhards.net/2007/08/rsyslog-v3-object-model-and-message.html
+[Article Source]
 
 To understand the Rsyslog's config file formats, one needs to know more 
 about its object model.  
@@ -193,31 +194,49 @@ The main message queue is created after parsing the config file and all of its
 potential 
 includes.  An action queue is created each time an action selector is specified. 
 
-Not all queues necessarily support the full set of queue configuration parameters, because 
-not all are applicable.  For example, in current output module design, actions do not support 
-multi-threading.  Consequently, the number of worker threads is fixed to one for action queues 
+Not all queues necessarily support the full set of queue configuration 
+parameters, because not all are applicable.  For example, in current output 
+module design, actions do not support multi-threading.  Consequently, the number
+of worker threads is fixed to one for action queues 
 and can not be changed.
 
 
 === Queue Analogy
 
 A warp-up: In rsyslog, an action queue "sits in front of" each output plugin. 
-Messages are received and flow, from input to output, over various stages and two level of 
-queues to the outputs.  Actions queues are always present, but may not easily be visible when 
-in direct mode (where no actual queuing takes place). 
+Messages are received and flow, from input to output, over various stages and 
+two level of queues to the outputs.  Actions queues are always present, but may 
+not easily be visible when in direct mode (where no actual queuing takes place). 
 
-On the output side, the queue is the active component, not the consumer. As such, the consumer cannot ask the queue for anything (like n number of messages) but rather is activated by the queue itself. As such, a queue somewhat resembles a "living thing" whereas the outputs are just tools that this "living thing" uses.
+On the output side, the queue is the active component, not the consumer. As 
+such, the consumer cannot ask the queue for anything (like n number of messages)
+but rather is activated by the queue itself. As such, a queue somewhat resembles
+a "living thing" whereas the outputs are just tools that this "living thing" 
+uses.
 
-Note that I left out a couple of subtleties, especially when it comes to error handling and terminating a queue (you hopefully have now at least a rough idea why I say "terminating a queue" and not "terminating an action" - who is the "living thing"?). An action returns a status to the queue, but it is the queue that ultimately decides which messages can finally be considered processed and which not. Please note that the queue may even cancel an output right in the middle of its action. This happens, if configured, if an output needs more than a configured maximum processing time and is a guard condition to prevent slow outputs from deferring a rsyslog restart for too long. Especially in this case re-queuing and cleanup is not trivial. Also, note that I did not discuss disk-assisted queue modes. The basic rules apply, but there are some additional constraints, especially in regard to the threading model. Transitioning between actual disk-assisted mode and pure-in-memory-mode (which is done automatically when needed) is also far from trivial and a real joy for an implementer to work on ;).
+Note that I left out a couple of subtleties, especially when it comes to error 
+handling and terminating a queue (you hopefully have now at least a rough idea 
+why I say "terminating a queue" and not "terminating an action" - who is the 
+"living thing"?). An action returns a status to the queue, but it is the queue 
+that ultimately decides which messages can finally be considered processed and 
+which not. Please note that the queue may even cancel an output right in the 
+middle of its action. This happens, if configured, if an output needs more than
+a configured maximum processing time and is a guard condition to prevent slow 
+outputs from deferring a rsyslog restart for too long. Especially in this case 
+re-queuing and cleanup is not trivial. Also, note that I did not discuss 
+disk-assisted queue modes. The basic rules apply, but there are some additional
+ constraints, especially in regard to the threading model. Transitioning between
+ actual disk-assisted mode and pure-in-memory-mode (which is done automatically 
+ when needed) is also far from trivial and a real joy for an implementer 
+ to work on ;).
 
 === Worker Thread Pools
 
-Each queue (except in "direct" mode) has an associated pool of worker threads.  Worker threads 
-carry out the action to be performed on the data elements enqueued.  As an actual sample, the 
-main message queue's worker task is to apply filter logic to each incoming message and enqueue 
-them to the relevant output queues (actions).
-
-
+Each queue (except in "direct" mode) has an associated pool of worker threads.  
+Worker threads carry out the action to be performed on the data elements 
+enqueued.  As an actual sample, the main message queue's worker task is to apply
+filter logic to each incoming message and enqueue them to the relevant output 
+queues (actions).
 
 === Turning Lanes and Rsyslog Queues - an Analogy
 
@@ -242,12 +261,14 @@ or several action queues (depending on filter results).  They leave rsyslog on
 "the right side" where output modules (like the file or database writer) consume 
 them.
 
-So there are always two stages where a message (conceptually) is queued - first in the 
-main queue and later on in n action specific queues (with n being the number of actions 
-that the message in question needs to be processed by, what is being decided by the 
-"Filter Engine").  As such, a message will be in at least two queues during its lifetime
-(with the exception of messages being discarded by the queue itself, but for the purpose 
-of this document, we will ignore that possibility).
+So there are always two stages where a message (conceptually) is queued - first 
+in the 
+main queue and later on in n action specific queues (with n being the number of
+actions that the message in question needs to be processed by, what is being 
+decided by the  "Filter Engine").  As such, a message will be in at least two 
+queues during its lifetime (with the exception of messages being discarded by 
+the queue itself, but for the purpose  of this document, we will ignore that 
+possibility).
 
 Also, it is vitally important to understand that each action has a queue sitting
 in front of it.  If you have dug into the details of rsyslog configuration, you 
@@ -275,9 +296,9 @@ http://www.rsyslog.com/doc/mmnormalize.html[Article Source]
 === Description
 
 This module provides the capability to normalize log messages via liblognorm.  
-Thanks to liblognorm, unstructured text, like usually found in log messages, can very 
-quickly be parsed and put into a normal form. This is done so quickly, that it should 
-be possible to normalize events in realtime.
+Thanks to liblognorm, unstructured text, like usually found in log messages, can
+very quickly be parsed and put into a normal form. This is done so quickly, that
+it should be possible to normalize events in realtime.
 
 This module is implemented via the output module interface.  This means that
 mmnormalize should be called just like an action. After it has been called, the
@@ -289,23 +310,24 @@ Please note: CEE/lumberjack properties are different from regular properties.
 They always have "$!" prepended to the property name given in the rulebase.
 Such a property needs to be called with %$!propertyname%.
 
-Note that mmnormalize should only be called once on each message. Behaviour is undefined if multiple calls to mmnormalize happen for the same
-message.
+Note that mmnormalize should only be called once on each message. Behaviour is 
+undefined if multiple calls to mmnormalize happen for the same message.
 
 
 === Action Parameters
 
-* *ruleBase* [word]
+* *ruleBase* [word] +
 Specifies which rulebase file is to use. If there are multiple mmnormalize
-instances, each one 
-can use a different file. However, a single instance can use only a single file. This parameter 
-MUST be given, because normalization can only happen based on a rulebase. It is recommended that 
-an absolute path name is given. Information on how to create the rulebase can be found in the
+instances, each one can use a different file. However, a single instance can use
+only a single file. This parameter MUST be given, because normalization can only
+happen based on a 
+rulebase. It is recommended that an absolute path name is given. Information on 
+how to create the rulebase can be found in the
 liblognorm manual.
 
-* useRawMsg [boolean]
-Specifies if the raw message should be used for normalization (on) or just the MSG part of 
-the message (off). Default is "off".
+* useRawMsg [boolean] +
+Specifies if the raw message should be used for normalization (on) or just the 
+MSG part of  the message (off). Default is "off".
 
 
 === Sample
@@ -417,14 +439,11 @@ specifying any queue parameters in the ruleset definition will as a side effect
 perform the equivalent of a `$RulesetCreateMainQueue on`
 
 
-* *$RulesetParser*
+== $RulesetParser
 
-Type: ruleset-specific configuration directive
-
-Parameter Values: string
-
-Available since: 5.3.4+
-
+Type: ruleset-specific configuration directive +
+Parameter Values: string +
+Available since: 5.3.4+ +
 Default: rsyslog.rfc5424 followed by rsyslog.rfc3164
 
 === Description
@@ -434,28 +453,55 @@ ruleset in question. It no ruleset is explicitely specified, the default ruleset
 is used. Message parsers are contained in (loadable) parser modules with the 
 most common cases (RFC3164 and RFC5424) being build-in into rsyslogd.
 
-When this directive is specified the first time for a ruleset, it will not only add the parser to the ruleset's parser chain, it will also wipe out the default parser chain. So if you need to have them in addition to the custom parser, you need to specify those as well.
+When this directive is specified the first time for a ruleset, it will not only 
+add the parser to the ruleset's parser chain, it will also wipe out the default 
+parser chain. So if you need to have them in addition to the custom parser, you 
+need to specify those as well.
 
-Order of directives is important. Parsers are tried one after another, in the order they are specified inside the config. As soon as a parser is able to parse the message, it will do so and no other parsers will be executed. If no matching parser can be found, the message will be discarded and a warning message be issued (but only for the first 1,000 instances of this problem, to prevent message generation loops).
+Order of directives is important. Parsers are tried one after another, in the 
+order they are specified inside the config. As soon as a parser is able to parse
+the message, it will do so and no other parsers will be executed. If no matching
+parser can be found, the message will be discarded and a warning message be 
+issued (but only for the first 1,000 instances of this problem, to prevent 
+message generation loops).
 
-Note that the rfc3164 parser will always be able to parse a message - it may just not be the format that you like. This has two important implications: 1) always place that parser at the END of the parser list, or the other parsers after it will never be tried and 2) if you would like to make sure no message is lost, placing the rfc3164 parser at the end of the parser list ensures that.
+Note that the rfc3164 parser will always be able to parse a message - it may 
+just not be the format that you like. This has two important implications: 
+1) always place that parser at the END of the parser list, or the other parsers 
+after it will never be tried and 2) if you would like to make sure no message is
+lost, placing the rfc3164 parser at the end of the parser list ensures that.
 
-Multiple parser modules are very useful if you have various devices that emit messages that are malformed in various ways. The route to take then is
+Multiple parser modules are very useful if you have various devices that emit 
+messages that are malformed in various ways. The route to take then is make sure
+you find a custom parser for that device; if there is no one, you may consider 
+writing one yourself (it is not that hard) or getting one written as part of 
+Adiscon's professional services for rsyslog.
 
-make sure you find a custom parser for that device; if there is no one, you may consider writing one yourself (it is not that hard) or getting one written as part of Adiscon's professional services for rsyslog.
 load your custom parsers via $ModLoad
 create a ruleset for each malformed format; assign the custom parser to it
-create a specific listening port for all devices that emit the same malformed format
-bind the listener to the ruleset with the required parser
-Note that it may be cumbersome to add all rules to all rulesets. To avoid this, you can either use $Include or omruleset (what probably provides the best solution).
+create a specific listening port for all devices that emit the same malformed 
+format bind the listener to the ruleset with the required parser
+Note that it may be cumbersome to add all rules to all rulesets. To avoid this, 
+you can either use $Include or omruleset (what probably provides the best
+solution).
 
-More information about rulesets in general can be found in multi-ruleset support in rsyslog.
+More information about rulesets in general can be found in multi-ruleset support 
+in rsyslog.
 
 === Example
 
-This example assumes there are two devices emiting malformed messages via UDP. We have two custom parsers for them, named "device1.parser" and "device2.parser". In addition to that, we have a number of other devices sending wellformed messages, also via UDP.
+This example assumes there are two devices emiting malformed messages via UDP. 
+We have two custom parsers for them, named "device1.parser" and 
+"device2.parser". In addition to that, we have a number of other devices sending
+wellformed messages, also via UDP.
 
-The solution is to listen for data from the two devices on two special ports (10514 and 10515 in this example), create a ruleset for each and assign the custom parsers to them. The rest of the messages are received via port 514 using the regular parsers. Processing shall be equal for all messages. So we simply forward the malformed messages to the regular queue once they are parsed (keep in mind that a message is never again parsed once any parser properly processed it).
+The solution is to listen for data from the two devices on two special ports 
+(10514 and 10515 in this example), create a ruleset for each and assign the 
+custom parsers to them. The rest of the messages are received via port 514 using
+the regular parsers. Processing shall be equal for all messages. So we simply 
+forward the malformed messages to the regular queue once they are parsed (keep 
+in mind that a message is never again parsed once any parser properly processed 
+it).
 
 [source]
 ----
@@ -538,11 +584,13 @@ closely together.
 Please also note that legacy action parameters **do not** affect
 RainerScript action objects. So if you define for example:
 
-    $actionResumeRetryCount 10
-    action(type="omfwd" target="server1.example.net")
-    @@server2.example.net
+[source]
+$actionResumeRetryCount 10
+action(type="omfwd" target="server1.example.net")
+@@server2.example.net
 
-server1's "action.resumeRetryCount" parameter is **not** set, instead server2's is!
+server1's "action.resumeRetryCount" parameter is **not** set, instead 
+server2's is!
 
 A goal of the new RainerScript action format was to avoid confusion
 which parameters are actually used. As such, it would be counter-productive
@@ -573,6 +621,7 @@ more precisely a single filter of such a selector line). Each action
 must be on its own line and the line must start with an ampersand
 ('&amp;') character and have no filters. An example would be
 
+[source]
     *.=crit :omusrmsg:rger
     &root
     & /var/log/critmsgs</b></code></p>
@@ -598,7 +647,8 @@ relative file names can also be specified.  To do so, these must begin with a
 dot. For example, use "./file-in-current-dir.log" to specify a file in the
 current directory. Please note that rsyslogd usually changes its working 
 directory to the root, so relative file names must be tested with care (they
-were introduced primarily as a debugging vehicle, but may have useful other applications as well).    
+were introduced primarily as a debugging vehicle, but may have useful other
+applications as well).    
     
 You may prefix each entry with the minus "-'' sign to omit syncing the
 file after every logging. Note that you might lose information if the
@@ -785,16 +835,16 @@ $template sysklogd,"&lt;%PRI%&gt;%TIMESTAMP% %syslogtag%%msg%\""
 
 ### List of Users ###
 
-Usually critical messages are also directed to "root'' on
-that machine. You can specify a list of users that shall get the
-message by simply writing ":omusrmsg: followed by the login name. For example,
-the send messages to root, use ":omusrmsg:root".
-You may specify more than one user
-by separating them with commas (",''). Do not repeat the ":omusrmsg:" prefix in
-this case. For example, to send data to users root and rger, use
-":omusrmsg:root,rger" (do not use ":omusrmsg:root,:omusrmsg:rger", this is invalid).
-If they're logged in they get
-the message.
+Usually critical messages are also directed to "root'' on that machine. You can 
+specify a list of users that shall get the message by simply writing ":omusrmsg:
+followed by the login name. For example, the send messages to root, use 
+":omusrmsg:root".
+
+You may specify more than one user by separating them with commas (",''). 
+Do not repeat the ":omusrmsg:" prefix in this case. For example, to send data 
+to users root and rger, use ":omusrmsg:root,rger" (do not use
+":omusrmsg:root,:omusrmsg:rger", this is invalid).
+If they're logged in they get the message.
 
 ### Everyone logged on ###
 
@@ -834,15 +884,15 @@ module's plugin file is called.
 
 This allows logging of the message to a database table.
 Currently, only MySQL databases are supported. However, other database
-drivers will most probably be developed as plugins. By default, a <a href="http://www.monitorware.com/">MonitorWare</a>-compatible
+drivers will most probably be developed as plugins. By default, a 
+http://www.monitorware.com/[">]MonitorWare]-compatible
 schema is required for this to work. You can create that schema with
 the createDB.SQL file that came with the rsyslog package. You can also<br>
 use any other schema of your liking - you just need to define a proper
 template and assign this template to the action.
 
-The database writer is called by specifying a greater-then sign
-("&gt;") in front of the database connect information. Immediately
-after that +
+The database writer is called by specifying a greater-then sign (">") in front
+of the database connect information. Immediately after that +
 sign the database host name must be given, a comma, the database name,
 another comma, the database user, a comma and then the user's password.
 If a specific template is to be used, a semicolon followed by the
@@ -950,45 +1000,46 @@ what you can do with it, see "TEMPLATES" at the top of this document.
 == Action Statement
         
 Action object describe what is to be done with a message. 
-They are implemented via <a href="rsyslog_conf_modules.html#om">outpout modules</a>.
+They are implemented via http://rsyslog_conf_modules.html#om[outpout modules].
 
 The action object has different parameters:
-* those that apply to all actions and are action specific.     
-    These are documented below.
+* those that apply to all actions and are action specific.
+  These are documented below.
 * parameters for the action queue.     
-    While they also apply to all parameters, they are queue-specific, not action-specific 
-    (they are the same that are used in rulesets, for example).
+  While they also apply to all parameters, they are queue-specific, not 
+  action-specific (they are the same that are used in rulesets, for example).
 * action-specific parameters.     
-    These are specific to a certain type of actions. 
-    They are documented by the output module in question.
+  These are specific to a certain type of actions. 
+  They are documented by the output module in question.
 
 === General Action Parameters
 
-* **name**  word  +
+* *name*  word  +
     used for statistics gathering and documentation    
 
-* **type** string +
+* *type* string +
     Mandatory parameter for every action. The name of the module that 
     should be used.    
 
-* **action.writeAllMarkMessages** on/off   +
+* *action.writeAllMarkMessages* on/off   +
     Normally, mark messages are written to actions only if the action was not
     recently executed (by default, recently means within the past 20 minutes). 
-    If this setting is switched to "on", mark messages are always sent to actions,
-    no matter how recently they have been executed. 
+    If this setting is switched to "on", mark messages are always sent to 
+    actions, no matter how recently they have been executed. 
     In this mode, mark messages can be used as a kind of heartbeat. Note that
-    this option auto-resets to "off", so if you intend to use it with multiple actions, 
-    it must be specified in front off all selector lines that should provide this
-    functionality.    
+    this option auto-resets to "off", so if you intend to use it with multiple 
+    actions, it must be specified in front off all selector lines that should 
+    provide this functionality.    
 
-* **action.execOnlyEveryNthTime** integer +
+* *action.execOnlyEveryNthTime* integer +
     If configured, the next action will only be executed every n-th time.
-    For example, if configured to 3, the first two messages that go into the action
-    will be dropped, the 3rd will actually cause the action to execute, the 4th and 
-    5th will be dropped, the 6th executed under the action, ... and so on. 
+    For example, if configured to 3, the first two messages that go into the 
+    action will be dropped, the 3rd will actually cause the action to execute,
+    the 4th and 5th will be dropped, the 6th executed under the action, ... and 
+    so on. 
     Note: this setting is automatically re-set when the actual action is defined.    
 
-* **action.execOnlyEveryNthTimeout** integer +
+* *action.execOnlyEveryNthTimeout* integer +
     Has a meaning only if Action.ExecOnlyEveryNthTime is also configured for
     the same action. If so, the timeout setting specifies after which period the
     counting of "previous actions" expires and a new action count is begun. 
@@ -1006,102 +1057,123 @@ The action object has different parameters:
      minutes. In the example above, the count would now be always 1 and
      consequently no rule would ever be triggered.    
     
-* **action.execOnlyOnceEveryInterval** integer +
+* *action.execOnlyOnceEveryInterval* integer +
     Execute action only if the last execute is at last <seconds> seconds in the
     past (more info in ommail, but may be used with any action)</seconds>    
 
-* **action.execOnlyWhenpReviousIsSuspended** on/off +   
+* *action.execOnlyWhenpReviousIsSuspended* on/off +   
     This directive allows to specify if actions should always be executed
-     ("off," the default) or only 
-    if the previous action is suspended ("on"). This directive works hand-in-hand with the multiple 
-    actions per selector feature. It can be used, for example, to create rules that automatically 
-    switch destination servers or databases to a (set of) backup(s), if the primary server fails. 
-    Note that this feature depends on proper implementation of the suspend feature in the output module.
-    All built-in output modules properly support it (most importantly the database write and the 
-    syslog message forwarder).    
+    ("off," the default) or only if the previous action is suspended ("on"). 
+    This directive works hand-in-hand with the multiple actions per selector 
+    feature. It can be used, for example, to create rules that automatically 
+    switch destination servers or databases to a (set of) backup(s), if the 
+    primary server fails. 
+    Note that this feature depends on proper implementation of the suspend 
+    feature in the output module.
+    All built-in output modules properly support it (most importantly the 
+    database write and the syslog message forwarder).    
 
-* **action.repeatedmsgcontainsoriginalmsg** on/off    
-    "last message repeated n times" messages, if generated, have a different format that contains 
-    the message that is being repeated. Note that only the first "n" characters are included, 
-    with n to be at least 80 characters, most probably more (this may change from version to version, 
-    thus no specific limit is given). The bottom line is that n is large enough to get a good idea 
-    which message was repeated but it is not necessarily large enough for the whole message.
-   (Introduced with 4.1.5). Once set, it affects all following actions.
+* *action.repeatedmsgcontainsoriginalmsg* on/off  +  
+    "last message repeated n times" messages, if generated, have a different 
+    format that contains the message that is being repeated. Note that only the 
+    first "n" characters are included, with n to be at least 80 characters, most 
+    probably more (this may change from version to version, thus no specific 
+    limit is given). The bottom line is that n is large enough to get a good 
+    idea which message was repeated but it is not necessarily large enough for
+    the whole message.  Once set, it affects all following actions.
 
-* **action.resumeRetryCount** integer    
+* *action.resumeRetryCount* integer + 
     [default 0, -1 means eternal]
 
-* **action.resumeInterval** integer    
-    Sets the ActionResumeInterval for the action. The interval provided is always in seconds. 
-    Thus, multiply by 60 if you need minutes and 3,600 if you need hours (not recommended).
-    When an action is suspended (e.g. destination can not be connected), the action is resumed 
-    for the configured interval. Thereafter, it is retried. If multiple retires fail, the interval 
-    is automatically extended. This is to prevent excessive ressource use for retires. 
-    After each 10 retries, the interval is extended by itself. To be precise, the actual interval 
-    is (numRetries / 10 + 1) * Action.ResumeInterval. so after the 10th try, it by default is 60 
-    and after the 100th try it is 330.
+* *action.resumeInterval* integer +
+    Sets the ActionResumeInterval for the action. The interval provided is 
+    always in seconds.  Thus, multiply by 60 if you need minutes and 3,600 if 
+    you need hours (not recommended).
+    When an action is suspended (e.g. destination can not be connected), the 
+    action is resumed for the configured interval. Thereafter, it is retried. 
+    If multiple retires fail, the interval is automatically extended. This is to
+    prevent excessive ressource use for retires. 
+    After each 10 retries, the interval is extended by itself. To be precise, 
+    the actual interval is (numRetries / 10 + 1) * Action.ResumeInterval.
+    so after the 10th try, it by default is 60 and after the 100th try it 
+    is 330.
 
 
 === Queue Parameters
 
 
-* **queue.filename**  word     
-    Specifes the base name to be used for queue files.    
-    Default: none    
-    Mandatory: yes (for disk-based queues)    
-     
-    Disk-based queues create a set of files for queue content. The value set via queue.filename acts 
-    as the basename to be used for filename creation. For actual log data, a number is appended to 
-    the file name. There is also a so-called "queue information" (qi) file created, which holds 
-    administrative information about the queue status. This file is named with the base name plus 
-    ".qi" as suffix.    
+* *queue.filename*  word +
+    Specifes the base name to be used for queue files. +
+    Default: none  +
+    Mandatory: yes (for disk-based queues)  +  
+ +
+    Disk-based queues create a set of files for queue content. The value set via 
+    queue.filename acts as the basename to be used for filename creation. For 
+    actual log data, a number is appended to the file name. There is also a 
+    so-called "queue information" (qi) file created, which holds administrative 
+    information about the queue status. This file is named with the base name 
+    plus ".qi" as suffix.    
 
 
-* **queue.size**  size      
+* *queue.size*  size +
     Specifes the maximum number of (in-core) messages a queue can hold.    
-    Default: 10,000 for ruleset queues, 1,000 for action queues    
-    Mandatory: no    
-     
-    This setting affects the in-memory queue size. Disk based queues may hold more data inside the queue, 
-    but not in main memory but on disk. The size is specified in number of messages. The representation 
-    of a typical syslog message object should require less than 1K, but excessively large messages may 
-    also result in excessively large objects. Note that not all message types may utilize the full queue. 
-    This depends on other queue parameters like the watermark settings. Most importantly, a small amount
-    (seven percent) is reserved for messages with high loss potential (like UDP-received messages) and 
-    will not be utilized by messages with lower loss potential (like TCP-received messages).    
-    
-    Warning: do not set the size to extremely small values (like less than 500 messages) unless you know 
-    exactly what you do (and why!). This could interfere with other internal settings like watermarks and 
-    batch sizes. It is possible to specify very small values in order to support power users who customize
-    the other settings accordingly. Usually there is no need to do that. Queues take only up memory when 
-    messages are stored in them. So reducing queue sizes does not reduce memory usage, except in cases 
-    where queues are actually full. The default settings permit small message bursts to be buffered 
-    without message loss.
+    Default: 10,000 for ruleset queues, 1,000 for action queues +
+    Mandatory: no  + 
+     +
+    This setting affects the in-memory queue size. Disk based queues may hold
+    more data inside the queue, but not in main memory but on disk. The size is 
+    specified in number of messages. The representation of a typical syslog 
+    message object should require less than 1K, but excessively large messages 
+    may also result in excessively large objects. Note that not all message 
+    types may utilize the full queue.  This depends on other queue parameters 
+    like the watermark settings. Most importantly, a small amount
+    (seven percent) is reserved for messages with high loss potential (like 
+    UDP-received messages) and will not be utilized by messages with lower loss 
+    potential (like TCP-received messages). +
+    +
+    Warning: do not set the size to extremely small values (like less than 500 
+    messages) unless you know exactly what you do (and why!). This could 
+    interfere with other internal settings like watermarks and batch sizes. 
+    It is possible to specify very small values in order to support power users 
+    who customize the other settings accordingly. Usually there is no need to do
+    that. Queues take only up memory when messages are stored in them. 
+    So reducing queue sizes does not reduce memory usage, except in cases 
+    where queues are actually full. The default settings permit small message 
+    bursts to be buffered without message loss.
 
 
-* **queue.dequeuebatchsize** number     
-    Specifies how many messages can be dequeued at once.    
-    Default:    
-    Mandatory: no    
-    
-    Specifies the batch size for dequeue operations. This setting affects performance. As a rule of thumb, 
-    larger batch sizes (up to a environment-induced upper limit) provide better performance. 
-    For the average system, there usually should be no need to adjust batch sizes as the defaults are sufficient.
+* *queue.dequeuebatchsize* number + 
+    Specifies how many messages can be dequeued at once. +   
+    Default: +
+    Mandatory: no +
+  +
+    Specifies the batch size for dequeue operations. This setting affects 
+    performance. As a rule of thumb, larger batch sizes (up to a 
+    environment-induced upper limit) provide better performance. 
+    For the average system, there usually should be no need to adjust batch 
+    sizes as the defaults are sufficient.
 
 
-* **queue.maxdiskspace** size
-    Specifies maximum amount of disk space a queue may use.    
-    Default: unlimited    
-    Mandatory: no    
-     
-    This setting permits to limit the maximum amount of disk space the queue data files will use. Note that actual disk allocation may be slightly larger due to block allocation. Also, no partial messages are written to queue, so writing a message is completed even if that means going slightly above the limit. Note that, contrary to queue.size, the size is specified in bytes and not messages. It is recommended to limit queue disk allocation, as otherwise the filesystem free space may be exhausted if the queue needs to grow very large.
-If the size limit is hit, messages are discarded until sufficient messages have been dequeued and queue files been deleted
+* *queue.maxdiskspace* size +
+    Specifies maximum amount of disk space a queue may use. +
+    Default: unlimited +
+    Mandatory: no +   
+    +
+    This setting permits to limit the maximum amount of disk space the queue 
+    data files will use. Note that actual disk allocation may be slightly larger 
+    due to block allocation. Also, no partial messages are written to queue, 
+    so writing a message is completed even if that means going slightly above 
+    the limit. Note that, contrary to queue.size, the size is specified in bytes
+    and not messages. It is recommended to limit queue disk allocation, as 
+    otherwise the filesystem free space may be exhausted if the queue needs to 
+    grow very large.  If the size limit is hit, messages are discarded until 
+    sufficient messages have been dequeued and queue files been deleted
 
 
-* **queue.highwatermark** number    
-    Specifies ...    
-    Default:    
-    Mandatory: no
+* *queue.highwatermark* number +
+    Specifies ... +
+    Default: +
+    Mandatory: no 
 
 * **queue.lowwatermark** number    
     Specifies ...    
@@ -1245,13 +1317,12 @@ Format: number
 Default:     
 Mandatory:  no
 
-* **queue.dequeuetimeend**
-Specifies
-
-Available Since:    6.3.3
-Format: number
-Default:     
-Mandatory:  no
+* *queue.dequeuetimeend* +
+Specifies +
+Available Since:    6.3.3 +
+Format: number +
+Default: +
+Mandatory:  no +
 
 
 
@@ -1260,118 +1331,176 @@ Mandatory:  no
 == Configure rsyslog 
 
 We configure rsyslog 
+
 * to recive UDP messages, 
 * to filter them depending on the IP of the host, and
 * to store them in a file.
 
-### How to configure the module ###
+=== How to configure the module
 
-The module has to be configured first. The general line for this configuration is: 
+The module has to be configured first. The general line for this configuration 
+is: 
 
-    module (load=”im<type of protocol>”)
+[source]
+module (load=”im<type of protocol>”)
 
 So in our example, where we want UDP, it will look like this:
 
-    module (load=”imudp”)
+[source]
+module (load=”imudp”)
 
-### How to configure the input for rsyslog ###
+=== How to configure the input for rsyslog
 
 For the input, you have to give two different information to rsyslog. 
 
-The first information needed is the protocol type of the input; in our example again `UDP`. 
-Like in the first line there is an `im` in front of the protocol-type.
+The first information needed is the protocol type of the input; in our example 
+again `UDP`.  Like in the first line there is an `im` in front of the 
+protocol-type.
 
-The other information is to configure a port for rsyslog, in our example 514. These two 
-information items are together in only one line. The line is:
+The other information is to configure a port for rsyslog, in our example 514.
+These two information items are together in only one line. The line is:
 
-    input (type=”<protocol of input>“ port=”<number of port>“)
+[source]
+input (type=”<protocol of input>“ port=”<number of port>“)
 
 This means for the example, the line has to be
 
-    input (type=”imudp” port=”514”)
+[source]
+input (type=”imudp” port=”514”)
 
-### How to configure a filter for fromhost-IPs and store them in a file ###
+=== How to configure a filter for fromhost-IPs and store them in a file
 
-A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure 
-it to do something with all notes from a specific IP, between “if” and “then” will be the property 
-“$fromhost-ip ==”-IP, you want to filter-”. After this stays a “then” and after the “then” follows 
-an action in brackets, which I will explain later. 
+A filter always has, like a normal conditional sentence, an “if…then” part.
+If you want to configure it to do something with all notes from a specific IP, 
+between “if” and “then” will be the property 
+“$fromhost-ip ==”-IP, you want to filter-”. 
+After this stays a “then” and after the “then” follows an action in brackets, 
+which I will explain later. 
 
-In my example I want only the notes from the host with the IP 172.19.1.135. So the line will be
+In my example I want only the notes from the host with the IP 172.19.1.135. 
+So the line will be
 
-    If $fromhost-ip == “172.19.1.135” then [
+[source]
+If $fromhost-ip == “172.19.1.135” then [
 
-After this we have to tell the computer, what to do if that case is given. In this example we want it
-to store these messages in the file “/var/log/network1.log”. This is an action with the type “omfile”. 
+After this we have to tell the computer, what to do if that case is given. In 
+this example we want it to store these messages in the file 
+“/var/log/network1.log”. This is an action with the type “omfile”. 
 
-To configure the file where to store the messages, the action is “action (type=”omfile” File=”-filename-“). So in this example, it will look like this:
+To configure the file where to store the messages, the action is 
+“action (type=”omfile” File=”-filename-“). So in this example, it will look 
+like this:
 
-    Action (type=”omfile” file=”/var/log/network1.log”)
-    ]
+[source]
+Action (type=”omfile” file=”/var/log/network1.log”)
+]
  
 
 All the lines together now are
 
-    Module (load=“imupd“)
+[source]
+----
+Module (load=“imupd“)
 
-    Input (type=”imudp” port=”514”)
-    If $fromhost-ip == “172.19.1.135“ then [
-        Action (type=”omfile” File=”/var/log/network1.log”)
-    ]
+Input (type=”imudp” port=”514”)
+If $fromhost-ip == “172.19.1.135“ then [
+    Action (type=”omfile” File=”/var/log/network1.log”)
+]
+----
 
-All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
+All in all it means: The input for rsyslog will listen to syslog via UDP on 
+port 514. If the IP from the Computer, which sends the messages, is 
+172.19.1.135, then the action in the brackets will get activated for these. 
+In the action the messages will be stored in the file /var/log/network1.log.
 
- 
 
-Rsyslog and rulesets
+=== Rsyslog and rulesets
 
-Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
+Rulesets are a bit more complicated. A ruleset is a set of rules, as the name 
+implies. These are bound to an input. This works by adding an option to the 
+input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a 
+ruleset “rs1” to a input the line will look like this:
 
 Input (type=”imudp” port=”514” ruleset=”rs1”)
-But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
+But you still have to define, what the ruleset should do. In this guide I will 
+limit myself to explain, how to create a ruleset, which has one action: to store
+all the messages in a file. In my example I want to store the messages in the 
+file /var/log/network1.log”.
 
-You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+You define a ruleset like the normal configuration. To define it, you first name
+it with ruleset (name=”-rulesetname-“). After this you write what it does, in my
+example the action action (type=”omfile” file=”/var/log/network1.log”). 
+This action you write in these curly brackets: {}.
 
 So my full example looks like this
 
 [source]
 ----
-    Module (load=”imudp”)
+Module (load=”imudp”)
 
-    Input (type=”imudp” port=”514” ruleset=”rs1”)
+Input (type=”imudp” port=”514” ruleset=”rs1”)
 
-    Ruleset (name=”rs1”) {
-        Action (type=”omfile” file=”/var/log/network1.log”)
-    }
+Ruleset (name=”rs1”) {
+    Action (type=”omfile” file=”/var/log/network1.log”)
+}
 ----
 
-In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
+In that second example for configurations you can see, how to store all messages 
+from the input into a file by using a ruleset. A rulesset can consist of 
+multiple rules, but without binding it to the input it is useless. It can be
+bound to an input multiple times or even other rulesets can be called.
 
 
 [[configuration]]
 == Configure rsyslog
 
-In this part I’ll explain some basic configuration steps for rsyslog. We configure rsyslog to recive UDP messages, to filter them depending on the IP of the host and to store them in a file.
+In this part I’ll explain some basic configuration steps for rsyslog. We 
+configure rsyslog to recive UDP messages, to filter them depending on the IP of 
+the host and to store them in a file.
 
 ### How to configure the module
-The module has to be configured first. The general line for this configuration is: “module (load=”im-type of protocol-”). So in our example, where we want UDP, it will look like this:
+The module has to be configured first. The general line for this configuration 
+is: +module (load=”im-type of protocol-”)+. So in our example, where we want 
+UDP, it will look like this:
 
 [source]
 Module (load=”imudp”)
 
-### How to configure the input for rsyslog
+=== How to configure the input for rsyslog
 
-For the input, you have to give two different information to rsyslog. The first information needed is the protocol type of the input; in my example again UDP. Like in the first line there is an “im-” in front of the protocol-type. The other information is to configure a port for rsyslog, in my example 514. These two information are together in only one line. The line is: “Input (type=”-protocol of input-“port=”-number of port-“). This means for my example, the line has to be
+For the input, you have to give two different information to rsyslog. The first 
+information needed is the protocol type of the input; in my example again UDP.
+Like in the first line there is an “im-” in front of the protocol-type. 
+The other information is to configure a port for rsyslog, in my example 514. 
+These two information are together in only one line. The line is:
+
+[source]
+Input (type=”-protocol of input-“port=”-number of port-“)
+
+This means for my example, the line has to be
+
+[source]
 Input (type=”imudp” port=”514”)
 
-### How to configure a filter for fromhost-IPs and store them in a file
+=== How to configure a filter for fromhost-IPs and store them in a file
 
-A filter always has, like a normal conditional sentence, an “if…then” part. If you want to configure it to do something with all notes from a specific IP, between “if” and “then” will be the property “$fromhost-ip ==”-IP, you want to filter-”. After this stays a “then” and after the “then” follows an action in brackets, which I will explain later. In my example I want only the notes from the host with the IP 172.19.1.135. So the line will be
+A filter always has, like a normal conditional sentence, an “if…then” part. 
+If you want to configure it to do something with all notes from a specific IP, 
+between “if” and “then” will be the property 
++$fromhost-ip ==”-IP, you want to filter-+.  After this stays a “then” and after
+the “then” follows an action in brackets, which I will explain later. 
+In my example I want only the notes from the host with the IP 172.19.1.135. 
+So the line will be
 
 [source]
 If $fromhost-ip == “172.19.1.135” then [
 
-After this we have to tell the computer, what to do if that case is given. In this example we want him to store these messages in the file “/var/log/network1.log”. This is an action with the type “omfile”. To configure the file where to store the messages, the action is “action (type=”omfile” File=”-filename-“). So in this example, it will look like this:
+After this we have to tell the computer, what to do if that case is given. 
+In this example we want him to store these messages in the 
+file “/var/log/network1.log”. This is an action with the type “omfile”. 
+To configure the file where to store the messages, the action is 
+“action (type=”omfile” File=”-filename-“). So in this example, it will look 
+like this:
 
 [source]
 Action (type=”omfile” file=”/var/log/network1.log”)
@@ -1382,59 +1511,78 @@ Action (type=”omfile” file=”/var/log/network1.log”)
 
 [source]
 ----
-    Module (load=“imupd“)
-    
-    Input (type=”imudp” port=”514”)
-    If $fromhost-ip == “172.19.1.135“ then [
-    Action (type=”omfile” File=”/var/log/network1.log”)
-    ]
+Module (load=“imupd“)
+
+Input (type=”imudp” port=”514”)
+If $fromhost-ip == “172.19.1.135“ then [
+Action (type=”omfile” File=”/var/log/network1.log”)
+]
 ----    
 
-All in all it means: The input for rsyslog will listen to syslog via UDP on port 514. If the IP from the Computer, which sends the messages, is 172.19.1.135, then the action in the brackets will get activated for these. In the action the messages will be stored in the file /var/log/network1.log.
+All in all it means: The input for rsyslog will listen to syslog via UDP on 
+port 514. If the IP from the Computer, which sends the messages, 
+is 172.19.1.135, then the action in the brackets will get activated for these. 
+In the action the messages will be stored in the file /var/log/network1.log.
 
  
 
 === Rsyslog and rulesets
-Rulesets are a bit more complicated. A ruleset is a set of rules, as the name implies. These are bound to an input. This works by adding an option to the input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a ruleset “rs1” to a input the line will look like this:
 
+Rulesets are a bit more complicated. A ruleset is a set of rules, as the name 
+implies. These are bound to an input. This works by adding an option to the 
+input, namely “ruleset=”-rulesetname-“”. For example, if I want to bind a 
+ruleset “rs1” to a input the line will look like this:
+
+[source]
 Input (type=”imudp” port=”514” ruleset=”rs1”)
 
-But you still have to define, what the ruleset should do. In this guide I will limit myself to explain, how to create a ruleset, which has one action: to store all the messages in a file. In my example I want to store the messages in the file /var/log/network1.log”.
+But you still have to define, what the ruleset should do. In this guide I will 
+limit myself to explain, how to create a ruleset, which has one action: to store
+all the messages in a file. In my example I want to store the messages in the 
+file /var/log/network1.log”.
 
-You define a ruleset like the normal configuration. To define it, you first name it with ruleset (name=”-rulesetname-“). After this you write what it does, in my example the action action (type=”omfile” file=”/var/log/network1.log”). This action you write in these curly brackets: {}.
+You define a ruleset like the normal configuration. To define it, you first name 
+it with ruleset (name=”-rulesetname-“). After this you write what it does, in my 
+example the action action (type=”omfile” file=”/var/log/network1.log”). 
+This action you write in these curly brackets: {}.
 
 So my full example looks like this
 
 [source]
 ----
-    Module (load=”imudp”)
-    
-    Input (type=”imudp” port=”514” ruleset=”rs1”)
-    
-    Ruleset (name=”rs1”) {
-        Action (type=”omfile” file=”/var/log/network1.log”)
-    }
+Module (load=”imudp”)
+
+Input (type=”imudp” port=”514” ruleset=”rs1”)
+
+Ruleset (name=”rs1”) {
+    Action (type=”omfile” file=”/var/log/network1.log”)
+}
 ----
 
-In that second example for configurations you can see, how to store all messages from the input into a file by using a ruleset. A rulesset can consist of multiple rules, but without binding it to the input it is useless. It can be bound to an input multiple times or even other rulesets can be called.
+In that second example for configurations you can see, how to store all messages 
+from the input into a file by using a ruleset. A rulesset can consist of 
+multiple rules, but without binding it to the input it is useless. It can be 
+bound to an input multiple times or even other rulesets can be called.
 
 
 [[elasticsearch]]
 == Logging to ElasticSearch
 
-This HOWTO should explain the steps of creating a basic setup where host(s) running rsyslog 
-is sending logs to host(s) running Elasticsearch.  This would enable you to aggregate logs 
-and search for them. Much like Graylog2 does, only not as nice but more flexible and scalable.
+This HOWTO should explain the steps of creating a basic setup where host(s) 
+running rsyslog is sending logs to host(s) running Elasticsearch.  This would 
+enable you to aggregate logs and search for them. Much like Graylog2 does, 
+only not as nice but more flexible and scalable.
 
-I'm running Ubuntu 12.04 x86_64, but I guess on any Linux the steps would be similar.
+I'm running Ubuntu 12.04 x86_64, but I guess on any Linux the steps would be 
+similar.
 
-### Installing Elasticsearch ###
+=== Installing Elasticsearch
 
 Download it from here: http://www.elasticsearch.org/download/
 
 For Ubuntu there's a nice .deb package which you can simply install. For any
 other Linux, it's as easy as extracting the .tar.gz archive and running
-+bin\elasticsearch+
++bin\elasticsearch+.
 
 If you have a complex setup, with many logs maybe, you would probably want to
 build or adapt a custom interface. But for now we'll use elasticsearch-head as 
@@ -1445,19 +1593,19 @@ git clone git://github.com/mobz/elasticsearch-head.git
 
 Then open index.html in your browser. In the Overview tab you will see your
 shards and replicas, while in the Browser tab you can search for your logs.
-Trouble is, at this point we have no shards/replicas and no logs in it.  But that's
-going to change soon :D
+Trouble is, at this point we have no shards/replicas and no logs in it.  
+But that's going to change soon :D
 
-The default settings for Elasticsearch are quite sensible, but if you have a lot of
-logs, you might find this tutorial useful:
+The default settings for Elasticsearch are quite sensible, but if you have a lot
+of logs, you might find this tutorial useful:
 
 [source]
 http://www.elasticsearch.org/tutorials/2012/05/19/elasticsearch-for-logging.html
 
-### Installing rsyslog with omelasticsearch ###
+=== Installing rsyslog with omelasticsearch
 
-At the time of writing this omelasticsearch is experimental, so you would have to 
-download it from the master-elasticsearch branch here:
+At the time of writing this omelasticsearch is experimental, so you would have 
+to download it from the master-elasticsearch branch here:
 
 http://git.adiscon.com/?p=rsyslog.git;a=shortlog;h=refs/heads/master-elasticsearch
 
@@ -1468,14 +1616,15 @@ and libee: +http://www.libee.org/download/+
 Here, it was as easy as:
 
 [source]
- # tar zxf $PACKAGE_NAME.tar.gz
- # cd $PACKAGE_NAME*
- # ./configure
- # make && make install
+# tar zxf $PACKAGE_NAME.tar.gz
+# cd $PACKAGE_NAME*
+# ./configure
+# make && make install
 
-When doing the same thing with rsyslog, you would need to add +--enable-elasticsearch+ when you run the configure script.
+When doing the same thing with rsyslog, you would need to add 
++--enable-elasticsearch+ when you run the configure script.
 
-### Configuring rsyslog for elasticsearch ###
+=== Configuring rsyslog for elasticsearch
 
 For a basic setup, you need to add the following lines:
 
@@ -1491,8 +1640,8 @@ would need to define a custom template, that would properly escape the JSON
 fields for you, and then tell omelasticsearch to use that template.
 
 You can also use templates for defining index names. For example, you might
-want to have an index per day. This way, for "rotating" logs, you can just remove
-old indices.
+want to have an index per day. This way, for "rotating" logs, you can just 
+remove old indices.
 
 Our config might become something like this:
 
@@ -1516,35 +1665,57 @@ Our config might become something like this:
 
 There are some other nice things you can use:
 
-* searchType="mycustomtype" - to specify a different type than "events". You can have dynSearchType="on" to have it variable, like you can with indices
-* serverport="9200" - this is the default setting, but you can specify a different port
-* asyncrepl="on" to enable asyncronous replication. That is, Elasticsearch gives an answer imediately after inserting to the main shard(s). It doesn't wait for replicas to be updated as well, which is the default setting
-* timeout="1m" - how long to wait for a reply from Elasticsearch. More info here, near the end: http://www.elasticsearch.org/guide/reference/api/index_.html
-* basic HTTP authentication. Elasticsearch has no authentication by default, but you can enable it:
+* searchType="mycustomtype" - to specify a different type than "events". You can
+  have dynSearchType="on" to have it variable, like you can with indices.
+* serverport="9200" - this is the default setting, but you can specify a 
+  different port
+* asyncrepl="on" to enable asyncronous replication. That is, Elasticsearch gives
+  an answer imediately after inserting to the main shard(s). It doesn't wait for
+  replicas to be updated as well, which is the default setting
+* timeout="1m" - how long to wait for a reply from Elasticsearch. More info 
+  here, near the end: 
+  http://www.elasticsearch.org/guide/reference/api/index_.html
+* basic HTTP authentication. Elasticsearch has no authentication by default, 
+but you can enable it:
 
 Download the http-basic plugin for Elasticsearch from here:
 https://github.com/Asquera/elasticsearch-http-basic/downloads
 
-Then, from your Elasticsearch home directory (/usr/share/elasticsearch on Ubuntu):
- # mkdir -p plugins/http-basic
- # cp elasticsearch-http-basic-1.0.3.jar plugins/http-basic/
+Then, from your Elasticsearch home directory 
+(/usr/share/elasticsearch on Ubuntu):
 
-Then you need to add the following to your config, before restarting Elasticsearch:
+[source]
+# mkdir -p plugins/http-basic
+# cp elasticsearch-http-basic-1.0.3.jar plugins/http-basic/
+
+Then you need to add the following to your config, before restarting 
+Elasticsearch:
 
  http.basic.enabled: true
  http.basic.user: "myuser"
  http.basic.password: "mypass"
 
-Which is config/elasticsearch.yml if you just extracted the elasticsearch.tar.gz. If you installed it from the .deb package, it's /etc/elasticsearch/elasticsearch.yml
+Which is config/elasticsearch.yml if you just extracted the 
+elasticsearch.tar.gz. If you installed it from the .deb package, it's 
+/etc/elasticsearch/elasticsearch.yml
 
-On the rsyslog side, you need to add the following to your "action" line: uid="myuser" pwd="mypass".
+On the rsyslog side, you need to add the following to your "action" line:
+
+[source] 
+uid="myuser" pwd="mypass".
 
 Then restart rsyslog and it should work :)
 
-### Using bulk indexing ###
-Elasticsearch can index multiple documents at a time (eg: in the same request), which makes this approach faster than indexing one log line at a time. You can make omelasticsearch use this feature by setting bulkmode="on" in your action() line.
+=== Using bulk indexing
 
-The bulk size depends on your queue settings. The default is 16, but, depending on your setup, a value of a few hundred will probably increase the indexing performance.
+Elasticsearch can index multiple documents at a time (eg: in the same request), 
+which makes this approach faster than indexing one log line at a time. You can 
+make omelasticsearch use this feature by setting bulkmode="on" in your action()
+line.
+
+The bulk size depends on your queue settings. The default is 16, but, depending
+ on your setup, a value of a few hundred will probably increase the indexing 
+ performance.
 
 More infromation about omelasticsearch's bulk indexing here:
 http://blog.gerhards.net/2012/06/using-elasticsearch-bulk-mode-with.html
@@ -1552,16 +1723,17 @@ http://blog.gerhards.net/2012/06/using-elasticsearch-bulk-mode-with.html
 And about queueing in general here:
 http://www.rsyslog.com/doc/queues.html
 
+
 [[elements]]
 == Data Flow
 
 <img src="http://www.rsyslog.com/doc/dataflow.png" width="680" height="305" alt="Drawing"/>
 
-### Bird's Eye View of Rsyslog Configuration Elements ###
+=== Bird's Eye View of Rsyslog Configuration Elements
 
 In a rsyslog cnfiguration file, **rulesets** are not the only elements that must
-be defined at the top level.  Inputs, templates, modules, and a few directives must 
-also be defined at the top level alongside the templates.
+be defined at the top level.  Inputs, templates, modules, and a few directives 
+must also be defined at the top level alongside the templates.
 
 There are a few **directives** that need to be defined outside of any
 statements, i.e. at the top level.  Examples of such directives are `xxx` 
@@ -1569,15 +1741,15 @@ and 'yyy'.  A directive always starts with a $-sign.
 
 Among the top-level defineable elements, **primary-rulesets** are conceptually
 at a higher level than other elements, including **subordinate-rulesets**.  
-rulesets can be defined hierarchically, i.e. one ruleset can call another ruleset
-(called subordinate-ruleset as opposed to primary-ruleset)  A primary-ruleset is
-a ruleset not reachable via any other ruleset.
+rulesets can be defined hierarchically, i.e. one ruleset can call another 
+ruleset (called subordinate-ruleset as opposed to primary-ruleset)  
+A primary-ruleset is a ruleset not reachable via any other ruleset.
 
 Even though an **input** element must also be defined at the top level, i.e. the
 same level as rulesets, it is conceptually contained in and belongs to one and
-only one particular ruleset.  A ruleset contains, and is pointed to by, one or more
-inputs using the input statement's `ruleset=<ruleset-name>` option.  In other
-words, there is a one-to-many relationship between rulesets and inputs.
+only one particular ruleset.  A ruleset contains, and is pointed to by, one or 
+more inputs using the input statement's `ruleset=<ruleset-name>` option.  In 
+other words, there is a one-to-many relationship between rulesets and inputs.
 
 There is also a one-to-many relationship between **input-modules** and inputs.
 Each input must be linked to one and only one input-module using its 
@@ -1586,24 +1758,27 @@ Each input must be linked to one and only one input-module using its
 Also, there is an implied many-to-many relationship between 
 rulesets and **output-modules** via nested action statements.  Each nested
 action statement of 
-a ruleset, via its `type=<output-module-name>`, must specify one and only one output-module
-to be utilized for sinking the qualified messages.  On the other hand, the same output-module
-can be referred to by more than one ruleset.
+a ruleset, via its `type=<output-module-name>`, must specify one and only one 
+output-module to be utilized for sinking the qualified messages.  On the other 
+hand, the same output-module can be referred to by more than one ruleset.
 
-Similar to output-modules, **Templates** can also be syntactically bound to the action part 
-of the containing rules of a ruleset, and therefore reachable via rulesets only.
+Similar to output-modules, **Templates** can also be syntactically bound to the
+action part of the containing rules of a ruleset, and therefore reachable via 
+rulesets only.
 
-It must be noted here that there is also a top-level **main-queue** configuration 
-element that explicitly defines a main-queue, unfortunately, only for so-called default 
-ruleset.  It is  unfortunate because trying to configure the default ruleset leads to 
-an unstructured configuration file with the default ruleset's configuration items splayed 
-all over the file.  The default ruleset is the legacy way to assign a ruleset to any 
-input-module with a missing `ruleset=<ruleset-name>` option.  The options and rules of 
-the default ruleset must be astray outside of a ruleset element and sensitive to the 
-order of definitions; and therefore highly error-prone.
+It must be noted here that there is also a top-level *main-queue* configuration 
+element that explicitly defines a main-queue, unfortunately, only for so-called 
+default ruleset.  It is  unfortunate because trying to configure the default 
+ruleset leads to an unstructured configuration file with the default ruleset's 
+configuration items splayed all over the file.  The default ruleset is the 
+legacy way to assign a ruleset to any input-module with a missing 
+`ruleset=<ruleset-name>` option.  The options and rules of the default ruleset
+must be astray outside of a ruleset element and sensitive to the order of 
+definitions; and therefore highly error-prone.
 
-In a sense, primary-rulesets are the top of the food-chain reaching all the other elements,
-except a few directives that don't have an structured equivalent.
+In a sense, primary-rulesets are the top of the food-chain reaching all the 
+other elements, except a few directives that don't have an structured 
+equivalent.
 
 
 === Ruleset Elements
@@ -1629,41 +1804,48 @@ ruleset (name=”rs1”) {
 Using the `ruleset=<rulesetname>` option of the input statement, a rulesets can
 be bound to an input.  For example, to bind a ruleset “rs1” to an input:
 
-    input (
-        type=”imudp” 
-        port=”514”
-        ruleset=”rs1”
-    )
+[source]
+input (
+    type=”imudp” 
+    port=”514”
+    ruleset=”rs1”
+)
 
 So, an a fully defined configuration may looks like:
 
-    module (load=”imtcp”)
-    module (load="omfile")
+[source]
+----
+module (load=”imtcp”)
+module (load="omfile")
 
-    input (type=”imtcp” port=”514” ruleset=”rs1”)
+input (type=”imtcp” port=”514” ruleset=”rs1”)
 
-    ruleset (name=”rs1”) {
-        if $fromhost-ip == '192.168.152.137' then {
-            action(type="omfile" file="/var/log/remotefile02")
-        }
+ruleset (name=”rs1”) {
+    if $fromhost-ip == '192.168.152.137' then {
+         action(type="omfile" file="/var/log/remotefile02")
     }
+}
+----
 
-As a result of the above configuration, the rsyslog will listen to syslog via TCP
-on port 514.
-If a received message is sent by a computr with the IP 172.19.1.135, then the messages will be 
-stored in the file /var/log/network1.log.
+As a result of the above configuration, the rsyslog will listen to syslog via 
+CP on port 514.
+If a received message is sent by a computr with the IP 172.19.1.135, then the 
+messages will be stored in the file /var/log/network1.log.
 
-Interestingly enough, the most important component of an explicitly defined ruleset 
-(arguably even the most important component of rsyslog), i.e. its main-queue, is not an 
-independently defineable element.  Each ruleset has one and only one associated main-queue.
-Each main-queue is served by a pool of dedicated worker-threads.  The worker-threads are in charge
-of enqueing incomming messages captured by input elements and dequeing and pushing messages
-to the filter engines and parsers and then placing them in zero or more action-queues.
+Interestingly enough, the most important component of an explicitly defined 
+ruleset (arguably even the most important component of rsyslog), i.e. its 
+main-queue, is not an independently defineable element.  Each ruleset has one 
+and only one associated main-queue.
 
-The only other kind of worker-threads created by rsyslog is the threads serving the 
-action-queues.  In this case, there is no pool per say.  Each action-queue can only
-be served by a single worker-thread dedicated to the loaded module associated to the
-action element involved. 
+Each main-queue is served by a pool of dedicated worker-threads.  The 
+worker-threads are in charge of enqueing incomming messages captured by input 
+elements and dequeing and pushing messages to the filter engines and parsers and
+then placing them in zero or more action-queues.
+
+The only other kind of worker-threads created by rsyslog is the threads serving
+the action-queues.  In this case, there is no pool per say.  Each action-queue 
+can only be served by a single worker-thread dedicated to the loaded module 
+associated to the action element involved. 
 
 
 == Input Elements
@@ -1672,45 +1854,52 @@ Input Elements are the second most important configuration elements of
 rsyslog, after rulesets.   
 
 
-=== Multiple Rulesets
+== Multiple Rulesets
 
-Starting with version 4.5.0 and 5.1.1, rsyslog supports multiple rulesets within a single configuration.
-This is especially useful for routing the reception of remote messages to a set of specific rules.
+Starting with version 4.5.0 and 5.1.1, rsyslog supports multiple rulesets within 
+a single configuration.  This is especially useful for routing the reception of 
+remote messages to a set of specific rules.
  
-Note that the **input module** must support binding to non-standard rulesets, so the functionality may 
-not be available with all inputs.  In this document, I am using imtcp, an input module that supports 
-binding to non-standard rulesets since rsyslog started to support them.
+Note that the *input module* must support binding to non-standard rulesets, so 
+the functionality may not be available with all inputs.  In this document, I am 
+using imtcp, an input module that supports binding to non-standard rulesets 
+since rsyslog started to support them.
 
 === What is a Ruleset?
 
-If you have worked with (r)syslog.conf, you know that it is made up of what I call 
-**rules** (others tend to call them selectors, a sysklogd term).  Each rule consist 
-of a **filter** and one or more *actions* to be carried out when the filter 
-evaluates to true.  A filter may be as simple as a traditional syslog priority based
-filter (like "*.*" or "mail.info" or as complex as a script-like expression.
-Details on that are covered in the config file documentation. After the filter come
-action specifiers,
-and an action is something that does something to a message, e.g. write it to a file or forward it to
-a remote logging server.
+If you have worked with (r)syslog.conf, you know that it is made up of what I
+call *rules* (others tend to call them selectors, a sysklogd term).  Each rule 
+consist of a *filter* and one or more *actions* to be carried out when the 
+filter evaluates to true.  A filter may be as simple as a traditional syslog 
+priority based filter (like "*.*" or "mail.info" or as complex as a script-like 
+expression.  Details on that are covered in the config file documentation. After 
+he filter come action specifiers, and an action is something that does something
+to a message, e.g. write it to a file or forward it to a remote logging server.
 
-A traditional configuration file is made up of one or more of these rules.  When a new message arrives,
-its processing starts with the first rule (in order of appearance in rsyslog.conf) and continues for
-each rule until either all rules have been processed or a so-called `discard` action happens, in which
-case processing stops and the message is thrown away (what also happens after the last rule has been 
-processed).
+A traditional configuration file is made up of one or more of these rules.  
+When a new message arrives, its processing starts with the first rule (in order 
+of appearance in rsyslog.conf) and continues for each rule until either all 
+rules have been processed or a so-called `discard` action happens, in which
+case processing stops and the message is thrown away (what also happens after 
+the last rule has been processed).
 
-The **multi-ruleset** support now permits to specify more than one such **rule sequence**. You can think
-of a traditional config file just as a single default rule set, which is automatically bound to each 
-of the inputs.  This is even what actually happens.  When rsyslog.conf is processed, the config file 
+The *multi-ruleset* support now permits to specify more than one such 
+*rule sequence*. You can think of a traditional config file just as a single
+default rule set, which is automatically bound to each of the inputs.  This is 
+even what actually happens.  When rsyslog.conf is processed, the config file 
 parser looks for the directive
 
-    ruleset(name="rulesetname");
+[source]
+ruleset(name="rulesetname");
 
-Where name is any name the user likes (but must not start with "RSYSLOG_", which is the name space 
-reserved for rsyslog use).  If it finds this directive, it begins a new rule set (if the name was not 
-yet known) or switches to an already-existing one (if the name was known).  All rules defined between
-this `$RuleSet` directive and the next one are appended to the named ruleset.  Note that the reserved
-name "RSYSLOG_DefaultRuleset" is used to specify rsyslogd's default ruleset.  You can use that name 
+Where name is any name the user likes (but must not start with "RSYSLOG_", which
+is the name space reserved for rsyslog use).  If it finds this directive, it 
+begins a new rule set (if the name was not yet known) or switches to an 
+already-existing one (if the name was known).  All rules defined between this 
+`$RuleSet` directive and the next one are appended to 
+the named ruleset.  Note that the reserved
+name "RSYSLOG_DefaultRuleset" is used to specify rsyslogd's default ruleset.  
+You can use that name 
 wherever you can use a ruleset name, including when binding an input to it.
 
 Inside a ruleset, messages are processed as described above: they start with the first rule and rules
@@ -1735,11 +1924,12 @@ other method.
 
 Binding to rulesets is input-specific. For imtcp, this is done via the following directive:
 
-    input(
-        type="imptcp" 
-        port="514" 
-        ruleset="rulesetname"
-    );
+[source]
+input(
+    type="imptcp" 
+    port="514" 
+    ruleset="rulesetname"
+);
 
 Note that "name" must be the name of a ruleset that is already defined at the time the bind
 directive is given. There are many ways to make sure this happens, but I personally think that it is 
@@ -1762,11 +1952,11 @@ This is possible by using the following directive:
 [source]
 $DefaultRuleset <name>
 
-Please note, however, that this directive is actually global: that is, it does not
-modify the ruleset to which the next input is bound but rather provides a 
-system-wide default rule set for those 
-inputs that did not explicitly bind to one. As such, the directive can not be used as a work-around to 
-bind inputs to non-default rulesets that do not support ruleset binding.
+Please note, however, that this directive is actually global: that is, it does 
+not modify the ruleset to which the next input is bound but rather provides a 
+system-wide default rule set for those inputs that did not explicitly bind to 
+one. As such, the directive can not be used as a work-around to bind inputs to 
+non-default rulesets that do not support ruleset binding.
 
 === Examples 
 
@@ -1946,70 +2136,94 @@ This module provides native support for logging to Elasticsearch.
 
 Action Parameters:
 
-* **server**    
+* *server* +   
 Host name or IP address of the Elasticsearch server. Defaults to "localhost"
-* **serverport**    
+
+* *serverport* +
 HTTP port to connect to Elasticsearch. Defaults to 9200
-* **searchIndex**    
+
+* *searchIndex* +   
 Elasticsearch index to send your logs to. Defaults to "system"
-* **dynSearchIndex** <on/off>    
+
+* *dynSearchIndex* <on/off> +
 Whether the string provided for searchIndex should be taken as a template. 
 Defaults to "off", which means the index name will be taken literally. 
-Otherwise, it will look for a template with that name, and the resulting string will be the index name. 
-For example, let's assume you define a template named "date-days" containing "%timereported:1:10:date-rfc3339%". 
-Then, with dynSearchIndex="on", if you say searchIndex="date-days", each log will be sent to 
-and index named after the first 10 characters of the timestamp, like "2013-03-22".
+Otherwise, it will look for a template with that name, and the resulting string 
+will be the index name.  For example, let's assume you define a template named 
+"date-days" containing "%timereported:1:10:date-rfc3339%".  Then, with 
+dynSearchIndex="on", if you say searchIndex="date-days", each log will be sent 
+to and index named after the first 10 characters of the timestamp, 
+like "2013-03-22".
+
 * **searchType**    
 Elasticsearch type to send your index to. Defaults to "events"
+
 * **dynSearchType** <on/off>    
 Like dynSearchIndex, it allows you to specify a template for searchType, instead of a static string.
+
 * **asyncrepl** <on/off>    
 By default, an indexing operation returns after all replica shards have indexed the document. 
 With asyncrepl="on" it will return after it was indexed on the primary shard only - thus 
 trading some consistency for speed.
+
 * **timeout**    
 How long Elasticsearch will wait for a primary shard to be available for indexing your 
 log before sending back an error. Defaults to "1m".
-* **template**    
+
+* *template* +  
 This is the JSON document that will be indexed in Elasticsearch. The resulting string needs to be 
 a valid JSON, otherwise Elasticsearch will return an error. Defaults to:
 
-    $template JSONDefault, 
-    "{\"message\":\"%msg:::json%\",\"fromhost\":\"%HOSTNAME:::json%\",
-    \"facility\":\"%syslogfacility-text%\",
-    \"priority\":\"%syslogpriority-text%\",
-    \"timereported\":\"%timereported:::date-rfc3339%\",
-    \"timegenerated\":\"%timegenerated:::date-rfc3339%\"}"
+[source]
+$template JSONDefault, 
+"{\"message\":\"%msg:::json%\",\"fromhost\":\"%HOSTNAME:::json%\",
+\"facility\":\"%syslogfacility-text%\",
+\"priority\":\"%syslogpriority-text%\",
+\"timereported\":\"%timereported:::date-rfc3339%\",
+\"timegenerated\":\"%timegenerated:::date-rfc3339%\"}"
 
 Which will produce this sort of documents (pretty-printed here for readability):
 
-    {
-        "message": " this is a test message",
-        "fromhost": "test-host",
-        "facility": "user",
-        "priority": "info",
-        "timereported": "2013-03-12T18:05:01.344864+02:00",
-        "timegenerated": "2013-03-12T18:05:01.344864+02:00"
-    }
+[source]
+{
+    "message": " this is a test message",
+    "fromhost": "test-host",
+    "facility": "user",
+    "priority": "info",
+    "timereported": "2013-03-12T18:05:01.344864+02:00",
+    "timegenerated": "2013-03-12T18:05:01.344864+02:00"
+}
 
-* **bulkmode** <on/off>    
-The default "off" setting means logs are shipped one by one. Each in its own HTTP request, 
-using the Index API. Set it to "on" and it will use Elasticsearch's Bulk API to send 
-multiple logs in the same request. The maximum number of logs sent in a single bulk request 
-depends on your queue settings - usually limited by the dequeue batch size. More information 
-about queues can be found here.
-* **parent**    
-Specifying a string here will index your logs with that string the parent ID of those logs. Please note that you need to define the parent field in your mapping for that to work. By default, logs are indexed without a parent.
+* *bulkmode* <on/off> +
+The default "off" setting means logs are shipped one by one. Each in its own 
+HTTP request, using the Index API. Set it to "on" and it will use 
+Elasticsearch's Bulk API to send multiple logs in the same request. The maximum 
+number of logs sent in a single bulk request depends on your queue settings - 
+usually limited by the dequeue batch size. More information about queues can be
+found here.
+
+* *parent* + 
+Specifying a string here will index your logs with that string the parent ID of 
+those logs. Please note that you need to define the parent field in your mapping
+for that to work. By default, logs are indexed without a parent.
+
 * **dynParent** <on/off>
-Using the same parent for all the logs sent in the same action is quite unlikely. So you'd probably want to turn this "on" and specify a template that will provide meaningful parent IDs for your logs.
-* **uid**    
-If you have basic HTTP authentication deployed (eg: through the elasticsearch-basic plugin), you can specify your user-name here.
-* **pwd**    
+Using the same parent for all the logs sent in the same action is quite 
+unlikely. So you'd probably want to turn this "on" and specify a template that
+will provide meaningful parent IDs for your logs.
+
+* *uid*    
+If you have basic HTTP authentication deployed (eg: through the
+elasticsearch-basic plugin), you can specify your user-name here.
+
+* *pwd* +  
 Password for basic authentication.
+
 Samples:
 
 The following sample does the following:
 
+[source]
 loads the omelasticsearch module
 outputs all logs to Elasticsearch using the default settings
 module(load="omelasticsearch")
@@ -2031,8 +2245,11 @@ port is 9200
 JSON docs will look as defined in the template above
 index will be "test-index"
 type will be "test-type"
-activate bulk mode. For that to work effectively, we use an in-memory queue that can hold up to 5000 events. The maximum bulk size will be 300
+activate bulk mode. For that to work effectively, we use an in-memory queue that
+can hold up to 5000 events. The maximum bulk size will be 300
 retry indefinitely if the HTTP request failed (eg: if the target server is down)
+
+[source]
 module(load="omelasticsearch")
 template(name="testTemplate"
          type="list"
@@ -2063,8 +2280,12 @@ template(name="testTemplate"
 [[expression]]
 == Expressions
 
-The language supports arbitrary complex expressions. All usual operators are supported. The precedence of operations is as follows (with operations being higher in the list being carried out before those lower in the list, e.g. multiplications are done before additions.
+The language supports arbitrary complex expressions. All usual operators are 
+supported. The precedence of operations is as follows (with operations being 
+higher in the list being carried out before those lower in the list, e.g. 
+multiplications are done before additions.
 
+[source]
     expressions in parenthesis
     not, unary minus
     *, /, % (modulus, as in C)
@@ -2073,7 +2294,14 @@ The language supports arbitrary complex expressions. All usual operators are sup
     and
     or
 
-For example, "not a == b" probably returns not what you intended. The script processor will first evaluate "not a" and then compare the resulting boolean to the value of b. What you probably intended to do is "not (a == b)". And if you just want to test for inequality, we highly suggest to use "!=" or "<>". Both are exactly the same and are provided so that you can pick whichever you like best. So inquality of a and b should be tested as "a <> b". The "not" operator should be reserved to cases where it actually is needed to form a complex boolean expression. In those cases, parenthesis are highly recommended.
+For example, "not a == b" probably returns not what you intended. The script 
+processor will first evaluate "not a" and then compare the resulting boolean to 
+the value of b. What you probably intended to do is "not (a == b)". And if you 
+just want to test for inequality, we highly suggest to use "!=" or "<>". Both 
+are exactly the same and are provided so that you can pick whichever you like 
+best. So inquality of a and b should be tested as "a <> b". The "not" operator 
+should be reserved to cases where it actually is needed to form a complex 
+boolean expression. In those cases, parenthesis are highly recommended.
 
 
 Rsyslog supports expressions at a growing number of places. 
@@ -2088,7 +2316,9 @@ but not yet in the rest of the configuration file.
 == Message Flow
 
 === Message Flow
-Depending on their module type, modules may access and/or modify messages at various stages 
+
+Depending on their module type, modules may access and/or modify messages at 
+various stages 
 during rsyslog's processing. Note that only the "core type" (e.g. input, output) but not any 
 type derived from it (message modification module) specifies when a module is called.
 
@@ -2182,7 +2412,8 @@ as you know from other scripting environments.
 Scripts based filters are indicated by the keyword "if", as usual.
 They have this format:
     
-    if expr then block else block
+[source]
+if expr then block else block
 
 "If" and "then" are fixed keywords that mus be present. "expr" is a (potentially quite complex) expression. 
 So the <a href="expression.html">expression documentation</a> for details.

@@ -189,7 +189,8 @@ Action queue parameters can not be  modified once the action has been specified.
 For example, to tell the main message queue to save its content on shutdown, 
 use $MainMsgQueueSaveOnShutdown on".
 
-The main message queue is created after parsing the config file and all of its potential 
+The main message queue is created after parsing the config file and all of its
+potential 
 includes.  An action queue is created each time an action selector is specified. 
 
 Not all queues necessarily support the full set of queue configuration parameters, because 
@@ -692,9 +693,7 @@ following the final at sign and be enclosed in parenthesis. The
 individual options must be separated by commas. The following options
 are right now defined:
 
-[options="header"]
-|============================
-| *z<number>* |
+* *z<number>* +
 Enable zlib-compression for the message. The
 <number> is the compression level. It can be 1 (lowest
 gain, lowest CPU overhead) to 9 (maximum compression, highest CPU
@@ -711,21 +710,21 @@ compressed. However, it is checked if there is a gain in compression
 and only if there is, the compressed message is transmitted. Otherwise,
 the uncompressed messages is transmitted. This saves the receiver CPU
 cycles for decompression. It also prevents small message to actually
-become larger in compressed form.
-
+become larger in compressed form. +
++
 *Please note that when a TCP transport is used,
 compression will also turn on syslog-transport-tls framing. See the "o"
-option for important information on the implications.*
-
+option for important information on the implications.* +
++
 Compressed messages are automatically detected and
 decompressed by the receiver. There is nothing that needs to be
 configured on the receiver side. 
 
-| o |
-This option is experimental. Use at your own
+* *o* +
+*This option is experimental. Use at your own
 risk and only if you know why you need it! If in doubt, do NOT turn it
-on.*
-
+on.* +
++
 This option is only valid for plain TCP based
 transports. It selects a different framing based on IETF internet draft
 syslog-transport-tls-06. This framing offers some benefits over
@@ -741,13 +740,13 @@ some of those changes. So you should take this note very serious. It is
 not something we do not *like* to do (and may change our mind if enough
 people beg...), it is something we most probably *can not* do for
 technical reasons (aka: you can beg as much as you like, it won't
-change anything...).
-
+change anything...). +
++
 The most important implication is that compressed syslog
 messages via TCP must be considered with care. Unfortunately, it is
 technically impossible to transfer compressed records over traditional
-syslog plain tcp transports, so you are left with two evil choices...</p>
-|==============
+syslog plain tcp transports, so you are left with two evil choices... 
+
 
 The hostname may be followed by a colon and the destination port.
 
